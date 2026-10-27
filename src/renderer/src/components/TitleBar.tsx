@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Minus, Square, Copy, X, Calendar, ShieldCheck } from 'lucide-react'
+import { Minus, Square, Copy, X, Calendar } from 'lucide-react'
 
 export const TitleBar: React.FC = () => {
   const [isMaximized, setIsMaximized] = useState(false)
@@ -44,7 +44,7 @@ export const TitleBar: React.FC = () => {
       onDoubleClick={handleMaximize}
       className="h-9 bg-[var(--bg-sidebar)] border-b border-[var(--border-subtle)] flex items-center justify-between select-none shrink-0 px-3 z-50 text-[var(--text-primary)] transition-colors"
     >
-      {/* Left: Window Branding & State */}
+      {/* Left: Window Branding */}
       <div
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         className="flex items-center gap-2.5"
@@ -54,21 +54,15 @@ export const TitleBar: React.FC = () => {
           <Calendar className="w-3 h-3 stroke-[2.2]" />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center">
           <span className="text-[12px] font-bold tracking-tight text-[var(--text-primary)]">
             ChronoDesk<span className="font-normal opacity-60 ml-1">Pro</span>
-          </span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-mono font-medium tracking-wide bg-[var(--bg-subtle)] text-[var(--text-muted)] border border-[var(--border-subtle)] flex items-center gap-1">
-            <ShieldCheck className="w-2.5 h-2.5 opacity-70" />
-            <span>LOCAL</span>
           </span>
         </div>
       </div>
 
-      {/* Middle: Subtle center breadcrumb indicator */}
-      <div className="flex items-center gap-2 opacity-50 text-[11px] font-mono tracking-wider">
-        <span>TIMETABLE & CALENDAR SUITE</span>
-      </div>
+      {/* Middle: Draggable center area */}
+      <div className="flex-1 h-full" />
 
       {/* Right: Window Control Actions matching theme */}
       <div

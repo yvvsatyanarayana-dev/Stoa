@@ -7,8 +7,7 @@ import {
   Bell,
   Settings as SettingsIcon,
   Plus,
-  Trash2,
-  Database
+  Trash2
 } from 'lucide-react'
 import { useAppStore, AppView } from '../store/useAppStore'
 
@@ -143,15 +142,6 @@ export const Sidebar: React.FC = () => {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Footer Status */}
-      <div className="p-2.5 border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] flex items-center justify-between text-[11px] text-[var(--text-muted)]">
-        <div className="flex items-center gap-1.5">
-          <Database className="w-3 h-3 text-[var(--text-secondary)] opacity-70" />
-          <span className="text-[10px] font-mono">SQLite Local</span>
-        </div>
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-xs" title="Connected" />
       </div>
     </aside>
   )
