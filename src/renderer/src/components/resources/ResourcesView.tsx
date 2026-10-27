@@ -32,25 +32,27 @@ export const ResourcesView: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-[#2D0000] p-6 text-[#EEEAD7]">
+    <div className="flex-1 flex flex-col overflow-hidden bg-[var(--bg-app)] p-6 text-[var(--text-primary)]">
       <div className="max-w-6xl w-full mx-auto flex-1 flex flex-col">
         {/* Header and Filter */}
-        <div className="flex items-center justify-between pb-6 border-b border-[#551010]">
+        <div className="flex items-center justify-between pb-6 border-b border-[var(--border-subtle)]">
           <div>
-            <h2 className="text-xl font-bold text-[#EEEAD7]">Resource & Room Directory</h2>
-            <p className="text-xs text-[#757D6F] mt-1">
+            <h2 className="text-xl font-bold text-[var(--text-primary)]">Resource & Room Directory</h2>
+            <p className="text-xs text-[var(--text-secondary)] mt-1">
               Add and organize personnel, meeting rooms, and equipment with availability limits and conflict detection.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex bg-[#1F0000] border border-[#551010] rounded-lg p-0.5 text-xs">
+            <div className="flex bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] p-0.5 text-xs">
               {['all', 'room', 'person', 'equipment'].map((t) => (
                 <button
                   key={t}
                   onClick={() => setFilterType(t)}
-                  className={`px-3 py-1.5 rounded-md capitalize font-bold transition-all ${
-                    filterType === t ? 'bg-[#6D0808] text-[#EEEAD7]' : 'text-[#757D6F] hover:text-[#EEEAD7]'
+                  className={`px-3 py-1.5 rounded-[var(--radius-sm)] capitalize font-semibold transition-all ${
+                    filterType === t
+                      ? 'bg-[var(--accent)] text-[var(--accent-text)]'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
                   {t}
@@ -66,7 +68,7 @@ export const ResourcesView: React.FC = () => {
                   capacity: 10
                 })
               }
-              className="flex items-center gap-2 bg-[#6D0808] hover:bg-[#8F0F0F] text-[#EEEAD7] px-3.5 py-1.5 rounded-lg text-xs font-bold shadow transition-all border border-[#EEEAD7]/30"
+              className="btn-primary flex items-center gap-2 py-1.5 px-3.5 text-xs"
             >
               <Plus className="w-4 h-4" />
               <span>Add Resource</span>
@@ -77,13 +79,13 @@ export const ResourcesView: React.FC = () => {
         {/* Resources Grid / Empty State */}
         {filtered.length === 0 ? (
           <div className="flex-1 flex items-center justify-center py-16">
-            <div className="max-w-md w-full bg-[#380505] border border-[#551010] rounded-2xl p-8 text-center space-y-4 shadow-xl">
-              <div className="w-12 h-12 rounded-xl bg-[#6D0808] border border-[#EEEAD7]/30 flex items-center justify-center mx-auto text-[#EEEAD7]">
+            <div className="max-w-md w-full card p-8 text-center space-y-4">
+              <div className="w-12 h-12 rounded-[var(--radius-md)] bg-[var(--accent)] text-[var(--accent-text)] flex items-center justify-center mx-auto shadow-sm">
                 <Users className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-[#EEEAD7]">No Resources Added Yet</h3>
-                <p className="text-xs text-[#757D6F] mt-1">
+                <h3 className="text-base font-bold text-[var(--text-primary)]">No Resources Added Yet</h3>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">
                   Add rooms, doctors, consultants, or equipment to allocate them to events and timetable slots.
                 </p>
               </div>
@@ -95,7 +97,7 @@ export const ResourcesView: React.FC = () => {
                     capacity: 8
                   })
                 }
-                className="w-full py-2.5 px-4 bg-[#6D0808] hover:bg-[#8F0F0F] text-[#EEEAD7] text-xs font-bold rounded-xl shadow border border-[#EEEAD7]/30 inline-flex items-center justify-center gap-2"
+                className="btn-primary w-full py-2.5 px-4 text-xs inline-flex items-center justify-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add First Resource</span>
@@ -118,12 +120,12 @@ export const ResourcesView: React.FC = () => {
               return (
                 <div
                   key={res.id}
-                  className="bg-[#380505] border border-[#551010] rounded-xl p-4 flex flex-col justify-between hover:border-[#6D0808] transition-all shadow-md"
+                  className="card p-4 flex flex-col justify-between hover:border-[var(--border-strong)] transition-all"
                 >
                   <div>
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-[#6D0808] flex items-center justify-center text-[#EEEAD7] border border-[#EEEAD7]/20">
+                        <div className="w-8 h-8 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-default)] flex items-center justify-center text-[var(--text-primary)]">
                           {res.type === 'room' ? (
                             <DoorClosed className="w-4 h-4" />
                           ) : res.type === 'person' ? (
@@ -133,8 +135,8 @@ export const ResourcesView: React.FC = () => {
                           )}
                         </div>
                         <div>
-                          <h3 className="text-sm font-bold text-[#EEEAD7]">{res.name}</h3>
-                          <span className="text-[10px] text-[#757D6F] uppercase font-bold tracking-wider">
+                          <h3 className="text-sm font-bold text-[var(--text-primary)]">{res.name}</h3>
+                          <span className="text-[10px] text-[var(--text-muted)] uppercase font-bold tracking-wider">
                             {res.type} • Capacity: {res.capacity}
                           </span>
                         </div>
@@ -143,7 +145,7 @@ export const ResourcesView: React.FC = () => {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => setEditingResource(res)}
-                          className="p-1.5 text-[#757D6F] hover:text-[#EEEAD7] hover:bg-[#1F0000] rounded-md transition-colors"
+                          className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded transition-colors"
                           title="Edit"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
@@ -152,7 +154,7 @@ export const ResourcesView: React.FC = () => {
                           onClick={() => {
                             if (confirm(`Delete ${res.name}?`)) deleteResource(res.id)
                           }}
-                          className="p-1.5 text-[#757D6F] hover:text-[#EEEAD7] hover:bg-[#6D0808]/40 rounded-md transition-colors"
+                          className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded transition-colors"
                           title="Delete"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -160,24 +162,24 @@ export const ResourcesView: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-[#551010] space-y-1 text-xs text-[#757D6F]">
-                      <div className="flex items-center gap-2 font-mono text-[11px] text-[#C4BFAC]">
-                        <Clock className="w-3.5 h-3.5 text-[#757D6F]" />
+                    <div className="mt-4 pt-3 border-t border-[var(--border-subtle)] space-y-1 text-xs text-[var(--text-secondary)]">
+                      <div className="flex items-center gap-2 font-mono text-[11px]">
+                        <Clock className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                         <span>{workingHours}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-[11px] text-[#C4BFAC]">
-                        <CheckCircle className="w-3.5 h-3.5 text-[#757D6F]" />
+                      <div className="flex items-center gap-2 text-[11px]">
+                        <CheckCircle className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                         <span>{workingDays}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-[#551010] flex items-center justify-between text-[11px] text-[#757D6F]">
-                    <span className="text-[#EEEAD7] font-semibold flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#757D6F]" />
+                  <div className="mt-4 pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between text-[11px] text-[var(--text-muted)]">
+                    <span className="text-[var(--text-primary)] font-semibold flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--border-strong)]" />
                       Active
                     </span>
-                    <span className="font-mono text-[#757D6F]">#{res.id.slice(0, 8)}</span>
+                    <span className="font-mono text-[var(--text-muted)]">#{res.id.slice(0, 8)}</span>
                   </div>
                 </div>
               )
@@ -188,36 +190,36 @@ export const ResourcesView: React.FC = () => {
 
       {/* Edit/Add Modal */}
       {editingResource && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <form
             onSubmit={handleSave}
-            className="bg-[#2D0000] border border-[#6D0808] rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4 text-[#EEEAD7]"
+            className="bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-[var(--radius-lg)] max-w-md w-full p-6 shadow-2xl space-y-4 text-[var(--text-primary)]"
           >
-            <h3 className="text-base font-bold text-[#EEEAD7]">
+            <h3 className="text-base font-bold text-[var(--text-primary)]">
               {editingResource.id ? 'Edit Resource' : 'Add New Resource'}
             </h3>
 
             <div>
-              <label className="block text-xs font-semibold text-[#757D6F] mb-1">Name</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Name</label>
               <input
                 type="text"
                 required
                 value={editingResource.name || ''}
                 onChange={(e) => setEditingResource({ ...editingResource, name: e.target.value })}
-                className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-2 text-sm text-[#EEEAD7] focus:outline-none focus:border-[#EEEAD7]"
+                className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-strong)]"
                 placeholder="e.g. Conference Room Beta or Dr. Jane Smith"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#757D6F] mb-1">Type</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Type</label>
                 <select
                   value={editingResource.type || 'room'}
                   onChange={(e) =>
                     setEditingResource({ ...editingResource, type: e.target.value as ResourceType })
                   }
-                  className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-2 text-sm text-[#EEEAD7] focus:outline-none focus:border-[#EEEAD7]"
+                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-strong)]"
                 >
                   <option value="room">Room</option>
                   <option value="person">Person</option>
@@ -226,7 +228,7 @@ export const ResourcesView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#757D6F] mb-1">Capacity</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Capacity</label>
                 <input
                   type="number"
                   min="1"
@@ -234,22 +236,22 @@ export const ResourcesView: React.FC = () => {
                   onChange={(e) =>
                     setEditingResource({ ...editingResource, capacity: Number(e.target.value) })
                   }
-                  className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-2 text-sm text-[#EEEAD7] focus:outline-none focus:border-[#EEEAD7]"
+                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-strong)]"
                 />
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4 border-t border-[#551010]">
+            <div className="flex justify-end gap-2 pt-4 border-t border-[var(--border-subtle)]">
               <button
                 type="button"
                 onClick={() => setEditingResource(null)}
-                className="px-4 py-2 rounded-lg bg-[#380505] hover:bg-[#480707] text-[#757D6F] hover:text-[#EEEAD7] text-xs font-bold transition-colors"
+                className="btn-secondary px-4 py-2 text-xs"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-lg bg-[#6D0808] hover:bg-[#8F0F0F] text-[#EEEAD7] text-xs font-bold shadow transition-all border border-[#EEEAD7]/30"
+                className="btn-primary px-4 py-2 text-xs"
               >
                 Save Resource
               </button>

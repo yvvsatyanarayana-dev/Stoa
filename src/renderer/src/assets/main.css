@@ -1,48 +1,11 @@
 @import "tailwindcss";
 
 @layer base {
-  :root {
-    --bg-base: #2D0000;
-    --bg-surface: #380505;
-    --bg-card: #3D0808;
-    --border-color: #551010;
-    --border-sage: #757D6F;
-    --text-primary: #EEEAD7;
-    --text-muted: #C4BFAC;
-    --accent-crimson: #6D0808;
-    --accent-crimson-hover: #8F0F0F;
-    --accent-sage: #757D6F;
-  }
-
   body {
-    background-color: #2D0000;
-    color: #EEEAD7;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     user-select: none;
     -webkit-user-select: none;
     margin: 0;
     padding: 0;
     overflow: hidden;
-  }
-
-  /* Custom scrollbars matching theme */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #2D0000;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #551010;
-    border-radius: 3px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #757D6F;
-  }
-
-  /* Form control styling matching theme */
-  input, select, textarea {
-    color-scheme: dark;
   }
 }

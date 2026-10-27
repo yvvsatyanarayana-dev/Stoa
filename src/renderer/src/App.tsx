@@ -18,10 +18,8 @@ export const App: React.FC = () => {
   const { currentView, fetchInitialData, fetchNotifications, isLoading } = useAppStore()
 
   useEffect(() => {
-    // Hydrate initial data from SQLite main process
     fetchInitialData()
 
-    // Listen for live reminder notifications pushed from the main process scheduler
     const unsubscribe = window.api.notifications.onReceived((data) => {
       console.log('[Live Notification]', data)
       fetchNotifications()
@@ -33,18 +31,18 @@ export const App: React.FC = () => {
   }, [])
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#2D0000] text-[#EEEAD7] font-sans">
+    <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-app)] text-[var(--text-primary)] font-sans">
       {/* Primary Sidebar */}
       <Sidebar />
 
       {/* Main Workspace Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-[#2D0000]">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-[var(--bg-app)]">
         <Header />
 
-        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative bg-[#2D0000]">
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative bg-[var(--bg-app)]">
           {isLoading ? (
-            <div className="flex-1 flex items-center justify-center bg-[#2D0000] text-xs text-[#757D6F]">
-              <span className="w-2 h-2 rounded-full bg-[#6D0808] animate-ping mr-2" />
+            <div className="flex-1 flex items-center justify-center bg-[var(--bg-app)] text-xs text-[var(--text-muted)]">
+              <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-ping mr-2" />
               Loading ChronoDesk Pro...
             </div>
           ) : (
@@ -60,7 +58,7 @@ export const App: React.FC = () => {
         </main>
       </div>
 
-      {/* Global Modals for full user data creation */}
+      {/* Global Modals */}
       <EventModal />
       <SlotModal />
       <CalendarModal />

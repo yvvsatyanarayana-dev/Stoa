@@ -121,20 +121,20 @@ export const TimetableBuilderView: React.FC = () => {
 
   if (timetables.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#2D0000] p-6 text-[#EEEAD7]">
-        <div className="max-w-md w-full bg-[#380505] border border-[#551010] rounded-2xl p-8 text-center space-y-4 shadow-xl">
-          <div className="w-12 h-12 rounded-xl bg-[#6D0808] border border-[#EEEAD7]/30 flex items-center justify-center mx-auto text-[#EEEAD7]">
+      <div className="flex-1 flex items-center justify-center bg-[var(--bg-app)] p-6 text-[var(--text-primary)]">
+        <div className="max-w-md w-full card p-8 text-center space-y-4">
+          <div className="w-12 h-12 rounded-[var(--radius-md)] bg-[var(--accent)] text-[var(--accent-text)] flex items-center justify-center mx-auto shadow-sm">
             <TableProperties className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-[#EEEAD7]">No Timetables Found</h2>
-            <p className="text-xs text-[#757D6F] mt-1">
+            <h2 className="text-lg font-bold text-[var(--text-primary)]">No Timetables Found</h2>
+            <p className="text-xs text-[var(--text-secondary)] mt-1">
               Create your own timetable roster from scratch. You can define weekly session hours, assign personnel, and prevent booking overlaps.
             </p>
           </div>
           <button
             onClick={() => setIsTimetableModalOpen(true)}
-            className="w-full py-2.5 px-4 bg-[#6D0808] hover:bg-[#8F0F0F] text-[#EEEAD7] text-xs font-bold rounded-xl shadow-md border border-[#EEEAD7]/30 transition-all flex items-center justify-center gap-2"
+            className="btn-primary w-full py-2.5 px-4 text-xs flex items-center justify-center gap-2"
           >
             <Plus className="w-4 h-4" />
             <span>Create First Timetable</span>
@@ -145,16 +145,16 @@ export const TimetableBuilderView: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-[#2D0000] text-[#EEEAD7]">
+    <div className="flex-1 flex flex-col overflow-hidden bg-[var(--bg-app)] text-[var(--text-primary)]">
       {/* Timetable Sub-header Controls */}
-      <div className="p-4 border-b border-[#551010] bg-[#380505] flex flex-wrap items-center justify-between gap-4 shrink-0">
+      <div className="p-4 border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] flex flex-wrap items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-[#757D6F]">Timetable:</span>
+            <span className="text-xs font-bold text-[var(--text-secondary)]">Timetable:</span>
             <select
               value={activeTimetableId || ''}
               onChange={(e) => selectTimetable(e.target.value)}
-              className="bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-1.5 text-xs font-bold text-[#EEEAD7] focus:outline-none focus:border-[#EEEAD7]"
+              className="bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs font-bold text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-strong)]"
             >
               {timetables.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -166,7 +166,7 @@ export const TimetableBuilderView: React.FC = () => {
 
           <button
             onClick={() => setIsTimetableModalOpen(true)}
-            className="p-1.5 bg-[#1F0000] hover:bg-[#480707] text-[#EEEAD7] border border-[#551010] rounded-lg text-xs font-bold flex items-center gap-1"
+            className="p-1.5 bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-[var(--radius-md)] text-xs font-bold flex items-center gap-1 transition-colors"
             title="Create Another Timetable"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -175,10 +175,10 @@ export const TimetableBuilderView: React.FC = () => {
 
           {activeTimetable && (
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-[#6D0808] text-[#EEEAD7] border border-[#EEEAD7]/30">
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-default)]">
                 {activeTimetable.status}
               </span>
-              <span className="text-xs text-[#757D6F] font-mono">
+              <span className="text-xs text-[var(--text-muted)] font-mono">
                 {activeTimetable.start_date} → {activeTimetable.end_date}
               </span>
               <button
@@ -187,7 +187,7 @@ export const TimetableBuilderView: React.FC = () => {
                     deleteTimetable(activeTimetable.id)
                   }
                 }}
-                className="p-1 text-[#757D6F] hover:text-[#EEEAD7] hover:bg-[#1F0000] rounded transition-colors"
+                className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded transition-colors"
                 title="Delete Timetable"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -199,15 +199,15 @@ export const TimetableBuilderView: React.FC = () => {
         {/* Action buttons */}
         <div className="flex items-center gap-2">
           {/* Week pattern filter */}
-          <div className="flex items-center bg-[#1F0000] p-0.5 rounded-md border border-[#551010] text-xs">
+          <div className="flex items-center bg-[var(--bg-subtle)] p-0.5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] text-xs">
             {(['all', 'A', 'B'] as const).map((pat) => (
               <button
                 key={pat}
                 onClick={() => setSelectedWeekPattern(pat)}
-                className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
+                className={`px-2.5 py-1 rounded-[var(--radius-sm)] text-xs font-bold transition-all ${
                   selectedWeekPattern === pat
-                    ? 'bg-[#6D0808] text-[#EEEAD7]'
-                    : 'text-[#757D6F] hover:text-[#EEEAD7]'
+                    ? 'bg-[var(--accent)] text-[var(--accent-text)]'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 {pat === 'all' ? 'All Weeks' : `Week ${pat}`}
@@ -217,7 +217,7 @@ export const TimetableBuilderView: React.FC = () => {
 
           <button
             onClick={handleExportCsv}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#380505] hover:bg-[#480707] text-[#EEEAD7] text-xs font-bold border border-[#551010] transition-colors"
+            className="btn-secondary flex items-center gap-1.5 py-1.5 px-3 text-xs"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export CSV</span>
@@ -225,7 +225,7 @@ export const TimetableBuilderView: React.FC = () => {
 
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#380505] hover:bg-[#480707] text-[#EEEAD7] text-xs font-bold border border-[#551010] transition-colors"
+            className="btn-secondary flex items-center gap-1.5 py-1.5 px-3 text-xs"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Print</span>
@@ -233,7 +233,7 @@ export const TimetableBuilderView: React.FC = () => {
 
           <button
             onClick={() => handleAddSlot(1, '09:00')}
-            className="flex items-center gap-1.5 bg-[#6D0808] hover:bg-[#8F0F0F] text-[#EEEAD7] px-3 py-1.5 rounded-md text-xs font-bold shadow-sm transition-all border border-[#EEEAD7]/30"
+            className="btn-primary flex items-center gap-1.5 py-1.5 px-3 text-xs"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Slot</span>
@@ -241,28 +241,28 @@ export const TimetableBuilderView: React.FC = () => {
         </div>
       </div>
 
-      {/* Subjects Bar (User creates/manages subjects) */}
-      <div className="px-4 py-2 border-b border-[#551010] bg-[#1F0000] flex items-center justify-between text-xs">
+      {/* Subjects Bar */}
+      <div className="px-4 py-2 border-b border-[var(--border-subtle)] bg-[var(--bg-subtle)] flex items-center justify-between text-xs">
         <div className="flex items-center gap-2 overflow-x-auto flex-1">
-          <span className="text-[11px] font-bold text-[#757D6F] flex items-center gap-1">
+          <span className="text-[11px] font-bold text-[var(--text-secondary)] flex items-center gap-1">
             <BookOpen className="w-3.5 h-3.5" />
             <span>Subjects:</span>
           </span>
           {subjects.length === 0 ? (
-            <span className="text-[11px] text-[#757D6F] italic">No subjects added yet.</span>
+            <span className="text-[11px] text-[var(--text-muted)] italic">No subjects added yet.</span>
           ) : (
             subjects.map((s) => (
               <span
                 key={s.id}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#380505] border border-[#551010] text-[#EEEAD7] text-[11px] font-semibold"
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] border border-[var(--border-default)] text-[var(--text-primary)] text-[11px] font-semibold"
               >
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
+                <span className="w-2 h-2 rounded-full border border-current" />
                 <span>{s.name}</span>
                 <button
                   onClick={() => {
                     if (confirm(`Remove subject "${s.name}"?`)) deleteSubject(s.id)
                   }}
-                  className="text-[#757D6F] hover:text-[#EEEAD7] ml-1"
+                  className="text-[var(--text-muted)] hover:text-[var(--text-primary)] ml-1"
                 >
                   ×
                 </button>
@@ -272,7 +272,7 @@ export const TimetableBuilderView: React.FC = () => {
         </div>
         <button
           onClick={() => setIsSubjectModalOpen(true)}
-          className="text-xs text-[#EEEAD7] hover:underline flex items-center gap-1 shrink-0 ml-2"
+          className="text-xs text-[var(--text-primary)] font-semibold hover:underline flex items-center gap-1 shrink-0 ml-2"
         >
           <Plus className="w-3 h-3" />
           <span>Add Subject</span>
@@ -281,14 +281,14 @@ export const TimetableBuilderView: React.FC = () => {
 
       {/* Conflict Alert Banner */}
       {detectedConflicts.length > 0 && (
-        <div className="bg-[#6D0808]/20 border-b border-[#6D0808] px-4 py-2 flex items-center justify-between text-xs text-[#EEEAD7]">
+        <div className="bg-[var(--bg-subtle)] border-b border-[var(--border-strong)] px-4 py-2 flex items-center justify-between text-xs text-[var(--text-primary)]">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 shrink-0 text-[#EEEAD7]" />
+            <AlertTriangle className="w-4 h-4 shrink-0 text-[var(--text-primary)]" />
             <span className="font-bold">
               Conflict Detected: {detectedConflicts[0].message}
             </span>
           </div>
-          <span className="text-[11px] bg-[#6D0808] px-2 py-0.5 rounded font-bold border border-[#EEEAD7]/30">
+          <span className="text-[11px] bg-[var(--accent)] text-[var(--accent-text)] px-2 py-0.5 rounded-[var(--radius-sm)] font-bold">
             {detectedConflicts.length} conflict{detectedConflicts.length > 1 ? 's' : ''}
           </span>
         </div>
@@ -296,15 +296,15 @@ export const TimetableBuilderView: React.FC = () => {
 
       {/* Timetable Weekly Grid */}
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="grid grid-cols-[70px_repeat(5,1fr)] bg-[#2D0000] border border-[#551010] rounded-xl overflow-hidden shadow-sm">
+        <div className="grid grid-cols-[70px_repeat(5,1fr)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-lg)] overflow-hidden shadow-sm">
           {/* Header Row */}
-          <div className="p-3 bg-[#380505] border-b border-r border-[#551010] text-center text-xs font-bold text-[#757D6F] uppercase tracking-wider">
+          <div className="p-3 bg-[var(--bg-sidebar)] border-b border-r border-[var(--border-subtle)] text-center text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
             Time
           </div>
           {days.map((day) => (
             <div
               key={day.num}
-              className="p-3 bg-[#380505] border-b border-r border-[#551010] last:border-r-0 text-center font-bold text-sm text-[#EEEAD7]"
+              className="p-3 bg-[var(--bg-sidebar)] border-b border-r border-[var(--border-subtle)] last:border-r-0 text-center font-bold text-sm text-[var(--text-primary)]"
             >
               {day.name}
             </div>
@@ -315,7 +315,7 @@ export const TimetableBuilderView: React.FC = () => {
             return (
               <React.Fragment key={time}>
                 {/* Time Label */}
-                <div className="p-2 border-b border-r border-[#440808] bg-[#1F0000] text-center text-xs font-mono text-[#757D6F] flex items-center justify-center">
+                <div className="p-2 border-b border-r border-[var(--cal-hour-line)] bg-[var(--bg-sidebar)] text-center text-xs font-mono text-[var(--text-muted)] flex items-center justify-center">
                   {time}
                 </div>
 
@@ -333,7 +333,7 @@ export const TimetableBuilderView: React.FC = () => {
                     <div
                       key={day.num}
                       onClick={() => handleAddSlot(day.num, time)}
-                      className="border-b border-r border-[#440808] last:border-r-0 p-1.5 min-h-[90px] relative hover:bg-[#380505]/40 cursor-pointer transition-colors"
+                      className="border-b border-r border-[var(--cal-grid-line)] last:border-r-0 p-1.5 min-h-[90px] relative hover:bg-[var(--bg-hover)] cursor-pointer transition-colors"
                     >
                       {cellSlots.map((slot) => {
                         const sub = slot.subject || subjects.find((s) => s.id === slot.subject_id)
@@ -343,26 +343,25 @@ export const TimetableBuilderView: React.FC = () => {
                           <div
                             key={slot.id}
                             onClick={(e) => handleEditSlot(slot, e)}
-                            className="rounded-lg p-2 text-xs bg-[#3D0808] hover:bg-[#4E0B0B] border-l-4 border border-[#6D0808] shadow-md flex flex-col justify-between mb-1 transition-all"
-                            style={{ borderLeftColor: sub?.color || '#6D0808' }}
+                            className="event-block rounded-[var(--radius-sm)] p-2 text-xs bg-[var(--event-1-bg)] text-[var(--event-1-text)] shadow-sm flex flex-col justify-between mb-1 transition-all"
                           >
                             <div>
-                              <div className="font-bold text-[#EEEAD7] flex items-center justify-between">
+                              <div className="font-bold flex items-center justify-between">
                                 <span className="truncate">{sub?.name || 'Session'}</span>
                                 {slot.week_pattern && slot.week_pattern !== 'all' && (
-                                  <span className="text-[9px] bg-[#6D0808] text-[#EEEAD7] px-1 py-0.2 rounded font-bold border border-[#EEEAD7]/30">
+                                  <span className="text-[9px] px-1 py-0.2 rounded font-bold border border-current">
                                     Wk {slot.week_pattern}
                                   </span>
                                 )}
                               </div>
-                              <div className="text-[10px] text-[#C4BFAC] font-mono mt-0.5">
+                              <div className="text-[10px] opacity-80 font-mono mt-0.5">
                                 {slot.start} - {slot.end}
                               </div>
                             </div>
-                            <div className="mt-2 flex items-center justify-between text-[10px] text-[#757D6F]">
-                              <span className="truncate max-w-[100px] text-[#EEEAD7]">{res?.name || 'Unassigned'}</span>
+                            <div className="mt-2 flex items-center justify-between text-[10px] opacity-90">
+                              <span className="truncate max-w-[100px]">{res?.name || 'Unassigned'}</span>
                               {slot.room && (
-                                <span className="bg-[#1F0000] px-1.5 py-0.5 rounded font-semibold text-[#EEEAD7] border border-[#551010]">
+                                <span className="bg-[var(--bg-elevated)] text-[var(--text-primary)] px-1.5 py-0.5 rounded border border-[var(--border-subtle)] font-semibold">
                                   {slot.room}
                                 </span>
                               )}

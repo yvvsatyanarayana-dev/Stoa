@@ -1,0 +1,207 @@
+/* ChronoDesk Pro: Black & White Theme
+   Usage: import once in the renderer entry (e.g. main.tsx -> import './theme.css')
+   Switch themes by setting <html data-theme="light|dark"> */
+
+:root,
+[data-theme="light"] {
+  /* Surfaces */
+  --bg-app:        #FFFFFF;
+  --bg-sidebar:    #F7F7F7;
+  --bg-elevated:   #FFFFFF;
+  --bg-subtle:     #F2F2F2;
+  --bg-hover:      #EBEBEB;
+  --bg-active:     #E0E0E0;
+
+  /* Text */
+  --text-primary:   #0A0A0A;
+  --text-secondary: #525252;
+  --text-muted:     #8A8A8A;
+  --text-inverse:   #FFFFFF;
+
+  /* Borders */
+  --border-subtle:  #E5E5E5;
+  --border-default: #CFCFCF;
+  --border-strong:  #0A0A0A;
+
+  /* Primary action (solid black) */
+  --accent:         #0A0A0A;
+  --accent-hover:   #262626;
+  --accent-active:  #404040;
+  --accent-text:    #FFFFFF;
+
+  /* Focus ring */
+  --focus-ring: 0 0 0 2px #FFFFFF, 0 0 0 4px #0A0A0A;
+
+  /* Calendar specifics */
+  --cal-grid-line:     #E5E5E5;
+  --cal-hour-line:     #CFCFCF;
+  --cal-today-bg:      #F2F2F2;
+  --cal-weekend-bg:    #FAFAFA;
+  --cal-now-line:      #0A0A0A;
+  --cal-selected-bg:   #0A0A0A;
+  --cal-selected-text: #FFFFFF;
+
+  /* Event block shades (grayscale scale for categories) */
+  --event-1-bg: #0A0A0A; --event-1-text: #FFFFFF;
+  --event-2-bg: #404040; --event-2-text: #FFFFFF;
+  --event-3-bg: #737373; --event-3-text: #FFFFFF;
+  --event-4-bg: #A3A3A3; --event-4-text: #0A0A0A;
+  --event-5-bg: #D4D4D4; --event-5-text: #0A0A0A;
+  --event-6-bg: #FFFFFF; --event-6-text: #0A0A0A; /* outlined style */
+
+  /* Status (no color: shown with icon + weight + pattern) */
+  --status-confirmed: #0A0A0A;
+  --status-tentative: #737373;
+  --status-cancelled: #A3A3A3;
+  --conflict-pattern: repeating-linear-gradient(
+      45deg, #0A0A0A 0 2px, transparent 2px 6px);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.10);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,.16);
+
+  /* Shape and type */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Consolas, monospace;
+}
+
+[data-theme="dark"] {
+  --bg-app:        #000000;
+  --bg-sidebar:    #0A0A0A;
+  --bg-elevated:   #111111;
+  --bg-subtle:     #171717;
+  --bg-hover:      #1F1F1F;
+  --bg-active:     #2A2A2A;
+
+  --text-primary:   #FAFAFA;
+  --text-secondary: #A3A3A3;
+  --text-muted:     #737373;
+  --text-inverse:   #000000;
+
+  --border-subtle:  #1F1F1F;
+  --border-default: #2E2E2E;
+  --border-strong:  #FAFAFA;
+
+  --accent:         #FFFFFF;
+  --accent-hover:   #E5E5E5;
+  --accent-active:  #CFCFCF;
+  --accent-text:    #000000;
+
+  --focus-ring: 0 0 0 2px #000000, 0 0 0 4px #FFFFFF;
+
+  --cal-grid-line:     #1F1F1F;
+  --cal-hour-line:     #2E2E2E;
+  --cal-today-bg:      #171717;
+  --cal-weekend-bg:    #050505;
+  --cal-now-line:      #FFFFFF;
+  --cal-selected-bg:   #FFFFFF;
+  --cal-selected-text: #000000;
+
+  --event-1-bg: #FFFFFF; --event-1-text: #000000;
+  --event-2-bg: #D4D4D4; --event-2-text: #000000;
+  --event-3-bg: #A3A3A3; --event-3-text: #000000;
+  --event-4-bg: #737373; --event-4-text: #FFFFFF;
+  --event-5-bg: #404040; --event-5-text: #FFFFFF;
+  --event-6-bg: #000000; --event-6-text: #FFFFFF; /* outlined style */
+
+  --status-confirmed: #FFFFFF;
+  --status-tentative: #A3A3A3;
+  --status-cancelled: #737373;
+  --conflict-pattern: repeating-linear-gradient(
+      45deg, #FFFFFF 0 2px, transparent 2px 6px);
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.6);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.7);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,.8);
+}
+
+/* High-contrast variant: pure B/W, no grays for text */
+[data-theme="light"][data-contrast="high"] {
+  --text-secondary: #0A0A0A;
+  --text-muted: #262626;
+  --border-default: #0A0A0A;
+}
+[data-theme="dark"][data-contrast="high"] {
+  --text-secondary: #FAFAFA;
+  --text-muted: #D4D4D4;
+  --border-default: #FAFAFA;
+}
+
+/* Base styles */
+html, body, #root {
+  height: 100%;
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+*:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+::selection { background: var(--accent); color: var(--accent-text); }
+
+/* Components */
+.btn-primary {
+  background: var(--accent); color: var(--accent-text);
+  border: 1px solid var(--accent); border-radius: var(--radius-md);
+  padding: 8px 16px; font-weight: 600; cursor: pointer;
+  transition: background .15s ease;
+}
+.btn-primary:hover  { background: var(--accent-hover); }
+.btn-primary:active { background: var(--accent-active); }
+
+.btn-secondary {
+  background: transparent; color: var(--text-primary);
+  border: 1px solid var(--border-default); border-radius: var(--radius-md);
+  padding: 8px 16px; font-weight: 500; cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.btn-secondary:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+
+.card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.event-block {
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  font-size: 12px; font-weight: 500;
+  border-left: 3px solid var(--border-strong);
+}
+.event-block.outlined { background: var(--event-6-bg); color: var(--event-6-text); border: 1px solid var(--border-strong); }
+.event-block.tentative { background-image: var(--conflict-pattern); background-size: 8px 8px; opacity: .85; }
+.event-block.cancelled { text-decoration: line-through; opacity: .5; }
+.event-block.conflict  { outline: 2px dashed var(--border-strong); outline-offset: 1px; }
+
+.now-indicator { height: 2px; background: var(--cal-now-line); position: relative; }
+.now-indicator::before {
+  content: ""; position: absolute; left: -4px; top: -3px;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--cal-now-line);
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg-app); }
+::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 8px; border: 2px solid var(--bg-app); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Form controls matching theme */
+input, select, textarea {
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+  border-color: var(--border-default);
+}
+
+/* Print: always clean black on white */
+@media print {
+  :root { --bg-app:#fff; --text-primary:#000; --border-default:#000; }
+  .event-block { border: 1px solid #000; background: #fff !important; color: #000 !important; }
+}

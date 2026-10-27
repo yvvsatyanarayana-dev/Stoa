@@ -97,17 +97,17 @@ export const SlotModal: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 text-[#EEEAD7]">
-      <div className="bg-[#2D0000] border border-[#6D0808] rounded-2xl max-w-md w-full shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 text-[var(--text-primary)]">
+      <div className="bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-[var(--radius-lg)] max-w-md w-full shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-[#551010] flex items-center justify-between bg-[#380505]">
-          <h2 className="text-base font-bold text-[#EEEAD7] flex items-center gap-2">
-            <Layers className="w-4 h-4 text-[#EEEAD7]" />
+        <div className="p-4 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-sidebar)]">
+          <h2 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2">
+            <Layers className="w-4 h-4" />
             <span>{selectedSlot?.id ? 'Edit Timetable Slot' : 'Add Timetable Slot'}</span>
           </h2>
           <button
             onClick={() => setIsSlotModalOpen(false)}
-            className="p-1 text-[#757D6F] hover:text-[#EEEAD7] rounded-lg transition-colors"
+            className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-sm)] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -118,23 +118,23 @@ export const SlotModal: React.FC = () => {
           {/* Subject */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-semibold text-[#757D6F]">Subject / Module *</label>
+              <label className="text-xs font-semibold text-[var(--text-secondary)]">Subject / Module *</label>
               <button
                 type="button"
                 onClick={() => setIsSubjectModalOpen(true)}
-                className="text-xs text-[#EEEAD7] hover:underline flex items-center gap-1"
+                className="text-xs font-semibold text-[var(--text-primary)] hover:underline flex items-center gap-1"
               >
                 <Plus className="w-3 h-3" />
                 <span>New Subject</span>
               </button>
             </div>
             {subjects.length === 0 ? (
-              <div className="p-2.5 bg-[#1F0000] border border-[#551010] rounded-lg text-xs text-[#757D6F] flex items-center justify-between">
+              <div className="p-2.5 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] text-xs text-[var(--text-secondary)] flex items-center justify-between">
                 <span>No subjects created yet.</span>
                 <button
                   type="button"
                   onClick={() => setIsSubjectModalOpen(true)}
-                  className="px-2 py-0.5 bg-[#6D0808] text-[#EEEAD7] rounded font-bold"
+                  className="btn-primary text-xs py-1 px-2"
                 >
                   + Add Subject
                 </button>
@@ -143,7 +143,7 @@ export const SlotModal: React.FC = () => {
               <select
                 value={subjectId}
                 onChange={(e) => setSubjectId(e.target.value)}
-                className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-2 text-xs text-[#EEEAD7] focus:outline-none focus:border-[#EEEAD7]"
+                className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-strong)]"
               >
                 {subjects.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -156,11 +156,11 @@ export const SlotModal: React.FC = () => {
 
           {/* Day of Week */}
           <div>
-            <label className="block text-xs font-semibold text-[#757D6F] mb-1">Day of Week</label>
+            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Day of Week</label>
             <select
               value={day}
               onChange={(e) => setDay(Number(e.target.value))}
-              className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-2 text-xs text-[#EEEAD7] focus:outline-none focus:border-[#EEEAD7]"
+              className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-strong)]"
             >
               <option value={1}>Monday</option>
               <option value={2}>Tuesday</option>
@@ -175,21 +175,21 @@ export const SlotModal: React.FC = () => {
           {/* Time Range */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#757D6F] mb-1">Start Time</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Start Time</label>
               <input
                 type="time"
                 value={start}
                 onChange={(e) => setStart(e.target.value)}
-                className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-1.5 text-xs text-[#EEEAD7] focus:outline-none"
+                className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#757D6F] mb-1">End Time</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">End Time</label>
               <input
                 type="time"
                 value={end}
                 onChange={(e) => setEnd(e.target.value)}
-                className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-1.5 text-xs text-[#EEEAD7] focus:outline-none"
+                className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
               />
             </div>
           </div>
@@ -197,22 +197,22 @@ export const SlotModal: React.FC = () => {
           {/* Room & Trainer / Resource */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#757D6F] mb-1">Room / Venue</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Room / Venue</label>
               <input
                 type="text"
                 value={room}
                 placeholder="e.g. Room 101"
                 onChange={(e) => setRoom(e.target.value)}
-                className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-1.5 text-xs text-[#EEEAD7] placeholder-[#757D6F]/50 focus:outline-none"
+                className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#757D6F] mb-1">Trainer / Resource</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Trainer / Resource</label>
               <select
                 value={resourceId}
                 onChange={(e) => setResourceId(e.target.value)}
-                className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-1.5 text-xs text-[#EEEAD7] focus:outline-none"
+                className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
               >
                 <option value="">Unassigned</option>
                 {resources.map((r) => (
@@ -226,17 +226,17 @@ export const SlotModal: React.FC = () => {
 
           {/* Week Pattern */}
           <div>
-            <label className="block text-xs font-semibold text-[#757D6F] mb-1">Week Rotation Pattern</label>
+            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Week Rotation Pattern</label>
             <div className="flex gap-2">
               {(['all', 'A', 'B'] as const).map((pat) => (
                 <button
                   key={pat}
                   type="button"
                   onClick={() => setWeekPattern(pat)}
-                  className={`flex-1 py-1.5 text-xs rounded-lg font-bold border transition-all ${
+                  className={`flex-1 py-1.5 text-xs rounded-[var(--radius-sm)] font-bold border transition-all ${
                     weekPattern === pat
-                      ? 'bg-[#6D0808] border-[#EEEAD7]/40 text-[#EEEAD7]'
-                      : 'bg-[#1F0000] border-[#551010] text-[#757D6F] hover:text-[#EEEAD7]'
+                      ? 'bg-[var(--accent)] border-[var(--border-strong)] text-[var(--accent-text)]'
+                      : 'bg-[var(--bg-subtle)] border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
                   {pat === 'all' ? 'All Weeks' : `Week ${pat}`}
@@ -247,13 +247,13 @@ export const SlotModal: React.FC = () => {
 
           {/* Conflict Alert Warning */}
           {conflictReport && conflictReport.hasConflict && (
-            <div className="p-3 bg-[#6D0808]/20 border border-[#6D0808] rounded-xl text-xs space-y-1">
-              <div className="flex items-center gap-2 font-bold text-[#EEEAD7]">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-[#EEEAD7]" />
+            <div className="p-3 bg-[var(--bg-subtle)] border border-[var(--border-strong)] rounded-[var(--radius-md)] text-xs space-y-1">
+              <div className="flex items-center gap-2 font-bold text-[var(--text-primary)]">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>Timetable Conflict Detected</span>
               </div>
               {conflictReport.conflicts.map((c, i) => (
-                <div key={i} className="text-[#C4BFAC] text-[11px] pl-6">
+                <div key={i} className="text-[var(--text-secondary)] text-[11px] pl-6">
                   • {c.message}
                 </div>
               ))}
@@ -261,12 +261,12 @@ export const SlotModal: React.FC = () => {
           )}
 
           {/* Action buttons */}
-          <div className="flex items-center justify-between pt-4 border-t border-[#551010]">
+          <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)]">
             {selectedSlot?.id ? (
               <button
                 type="button"
                 onClick={handleDelete}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#380505] hover:bg-[#500808] text-[#EEEAD7] text-xs font-bold border border-[#551010] transition-colors"
+                className="btn-secondary text-xs flex items-center gap-1.5"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Delete</span>
@@ -279,13 +279,13 @@ export const SlotModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsSlotModalOpen(false)}
-                className="px-4 py-2 rounded-lg bg-[#380505] hover:bg-[#480707] text-[#757D6F] hover:text-[#EEEAD7] text-xs font-bold transition-colors"
+                className="btn-secondary text-xs"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-lg bg-[#6D0808] hover:bg-[#8F0F0F] text-[#EEEAD7] text-xs font-bold shadow transition-all border border-[#EEEAD7]/30"
+                className="btn-primary text-xs"
               >
                 Save Slot
               </button>

@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
 import { useAppStore } from '../../store/useAppStore'
-import { Settings, BellOff, Building2, Save } from 'lucide-react'
+import { Settings, BellOff, Building2, Save, Sun, Moon } from 'lucide-react'
 
 export const SettingsView: React.FC = () => {
-  const { settings, updateSetting } = useAppStore()
+  const { settings, updateSetting, themeMode, setThemeMode } = useAppStore()
 
   const [formState, setFormState] = useState({
-    theme: settings?.theme || 'dark',
+    theme: themeMode,
     start_day_of_week: settings?.start_day_of_week ?? 1,
     time_format: settings?.time_format || '24h',
     default_timezone: settings?.default_timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -29,23 +29,28 @@ export const SettingsView: React.FC = () => {
     setTimeout(() => setSavedSuccess(false), 2500)
   }
 
+  const handleThemeChange = (newTheme: 'dark' | 'light'): void => {
+    setThemeMode(newTheme)
+    setFormState({ ...formState, theme: newTheme })
+  }
+
   return (
-    <div className="flex-1 overflow-y-auto bg-[#2D0000] p-6 text-[#EEEAD7]">
+    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 text-[var(--text-primary)]">
       <form onSubmit={handleSave} className="max-w-3xl mx-auto space-y-6">
-        <div className="flex items-center justify-between pb-4 border-b border-[#551010]">
+        <div className="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)]">
           <div>
-            <h2 className="text-xl font-bold text-[#EEEAD7] flex items-center gap-2">
-              <Settings className="w-5 h-5 text-[#EEEAD7]" />
+            <h2 className="text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+              <Settings className="w-5 h-5" />
               <span>Application & System Preferences</span>
             </h2>
-            <p className="text-xs text-[#757D6F] mt-1">
-              Configure calendar regional settings, quiet hours, and branded export watermarks.
+            <p className="text-xs text-[var(--text-secondary)] mt-1">
+              Configure B&W appearance, regional settings, quiet hours, and export watermarks.
             </p>
           </div>
 
           <button
             type="submit"
-            className="flex items-center gap-2 bg-[#6D0808] hover:bg-[#8F0F0F] text-[#EEEAD7] px-4 py-2 rounded-lg text-xs font-bold shadow transition-all border border-[#EEEAD7]/30"
+            className="btn-primary flex items-center gap-2 py-2 px-4 text-xs"
           >
             <Save className="w-4 h-4" />
             <span>Save Preferences</span>
@@ -53,21 +58,66 @@ export const SettingsView: React.FC = () => {
         </div>
 
         {savedSuccess && (
-          <div className="p-3 bg-[#6D0808]/20 border border-[#6D0808] rounded-lg text-[#EEEAD7] text-xs font-bold">
+          <div className="p-3 card bg-[var(--bg-subtle)] text-[var(--text-primary)] text-xs font-bold border border-[var(--border-strong)]">
             Preferences saved successfully.
           </div>
         )}
 
+        {/* Appearance & B/W Theme Mode */}
+        <div className="card p-5 space-y-4">
+          <h3 className="text-sm font-bold text-[var(--text-primary)]">Theme & Appearance</h3>
+          <p className="text-xs text-[var(--text-secondary)]">
+            Select your preferred monochromatic appearance mode:
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => handleThemeChange('dark')}
+              className={`p-3 rounded-[var(--radius-md)] border text-left flex items-center gap-3 transition-all ${
+                themeMode === 'dark'
+                  ? 'border-[var(--border-strong)] bg-[var(--bg-subtle)] shadow-sm'
+                  : 'border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]'
+              }`}
+            >
+              <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center border border-neutral-700">
+                <Moon className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-[var(--text-primary)]">Dark Mode</div>
+                <div className="text-[11px] text-[var(--text-muted)]">Pure black & charcoal shades</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleThemeChange('light')}
+              className={`p-3 rounded-[var(--radius-md)] border text-left flex items-center gap-3 transition-all ${
+                themeMode === 'light'
+                  ? 'border-[var(--border-strong)] bg-[var(--bg-subtle)] shadow-sm'
+                  : 'border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]'
+              }`}
+            >
+              <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center border border-neutral-300">
+                <Sun className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-[var(--text-primary)]">Light Mode</div>
+                <div className="text-[11px] text-[var(--text-muted)]">Clean white & crisp typography</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
         {/* General & Regional Settings */}
-        <div className="bg-[#380505] border border-[#551010] rounded-xl p-5 space-y-4">
-          <h3 className="text-sm font-bold text-[#EEEAD7]">Regional & Display Settings</h3>
+        <div className="card p-5 space-y-4">
+          <h3 className="text-sm font-bold text-[var(--text-primary)]">Regional & Display Settings</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-[#757D6F] mb-1">Time Format</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Time Format</label>
               <select
                 value={formState.time_format}
                 onChange={(e) => setFormState({ ...formState, time_format: e.target.value as any })}
-                className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-2 text-xs text-[#EEEAD7] focus:outline-none focus:border-[#EEEAD7]"
+                className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-strong)]"
               >
                 <option value="24h">24-hour (14:00)</option>
                 <option value="12h">12-hour (2:00 PM)</option>
@@ -75,11 +125,11 @@ export const SettingsView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#757D6F] mb-1">Week Start Day</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Week Start Day</label>
               <select
                 value={formState.start_day_of_week}
                 onChange={(e) => setFormState({ ...formState, start_day_of_week: Number(e.target.value) })}
-                className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-2 text-xs text-[#EEEAD7] focus:outline-none focus:border-[#EEEAD7]"
+                className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-strong)]"
               >
                 <option value={1}>Monday</option>
                 <option value={0}>Sunday</option>
@@ -88,26 +138,26 @@ export const SettingsView: React.FC = () => {
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-[#757D6F] mb-1">Default Timezone</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Default Timezone</label>
               <input
                 type="text"
                 value={formState.default_timezone}
                 onChange={(e) => setFormState({ ...formState, default_timezone: e.target.value })}
-                className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-2 text-xs text-[#EEEAD7] focus:outline-none focus:border-[#EEEAD7]"
+                className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-strong)]"
               />
             </div>
           </div>
         </div>
 
         {/* Quiet Hours / Focus Mode */}
-        <div className="bg-[#380505] border border-[#551010] rounded-xl p-5 space-y-4">
+        <div className="card p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-[#EEEAD7] flex items-center gap-2">
-                <BellOff className="w-4 h-4 text-[#757D6F]" />
+              <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <BellOff className="w-4 h-4 text-[var(--text-secondary)]" />
                 <span>Quiet Hours / Focus Mode</span>
               </h3>
-              <p className="text-xs text-[#757D6F] mt-0.5">
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                 Mutes popups and alert notifications during off-work hours.
               </p>
             </div>
@@ -115,28 +165,28 @@ export const SettingsView: React.FC = () => {
               type="checkbox"
               checked={formState.quiet_hours_enabled}
               onChange={(e) => setFormState({ ...formState, quiet_hours_enabled: e.target.checked })}
-              className="w-4 h-4 rounded text-[#6D0808] border-[#551010] bg-[#1F0000] focus:ring-0"
+              className="w-4 h-4 rounded text-[var(--accent)] border-[var(--border-default)] bg-[var(--bg-subtle)] focus:ring-0 cursor-pointer"
             />
           </div>
 
           {formState.quiet_hours_enabled && (
             <div className="grid grid-cols-2 gap-4 pt-2">
               <div>
-                <label className="block text-xs font-semibold text-[#757D6F] mb-1">Start Time</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Start Time</label>
                 <input
                   type="time"
                   value={formState.quiet_hours_start}
                   onChange={(e) => setFormState({ ...formState, quiet_hours_start: e.target.value })}
-                  className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-2 text-xs text-[#EEEAD7] focus:outline-none"
+                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-[#757D6F] mb-1">End Time</label>
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">End Time</label>
                 <input
                   type="time"
                   value={formState.quiet_hours_end}
                   onChange={(e) => setFormState({ ...formState, quiet_hours_end: e.target.value })}
-                  className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-2 text-xs text-[#EEEAD7] focus:outline-none"
+                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none"
                 />
               </div>
             </div>
@@ -144,28 +194,28 @@ export const SettingsView: React.FC = () => {
         </div>
 
         {/* Corporate Branding for Timetable & PDF Exports */}
-        <div className="bg-[#380505] border border-[#551010] rounded-xl p-5 space-y-4">
-          <h3 className="text-sm font-bold text-[#EEEAD7] flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-[#757D6F]" />
+        <div className="card p-5 space-y-4">
+          <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-[var(--text-secondary)]" />
             <span>Organization Branding for Exports</span>
           </h3>
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-semibold text-[#757D6F] mb-1">Organization / Header Name</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Organization / Header Name</label>
               <input
                 type="text"
                 value={formState.company_name}
                 onChange={(e) => setFormState({ ...formState, company_name: e.target.value })}
-                className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-2 text-xs text-[#EEEAD7] focus:outline-none focus:border-[#EEEAD7]"
+                className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-strong)]"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#757D6F] mb-1">Footer Watermark / Notice</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Footer Watermark / Notice</label>
               <input
                 type="text"
                 value={formState.company_footer}
                 onChange={(e) => setFormState({ ...formState, company_footer: e.target.value })}
-                className="w-full bg-[#1F0000] border border-[#551010] rounded-lg px-3 py-2 text-xs text-[#EEEAD7] focus:outline-none focus:border-[#EEEAD7]"
+                className="w-full bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] px-3 py-2 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-strong)]"
               />
             </div>
           </div>

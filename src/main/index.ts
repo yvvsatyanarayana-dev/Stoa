@@ -17,7 +17,7 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     title: 'ChronoDesk Pro',
-    backgroundColor: '#020617', // dark slate background
+    backgroundColor: '#000000',
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

@@ -211,17 +211,17 @@ function seedInitialData(): void {
   if (Number(existingCal.count) === 0) {
     console.log('[Database] Creating clean user workspace...')
     
-    // User's default initial calendar with requested palette
+    // User's default initial calendar with monochrome theme
     const insertCal = db.prepare('INSERT INTO calendars (id, name, color, source, visible, is_default) VALUES (?, ?, ?, ?, ?, ?)')
-    insertCal.run('cal-primary', 'Main Calendar', '#6D0808', 'local', 1, 1)
+    insertCal.run('cal-primary', 'Main Calendar', '#0A0A0A', 'local', 1, 1)
 
-    // Base categories styled with the user's theme palette
+    // Base categories styled with grayscale scale
     const insertCat = db.prepare('INSERT INTO categories (id, name, color, icon) VALUES (?, ?, ?, ?)')
-    insertCat.run('cat-meeting', 'Meeting', '#6D0808', 'Users')
-    insertCat.run('cat-appointment', 'Appointment', '#757D6F', 'UserCheck')
-    insertCat.run('cat-training', 'Training / Session', '#8A1B1B', 'GraduationCap')
-    insertCat.run('cat-event', 'Special Event', '#A33B3B', 'Presentation')
-    insertCat.run('cat-deadline', 'Milestone & Deadline', '#C45555', 'Flag')
+    insertCat.run('cat-meeting', 'Meeting', '#0A0A0A', 'Users')
+    insertCat.run('cat-appointment', 'Appointment', '#404040', 'UserCheck')
+    insertCat.run('cat-training', 'Training / Session', '#737373', 'GraduationCap')
+    insertCat.run('cat-event', 'Special Event', '#A3A3A3', 'Presentation')
+    insertCat.run('cat-deadline', 'Milestone & Deadline', '#0A0A0A', 'Flag')
   }
 
   // Ensure default settings exist with user's theme palette defaults

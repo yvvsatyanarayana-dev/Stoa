@@ -43,26 +43,26 @@ export const DashboardView: React.FC = () => {
   const personResources = resources.filter((r) => r.type === 'person')
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#2D0000] p-6 space-y-6 text-[#EEEAD7]">
+    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 space-y-6 text-[var(--text-primary)]">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Next Meeting Banner */}
-        <div className="bg-[#380505] border border-[#551010] rounded-2xl p-6 relative overflow-hidden shadow-xl">
+        <div className="card p-6 relative overflow-hidden shadow-md">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
             <div>
-              <div className="flex items-center gap-2 text-xs font-bold text-[#757D6F] uppercase tracking-wider mb-1">
-                <Clock className="w-4 h-4 text-[#EEEAD7]" />
+              <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1">
+                <Clock className="w-4 h-4 text-[var(--accent)]" />
                 <span>Next Scheduled Event</span>
               </div>
-              <h2 className="text-xl font-bold text-[#EEEAD7]">
+              <h2 className="text-xl font-bold text-[var(--text-primary)]">
                 {nextEvent ? nextEvent.title : 'Schedule is Clear'}
               </h2>
               {nextEvent ? (
-                <p className="text-xs text-[#C4BFAC] font-mono mt-1">
+                <p className="text-xs text-[var(--text-secondary)] font-mono mt-1">
                   {format(new Date(nextEvent.start), 'HH:mm')} - {format(new Date(nextEvent.end), 'HH:mm')}
                   {nextEvent.location ? ` • ${nextEvent.location}` : ''}
                 </p>
               ) : (
-                <p className="text-xs text-[#757D6F] mt-1">
+                <p className="text-xs text-[var(--text-muted)] mt-1">
                   You have no upcoming events. Click "Create Event" to schedule your next appointment or session.
                 </p>
               )}
@@ -70,9 +70,9 @@ export const DashboardView: React.FC = () => {
 
             {nextEvent ? (
               <div className="flex items-center gap-3">
-                <div className="bg-[#1F0000] border border-[#551010] px-4 py-2.5 rounded-xl text-center">
-                  <div className="text-[10px] text-[#757D6F] uppercase font-bold">Starts in</div>
-                  <div className="text-sm font-bold text-[#EEEAD7] font-mono">{countdown}</div>
+                <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] px-4 py-2.5 rounded-[var(--radius-md)] text-center">
+                  <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold">Starts in</div>
+                  <div className="text-sm font-bold text-[var(--text-primary)] font-mono">{countdown}</div>
                 </div>
 
                 {nextEvent.meeting_url && (
@@ -80,7 +80,7 @@ export const DashboardView: React.FC = () => {
                     href={nextEvent.meeting_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-4 py-2.5 bg-[#6D0808] hover:bg-[#8F0F0F] text-[#EEEAD7] rounded-xl text-xs font-bold flex items-center gap-2 shadow border border-[#EEEAD7]/30 transition-all"
+                    className="btn-primary text-xs py-2.5 px-4 flex items-center gap-2"
                   >
                     <Video className="w-4 h-4" />
                     <span>Join Call</span>
@@ -93,7 +93,7 @@ export const DashboardView: React.FC = () => {
                   setSelectedEvent(null)
                   setIsEventModalOpen(true)
                 }}
-                className="px-4 py-2 bg-[#6D0808] hover:bg-[#8F0F0F] text-[#EEEAD7] rounded-xl text-xs font-bold flex items-center gap-2 shadow border border-[#EEEAD7]/30 transition-all"
+                className="btn-primary text-xs py-2 px-4 flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>Create Event</span>
@@ -104,43 +104,43 @@ export const DashboardView: React.FC = () => {
 
         {/* Top KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-[#380505] border border-[#551010] rounded-xl p-4 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-[#6D0808] flex items-center justify-center text-[#EEEAD7] border border-[#EEEAD7]/20">
+          <div className="card p-4 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-default)] flex items-center justify-center text-[var(--text-primary)]">
               <CalendarIcon className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-[#EEEAD7]">{todayEvents.length}</div>
-              <div className="text-xs text-[#757D6F]">Today's Events</div>
+              <div className="text-2xl font-bold text-[var(--text-primary)]">{todayEvents.length}</div>
+              <div className="text-xs text-[var(--text-muted)]">Today's Events</div>
             </div>
           </div>
 
-          <div className="bg-[#380505] border border-[#551010] rounded-xl p-4 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-[#6D0808] flex items-center justify-center text-[#EEEAD7] border border-[#EEEAD7]/20">
+          <div className="card p-4 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-default)] flex items-center justify-center text-[var(--text-primary)]">
               <DoorClosed className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-[#EEEAD7]">{roomResources.length}</div>
-              <div className="text-xs text-[#757D6F]">Registered Rooms</div>
+              <div className="text-2xl font-bold text-[var(--text-primary)]">{roomResources.length}</div>
+              <div className="text-xs text-[var(--text-muted)]">Registered Rooms</div>
             </div>
           </div>
 
-          <div className="bg-[#380505] border border-[#551010] rounded-xl p-4 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-[#6D0808] flex items-center justify-center text-[#EEEAD7] border border-[#EEEAD7]/20">
+          <div className="card p-4 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-default)] flex items-center justify-center text-[var(--text-primary)]">
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-[#EEEAD7]">{personResources.length}</div>
-              <div className="text-xs text-[#757D6F]">Personnel & Staff</div>
+              <div className="text-2xl font-bold text-[var(--text-primary)]">{personResources.length}</div>
+              <div className="text-xs text-[var(--text-muted)]">Personnel & Staff</div>
             </div>
           </div>
 
-          <div className="bg-[#380505] border border-[#551010] rounded-xl p-4 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-[#6D0808] flex items-center justify-center text-[#EEEAD7] border border-[#EEEAD7]/20">
+          <div className="card p-4 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-default)] flex items-center justify-center text-[var(--text-primary)]">
               <TrendingUp className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-[#EEEAD7]">{events.length}</div>
-              <div className="text-xs text-[#757D6F]">Total Scheduled Events</div>
+              <div className="text-2xl font-bold text-[var(--text-primary)]">{events.length}</div>
+              <div className="text-xs text-[var(--text-muted)]">Total Scheduled Events</div>
             </div>
           </div>
         </div>
@@ -148,14 +148,14 @@ export const DashboardView: React.FC = () => {
         {/* Schedule Timeline & Category Distribution */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Today Timeline */}
-          <div className="lg:col-span-2 bg-[#380505] border border-[#551010] rounded-xl p-5 flex flex-col">
-            <h3 className="text-sm font-bold text-[#EEEAD7] mb-4 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-[#757D6F]" />
+          <div className="lg:col-span-2 card p-5 flex flex-col">
+            <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[var(--accent)]" />
               <span>Today's Schedule Timeline</span>
             </h3>
 
             {todayEvents.length === 0 ? (
-              <div className="text-center py-10 text-[#757D6F] text-xs space-y-1">
+              <div className="text-center py-10 text-[var(--text-muted)] text-xs space-y-1">
                 <p>No events scheduled for today.</p>
                 <p>Click any slot in the Calendar view to book a time.</p>
               </div>
@@ -168,23 +168,20 @@ export const DashboardView: React.FC = () => {
                       setSelectedEvent(evt)
                       setIsEventModalOpen(true)
                     }}
-                    className="p-3 bg-[#1F0000] border border-[#551010] hover:border-[#6D0808] rounded-lg cursor-pointer transition-all flex items-center justify-between"
+                    className="p-3 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] rounded-[var(--radius-md)] cursor-pointer transition-all flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
-                      <div
-                        className="w-2 h-8 rounded-full"
-                        style={{ backgroundColor: evt.calendar?.color || '#6D0808' }}
-                      />
+                      <div className="w-2 h-8 rounded-full bg-[var(--border-strong)]" />
                       <div>
-                        <div className="text-xs font-bold text-[#EEEAD7]">{evt.title}</div>
-                        <div className="text-[11px] text-[#757D6F] font-mono">
+                        <div className="text-xs font-bold text-[var(--text-primary)]">{evt.title}</div>
+                        <div className="text-[11px] text-[var(--text-secondary)] font-mono">
                           {format(new Date(evt.start), 'HH:mm')} - {format(new Date(evt.end), 'HH:mm')}
                           {evt.location ? ` • ${evt.location}` : ''}
                         </div>
                       </div>
                     </div>
 
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full capitalize bg-[#6D0808] text-[#EEEAD7] border border-[#EEEAD7]/30">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full capitalize bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border-default)]">
                       {evt.status}
                     </span>
                   </div>
@@ -194,31 +191,29 @@ export const DashboardView: React.FC = () => {
           </div>
 
           {/* Categories Allocation */}
-          <div className="bg-[#380505] border border-[#551010] rounded-xl p-5">
-            <h3 className="text-sm font-bold text-[#EEEAD7] mb-4">Event Categories Breakdown</h3>
+          <div className="card p-5">
+            <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">Event Categories Breakdown</h3>
             <div className="space-y-3">
-              {categories.map((cat) => {
+              {categories.map((cat, idx) => {
                 const count = events.filter((e) => e.category_id === cat.id).length
                 const pct = events.length > 0 ? Math.round((count / events.length) * 100) : 0
+                const shade = idx % 2 === 0 ? 'var(--text-primary)' : 'var(--text-secondary)'
 
                 return (
                   <div key={cat.id} className="space-y-1">
                     <div className="flex justify-between text-xs">
-                      <span className="text-[#EEEAD7] font-semibold flex items-center gap-2">
-                        <span
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: cat.color }}
-                        />
+                      <span className="text-[var(--text-primary)] font-semibold flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full border border-current" />
                         {cat.name}
                       </span>
-                      <span className="text-[#757D6F] font-mono">
+                      <span className="text-[var(--text-muted)] font-mono">
                         {count} ({pct}%)
                       </span>
                     </div>
-                    <div className="w-full bg-[#1F0000] h-1.5 rounded-full overflow-hidden border border-[#551010]">
+                    <div className="w-full bg-[var(--bg-subtle)] h-1.5 rounded-full overflow-hidden border border-[var(--border-subtle)]">
                       <div
                         className="h-full rounded-full"
-                        style={{ width: `${pct}%`, backgroundColor: cat.color }}
+                        style={{ width: `${pct}%`, backgroundColor: shade }}
                       />
                     </div>
                   </div>

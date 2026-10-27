@@ -58,6 +58,10 @@ interface AppState {
   isSubjectModalOpen: boolean
   setIsSubjectModalOpen: (open: boolean) => void
 
+  themeMode: 'dark' | 'light'
+  setThemeMode: (mode: 'dark' | 'light') => void
+  toggleThemeMode: () => void
+
   isLoading: boolean
   fetchInitialData: () => Promise<void>
   fetchEvents: () => Promise<void>
@@ -140,6 +144,17 @@ export const useAppStore = create<AppState>((set, get) => ({
   isSubjectModalOpen: false,
   setIsSubjectModalOpen: (isSubjectModalOpen) => set({ isSubjectModalOpen }),
 
+  themeMode: 'dark',
+  setThemeMode: (mode) => {
+    document.documentElement.setAttribute('data-theme', mode)
+    set({ themeMode: mode })
+  },
+  toggleThemeMode: () => {
+    const next = get().themeMode === 'dark' ? 'light' : 'dark'
+    document.documentElement.setAttribute('data-theme', next)
+    set({ themeMode: next })
+  },
+
   isLoading: false,
 
   fetchInitialData: async () => {
@@ -161,11 +176,15 @@ export const useAppStore = create<AppState>((set, get) => ({
         }
       }
 
+      const theme = data.settings?.theme === 'light' ? 'light' : 'dark'
+      document.documentElement.setAttribute('data-theme', theme)
+
       set({
         calendars: data.calendars,
         categories: data.categories,
         resources: data.resources,
         settings: data.settings,
+        themeMode: theme,
         timetables: data.timetables,
         activeTimetableId: activeTtId,
         activeTimetableSlots: activeSlots,
