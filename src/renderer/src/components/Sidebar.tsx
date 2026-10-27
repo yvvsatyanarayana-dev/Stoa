@@ -6,7 +6,8 @@ import {
   LayoutDashboard,
   Bell,
   Settings as SettingsIcon,
-  Plus
+  Plus,
+  Trash2
 } from 'lucide-react'
 import { useAppStore, AppView } from '../store/useAppStore'
 
@@ -16,9 +17,11 @@ export const Sidebar: React.FC = () => {
     setCurrentView,
     calendars,
     toggleCalendar,
+    deleteCalendar,
     notificationLogs,
     setIsEventModalOpen,
-    setSelectedEvent
+    setSelectedEvent,
+    setIsCalendarModalOpen
   } = useAppStore()
 
   const navItems: Array<{ id: AppView; label: string; icon: React.ReactNode; badge?: number }> = [
@@ -41,27 +44,27 @@ export const Sidebar: React.FC = () => {
   }
 
   return (
-    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-screen select-none shrink-0">
+    <aside className="w-64 bg-[#2D0000] border-r border-[#551010] flex flex-col h-screen select-none shrink-0 text-[#EEEAD7]">
       {/* App Branding */}
-      <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+      <div className="p-4 border-b border-[#551010] flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <CalendarIcon className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 rounded-lg bg-[#6D0808] border border-[#EEEAD7]/30 flex items-center justify-center shadow-md">
+            <CalendarIcon className="w-4 h-4 text-[#EEEAD7]" />
           </div>
           <div>
-            <h1 className="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
-              ChronoDesk <span className="text-[10px] bg-blue-500/20 text-blue-400 font-semibold px-1.5 py-0.5 rounded border border-blue-500/30">PRO</span>
+            <h1 className="text-sm font-bold tracking-tight text-[#EEEAD7] flex items-center gap-1.5">
+              ChronoDesk <span className="text-[10px] bg-[#6D0808] text-[#EEEAD7] font-bold px-1.5 py-0.5 rounded border border-[#EEEAD7]/30">PRO</span>
             </h1>
-            <p className="text-[11px] text-slate-400">Enterprise Scheduling</p>
+            <p className="text-[11px] text-[#757D6F]">Professional Scheduling</p>
           </div>
         </div>
       </div>
 
-      {/* Quick Action Button */}
+      {/* Primary Action Button */}
       <div className="p-3">
         <button
           onClick={handleNewEvent}
-          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all"
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-[#6D0808] hover:bg-[#8F0F0F] active:bg-[#500606] text-[#EEEAD7] text-xs font-bold rounded-lg shadow transition-all border border-[#EEEAD7]/20"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>New Event</span>
@@ -76,18 +79,18 @@ export const Sidebar: React.FC = () => {
             <button
               key={item.id}
               onClick={() => setCurrentView(item.id)}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
                 isActive
-                  ? 'bg-blue-600/15 text-blue-400 font-semibold'
-                  : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
+                  ? 'bg-[#6D0808] text-[#EEEAD7] shadow-sm'
+                  : 'text-[#757D6F] hover:bg-[#380505] hover:text-[#EEEAD7]'
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <span className={isActive ? 'text-blue-400' : 'text-slate-400'}>{item.icon}</span>
+                <span className={isActive ? 'text-[#EEEAD7]' : 'text-[#757D6F]'}>{item.icon}</span>
                 <span>{item.label}</span>
               </div>
               {item.badge !== undefined && (
-                <span className="text-[10px] bg-slate-800 text-slate-300 font-bold px-1.5 py-0.5 rounded-full border border-slate-700">
+                <span className="text-[10px] bg-[#380505] text-[#EEEAD7] font-bold px-1.5 py-0.5 rounded-full border border-[#551010]">
                   {item.badge}
                 </span>
               )}
@@ -96,40 +99,62 @@ export const Sidebar: React.FC = () => {
         })}
       </nav>
 
-      {/* Calendars Filter List */}
+      {/* User's Calendars List */}
       <div className="mt-4 px-3 flex-1 overflow-y-auto">
         <div className="flex items-center justify-between px-1 mb-2">
-          <span className="text-[11px] font-semibold tracking-wider uppercase text-slate-400">Calendars</span>
+          <span className="text-[11px] font-bold tracking-wider uppercase text-[#757D6F]">My Calendars</span>
+          <button
+            onClick={() => setIsCalendarModalOpen(true)}
+            className="p-1 text-[#757D6F] hover:text-[#EEEAD7] hover:bg-[#380505] rounded transition-colors"
+            title="Create Custom Calendar"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </button>
         </div>
         <div className="space-y-1">
           {calendars.map((cal) => (
-            <label
+            <div
               key={cal.id}
-              className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-slate-800/40 cursor-pointer text-xs text-slate-300 transition-colors"
+              className="flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-[#380505] cursor-pointer text-xs transition-colors group"
             >
-              <input
-                type="checkbox"
-                checked={cal.visible}
-                onChange={() => toggleCalendar(cal.id)}
-                className="rounded border-slate-700 text-blue-600 focus:ring-0 focus:ring-offset-0 bg-slate-950 w-3.5 h-3.5"
-              />
-              <span
-                className="w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: cal.color }}
-              />
-              <span className="truncate">{cal.name}</span>
-            </label>
+              <label className="flex items-center gap-2.5 cursor-pointer flex-1 truncate">
+                <input
+                  type="checkbox"
+                  checked={cal.visible}
+                  onChange={() => toggleCalendar(cal.id)}
+                  className="rounded border-[#551010] text-[#6D0808] focus:ring-0 bg-[#1F0000] w-3.5 h-3.5"
+                />
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0 border border-[#EEEAD7]/30"
+                  style={{ backgroundColor: cal.color }}
+                />
+                <span className="truncate text-[#EEEAD7] font-medium">{cal.name}</span>
+              </label>
+
+              {calendars.length > 1 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (confirm(`Delete calendar "${cal.name}"?`)) deleteCalendar(cal.id)
+                  }}
+                  className="opacity-0 group-hover:opacity-100 p-1 text-[#757D6F] hover:text-[#EEEAD7] transition-opacity"
+                  title="Delete Calendar"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
+            </div>
           ))}
         </div>
       </div>
 
       {/* Footer Status */}
-      <div className="p-3 border-t border-slate-800 bg-slate-900/60 flex items-center justify-between text-[11px] text-slate-400">
+      <div className="p-3 border-t border-[#551010] bg-[#1F0000] flex items-center justify-between text-[11px] text-[#757D6F]">
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Offline-First (Active)</span>
+          <span className="w-2 h-2 rounded-full bg-[#757D6F] animate-pulse" />
+          <span>Local-First SQLite</span>
         </div>
-        <span className="text-[10px] text-slate-400">v1.0</span>
+        <span className="text-[10px] text-[#757D6F] font-mono">ChronoDesk</span>
       </div>
     </aside>
   )

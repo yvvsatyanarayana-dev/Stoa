@@ -5,12 +5,13 @@ import {
   resourceDb,
   eventDb,
   timetableDb,
+  subjectDb,
   reminderDb,
   settingsDb,
   notificationLogDb
 } from '../db'
 import { checkEventConflicts, checkTimetableSlotConflicts } from '../engine/conflictEngine'
-import type { CalendarEvent, Resource, TimetableSlot } from '../../types'
+import type { Calendar, CalendarEvent, Resource, Timetable, TimetableSlot, Subject } from '../../types'
 
 export function registerIpcHandlers(): void {
   // Initial Hydration
@@ -20,13 +21,26 @@ export function registerIpcHandlers(): void {
       categories: categoryDb.list(),
       resources: resourceDb.list(),
       settings: settingsDb.get(),
-      timetables: timetableDb.list()
+      timetables: timetableDb.list(),
+      subjects: subjectDb.list()
     }
   })
 
   // Calendars
   ipcMain.handle('calendars:list', async () => {
     return calendarDb.list()
+  })
+
+  ipcMain.handle('calendars:create', async (_, cal: Calendar) => {
+    return calendarDb.create(cal)
+  })
+
+  ipcMain.handle('calendars:update', async (_, cal: Calendar) => {
+    return calendarDb.update(cal)
+  })
+
+  ipcMain.handle('calendars:delete', async (_, id: string) => {
+    return calendarDb.delete(id)
   })
 
   ipcMain.handle('calendars:toggle', async (_, id: string, visible: boolean) => {
@@ -65,6 +79,18 @@ export function registerIpcHandlers(): void {
     return timetableDb.get(id)
   })
 
+  ipcMain.handle('timetables:create', async (_, tt: Timetable) => {
+    return timetableDb.create(tt)
+  })
+
+  ipcMain.handle('timetables:update', async (_, tt: Timetable) => {
+    return timetableDb.update(tt)
+  })
+
+  ipcMain.handle('timetables:delete', async (_, id: string) => {
+    return timetableDb.delete(id)
+  })
+
   ipcMain.handle('timetables:save-slot', async (_, slot: TimetableSlot) => {
     timetableDb.saveSlot(slot)
     return { success: true }
@@ -87,24 +113,34 @@ export function registerIpcHandlers(): void {
     return timetableDb.getVersions(timetableId)
   })
 
+  // Subjects
+  ipcMain.handle('subjects:list', async () => {
+    return subjectDb.list()
+  })
+
+  ipcMain.handle('subjects:create', async (_, sub: Subject) => {
+    return subjectDb.create(sub)
+  })
+
+  ipcMain.handle('subjects:delete', async (_, id: string) => {
+    return subjectDb.delete(id)
+  })
+
   // Resources
   ipcMain.handle('resources:list', async () => {
     return resourceDb.list()
   })
 
   ipcMain.handle('resources:create', async (_, res: Resource) => {
-    resourceDb.create(res)
-    return resourceDb.list()
+    return resourceDb.create(res)
   })
 
   ipcMain.handle('resources:update', async (_, res: Resource) => {
-    resourceDb.update(res)
-    return resourceDb.list()
+    return resourceDb.update(res)
   })
 
   ipcMain.handle('resources:delete', async (_, id: string) => {
-    resourceDb.delete(id)
-    return resourceDb.list()
+    return resourceDb.delete(id)
   })
 
   // Reminders & Notifications

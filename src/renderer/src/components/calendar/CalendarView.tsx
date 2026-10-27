@@ -11,7 +11,7 @@ import {
 } from 'date-fns'
 import { useAppStore } from '../../store/useAppStore'
 import { CalendarEvent } from '../../../../types'
-import { Clock, MapPin, Video } from 'lucide-react'
+import { Clock, MapPin, Video, Plus } from 'lucide-react'
 
 export const CalendarView: React.FC = () => {
   const {
@@ -65,10 +65,10 @@ export const CalendarView: React.FC = () => {
     const hours = Array.from({ length: 14 }, (_, i) => i + 7) // 07:00 to 20:00
 
     return (
-      <div className="flex-1 flex flex-col overflow-hidden bg-slate-950">
+      <div className="flex-1 flex flex-col overflow-hidden bg-[#2D0000] text-[#EEEAD7]">
         {/* Days Header */}
-        <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-slate-800 bg-slate-900/50 shrink-0">
-          <div className="p-2 border-r border-slate-800 text-center text-[10px] text-slate-500 font-semibold uppercase">
+        <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-[#551010] bg-[#380505] shrink-0">
+          <div className="p-2 border-r border-[#551010] text-center text-[10px] text-[#757D6F] font-bold uppercase">
             Time
           </div>
           {days.map((day) => {
@@ -76,16 +76,16 @@ export const CalendarView: React.FC = () => {
             return (
               <div
                 key={day.toISOString()}
-                className={`py-2 px-1 text-center border-r border-slate-800 last:border-r-0 ${
-                  today ? 'bg-blue-600/10' : ''
+                className={`py-2 px-1 text-center border-r border-[#551010] last:border-r-0 ${
+                  today ? 'bg-[#6D0808]/20' : ''
                 }`}
               >
-                <div className="text-[11px] font-medium text-slate-400">
+                <div className="text-[11px] font-semibold text-[#757D6F]">
                   {format(day, 'EEE')}
                 </div>
                 <div
                   className={`text-sm font-bold inline-flex items-center justify-center w-6 h-6 rounded-full mt-0.5 ${
-                    today ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-200'
+                    today ? 'bg-[#6D0808] text-[#EEEAD7] border border-[#EEEAD7]/40 shadow' : 'text-[#EEEAD7]'
                   }`}
                 >
                   {format(day, 'd')}
@@ -99,11 +99,11 @@ export const CalendarView: React.FC = () => {
         <div className="flex-1 overflow-y-auto">
           <div className="grid grid-cols-[60px_repeat(7,1fr)] relative min-h-[700px]">
             {/* Time labels column */}
-            <div className="border-r border-slate-800 bg-slate-900/20">
+            <div className="border-r border-[#551010] bg-[#1F0000]">
               {hours.map((h) => (
                 <div
                   key={h}
-                  className="h-14 border-b border-slate-800/60 text-right pr-2 text-[10px] text-slate-400 font-mono pt-1"
+                  className="h-14 border-b border-[#440808] text-right pr-2 text-[10px] text-[#757D6F] font-mono pt-1"
                 >
                   {String(h).padStart(2, '0')}:00
                 </div>
@@ -118,8 +118,8 @@ export const CalendarView: React.FC = () => {
               return (
                 <div
                   key={day.toISOString()}
-                  className={`border-r border-slate-800 last:border-r-0 relative ${
-                    today ? 'bg-blue-950/10' : ''
+                  className={`border-r border-[#440808] last:border-r-0 relative ${
+                    today ? 'bg-[#6D0808]/5' : ''
                   }`}
                 >
                   {/* Grid hour cells */}
@@ -127,7 +127,7 @@ export const CalendarView: React.FC = () => {
                     <div
                       key={h}
                       onClick={() => handleSlotClick(day, h)}
-                      className="h-14 border-b border-slate-800/40 hover:bg-slate-800/20 cursor-pointer transition-colors"
+                      className="h-14 border-b border-[#440808] hover:bg-[#380505]/40 cursor-pointer transition-colors"
                     />
                   ))}
 
@@ -138,7 +138,6 @@ export const CalendarView: React.FC = () => {
                     const startHour = start.getHours() + start.getMinutes() / 60
                     const endHour = end.getHours() + end.getMinutes() / 60
 
-                    // Calculate top and height relative to start at 7:00
                     const top = Math.max(0, (startHour - 7) * 56)
                     const height = Math.max(28, (endHour - startHour) * 56)
 
@@ -149,25 +148,25 @@ export const CalendarView: React.FC = () => {
                         style={{
                           top: `${top}px`,
                           height: `${height}px`,
-                          borderLeftColor: evt.calendar?.color || '#3b82f6'
+                          borderLeftColor: evt.calendar?.color || '#6D0808'
                         }}
-                        className="absolute left-1 right-1 rounded-md p-1.5 text-xs bg-slate-800/90 hover:bg-slate-750 border-l-4 border border-slate-700/60 cursor-pointer shadow-sm hover:shadow-md transition-all z-10 overflow-hidden flex flex-col justify-between"
+                        className="absolute left-1 right-1 rounded-md p-1.5 text-xs bg-[#3D0808] hover:bg-[#4E0B0B] border-l-4 border border-[#6D0808] cursor-pointer shadow-md transition-all z-10 overflow-hidden flex flex-col justify-between"
                       >
                         <div>
-                          <div className="font-semibold text-slate-100 truncate flex items-center gap-1">
-                            {evt.meeting_url && <Video className="w-3 h-3 text-blue-400 shrink-0" />}
+                          <div className="font-bold text-[#EEEAD7] truncate flex items-center gap-1">
+                            {evt.meeting_url && <Video className="w-3 h-3 text-[#757D6F] shrink-0" />}
                             <span className="truncate">{evt.title}</span>
                           </div>
-                          <div className="text-[10px] text-slate-400 font-mono mt-0.5 truncate flex items-center gap-1">
-                            <Clock className="w-2.5 h-2.5 text-slate-500 shrink-0" />
+                          <div className="text-[10px] text-[#C4BFAC] font-mono mt-0.5 truncate flex items-center gap-1">
+                            <Clock className="w-2.5 h-2.5 text-[#757D6F] shrink-0" />
                             <span>
                               {format(start, 'HH:mm')} - {format(end, 'HH:mm')}
                             </span>
                           </div>
                         </div>
                         {evt.location && (
-                          <div className="text-[10px] text-slate-400 truncate flex items-center gap-1 mt-0.5">
-                            <MapPin className="w-2.5 h-2.5 text-slate-500 shrink-0" />
+                          <div className="text-[10px] text-[#757D6F] truncate flex items-center gap-1 mt-0.5">
+                            <MapPin className="w-2.5 h-2.5 text-[#757D6F] shrink-0" />
                             <span className="truncate">{evt.location}</span>
                           </div>
                         )}
@@ -188,24 +187,24 @@ export const CalendarView: React.FC = () => {
     const dayEvents = filteredEvents.filter((e) => isSameDay(new Date(e.start), selectedDate))
 
     return (
-      <div className="flex-1 flex flex-col overflow-hidden bg-slate-950">
-        <div className="p-3 border-b border-slate-800 bg-slate-900/40 flex items-center justify-between">
+      <div className="flex-1 flex flex-col overflow-hidden bg-[#2D0000] text-[#EEEAD7]">
+        <div className="p-3 border-b border-[#551010] bg-[#380505] flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-slate-100">
+            <h2 className="text-base font-bold text-[#EEEAD7]">
               {format(selectedDate, 'EEEE, MMMM d, yyyy')}
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[#757D6F]">
               {dayEvents.length} scheduled event{dayEvents.length === 1 ? '' : 's'} today
             </p>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
           <div className="grid grid-cols-[80px_1fr] relative min-h-[700px]">
-            <div className="border-r border-slate-800 bg-slate-900/20">
+            <div className="border-r border-[#551010] bg-[#1F0000]">
               {hours.map((h) => (
                 <div
                   key={h}
-                  className="h-16 border-b border-slate-800/60 text-right pr-3 text-xs text-slate-400 font-mono pt-1"
+                  className="h-16 border-b border-[#440808] text-right pr-3 text-xs text-[#757D6F] font-mono pt-1"
                 >
                   {String(h).padStart(2, '0')}:00
                 </div>
@@ -216,7 +215,7 @@ export const CalendarView: React.FC = () => {
                 <div
                   key={h}
                   onClick={() => handleSlotClick(selectedDate, h)}
-                  className="h-16 border-b border-slate-800/40 hover:bg-slate-800/20 cursor-pointer transition-colors"
+                  className="h-16 border-b border-[#440808] hover:bg-[#380505]/40 cursor-pointer transition-colors"
                 />
               ))}
               {dayEvents.map((evt) => {
@@ -234,26 +233,26 @@ export const CalendarView: React.FC = () => {
                     style={{
                       top: `${top}px`,
                       height: `${height}px`,
-                      borderLeftColor: evt.calendar?.color || '#3b82f6'
+                      borderLeftColor: evt.calendar?.color || '#6D0808'
                     }}
-                    className="absolute left-3 right-6 rounded-lg p-2.5 bg-slate-800 border-l-4 border border-slate-700 cursor-pointer shadow-md hover:bg-slate-750 transition-all z-10 flex flex-col justify-between"
+                    className="absolute left-3 right-6 rounded-lg p-2.5 bg-[#3D0808] border-l-4 border border-[#6D0808] cursor-pointer shadow-md hover:bg-[#4E0B0B] transition-all z-10 flex flex-col justify-between"
                   >
                     <div>
-                      <div className="font-semibold text-slate-100 text-sm flex items-center justify-between">
+                      <div className="font-bold text-[#EEEAD7] text-sm flex items-center justify-between">
                         <span>{evt.title}</span>
                         {evt.priority === 'urgent' && (
-                          <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-semibold border border-red-500/30">
+                          <span className="text-[10px] bg-[#6D0808] text-[#EEEAD7] px-2 py-0.5 rounded font-bold border border-[#EEEAD7]/30">
                             Urgent
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-slate-400 font-mono mt-1">
+                      <div className="text-xs text-[#C4BFAC] font-mono mt-1">
                         {format(start, 'HH:mm')} - {format(end, 'HH:mm')}
                       </div>
                     </div>
                     {evt.location && (
-                      <div className="text-xs text-slate-400 flex items-center gap-1.5 mt-1">
-                        <MapPin className="w-3.5 h-3.5 text-slate-500" />
+                      <div className="text-xs text-[#757D6F] flex items-center gap-1.5 mt-1">
+                        <MapPin className="w-3.5 h-3.5 text-[#757D6F]" />
                         <span>{evt.location}</span>
                       </div>
                     )}
@@ -275,10 +274,10 @@ export const CalendarView: React.FC = () => {
     const days = eachDayOfInterval({ start: startDate, end: endDate })
 
     return (
-      <div className="flex-1 flex flex-col overflow-hidden bg-slate-950">
-        <div className="grid grid-cols-7 border-b border-slate-800 bg-slate-900/60 py-2">
+      <div className="flex-1 flex flex-col overflow-hidden bg-[#2D0000] text-[#EEEAD7]">
+        <div className="grid grid-cols-7 border-b border-[#551010] bg-[#380505] py-2">
           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
-            <div key={d} className="text-center text-xs font-semibold text-slate-400">
+            <div key={d} className="text-center text-xs font-bold text-[#757D6F]">
               {d}
             </div>
           ))}
@@ -293,14 +292,14 @@ export const CalendarView: React.FC = () => {
               <div
                 key={day.toISOString()}
                 onClick={() => handleSlotClick(day, 9)}
-                className={`border-b border-r border-slate-800 p-2 flex flex-col min-h-[100px] cursor-pointer hover:bg-slate-900/40 transition-colors ${
+                className={`border-b border-r border-[#440808] p-2 flex flex-col min-h-[100px] cursor-pointer hover:bg-[#380505]/40 transition-colors ${
                   !isCurrentMonth ? 'opacity-30' : ''
-                } ${today ? 'bg-blue-950/15' : ''}`}
+                } ${today ? 'bg-[#6D0808]/15' : ''}`}
               >
                 <div className="flex justify-between items-center mb-1">
                   <span
                     className={`text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center ${
-                      today ? 'bg-blue-600 text-white' : 'text-slate-400'
+                      today ? 'bg-[#6D0808] text-[#EEEAD7] border border-[#EEEAD7]/40' : 'text-[#757D6F]'
                     }`}
                   >
                     {format(day, 'd')}
@@ -311,14 +310,14 @@ export const CalendarView: React.FC = () => {
                     <div
                       key={evt.id}
                       onClick={(e) => handleEventClick(evt, e)}
-                      className="text-[10px] px-1.5 py-0.5 rounded truncate font-medium flex items-center gap-1 text-slate-200 bg-slate-800 hover:bg-slate-700"
-                      style={{ borderLeft: `3px solid ${evt.calendar?.color || '#3b82f6'}` }}
+                      className="text-[10px] px-1.5 py-0.5 rounded truncate font-semibold flex items-center gap-1 text-[#EEEAD7] bg-[#3D0808] hover:bg-[#4E0B0B]"
+                      style={{ borderLeft: `3px solid ${evt.calendar?.color || '#6D0808'}` }}
                     >
                       <span className="truncate">{evt.title}</span>
                     </div>
                   ))}
                   {dayEvents.length > 3 && (
-                    <div className="text-[10px] text-slate-400 font-semibold px-1">
+                    <div className="text-[10px] text-[#757D6F] font-bold px-1">
                       +{dayEvents.length - 3} more
                     </div>
                   )}
@@ -337,42 +336,66 @@ export const CalendarView: React.FC = () => {
     )
 
     return (
-      <div className="flex-1 overflow-y-auto p-6 bg-slate-950">
+      <div className="flex-1 overflow-y-auto p-6 bg-[#2D0000] text-[#EEEAD7]">
         <div className="max-w-3xl mx-auto space-y-4">
-          <h2 className="text-base font-bold text-slate-100 mb-2">Upcoming Schedule Agenda</h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-base font-bold text-[#EEEAD7]">Upcoming Schedule Agenda</h2>
+            <button
+              onClick={() => {
+                setSelectedEvent(null)
+                setIsEventModalOpen(true)
+              }}
+              className="px-3 py-1 bg-[#6D0808] hover:bg-[#8F0F0F] text-xs font-bold rounded-lg border border-[#EEEAD7]/30 flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Create Event</span>
+            </button>
+          </div>
+
           {sorted.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 text-sm">
-              No events found for the active calendars.
+            <div className="text-center py-16 bg-[#380505] rounded-2xl border border-[#551010] p-8 space-y-3">
+              <p className="text-sm font-semibold text-[#757D6F]">Your schedule is completely clear.</p>
+              <p className="text-xs text-[#757D6F]">Click "+ Create Event" or click any slot on the calendar grid to add your first event.</p>
+              <button
+                onClick={() => {
+                  setSelectedEvent(null)
+                  setIsEventModalOpen(true)
+                }}
+                className="mt-2 px-4 py-2 bg-[#6D0808] hover:bg-[#8F0F0F] text-[#EEEAD7] rounded-lg text-xs font-bold border border-[#EEEAD7]/30 shadow-md inline-flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Create First Event</span>
+              </button>
             </div>
           ) : (
             sorted.map((evt) => (
               <div
                 key={evt.id}
                 onClick={(e) => handleEventClick(evt, e)}
-                className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl p-4 cursor-pointer transition-all flex items-start justify-between"
+                className="bg-[#380505] border border-[#551010] hover:border-[#6D0808] rounded-xl p-4 cursor-pointer transition-all flex items-start justify-between"
               >
                 <div className="flex items-start gap-4">
                   <div
                     className="w-1.5 h-12 rounded-full shrink-0"
-                    style={{ backgroundColor: evt.calendar?.color || '#3b82f6' }}
+                    style={{ backgroundColor: evt.calendar?.color || '#6D0808' }}
                   />
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-100">{evt.title}</h3>
-                    <div className="flex items-center gap-4 text-xs text-slate-400 mt-1">
+                    <h3 className="text-sm font-bold text-[#EEEAD7]">{evt.title}</h3>
+                    <div className="flex items-center gap-4 text-xs text-[#757D6F] mt-1">
                       <span className="flex items-center gap-1 font-mono">
-                        <Clock className="w-3.5 h-3.5 text-slate-500" />
+                        <Clock className="w-3.5 h-3.5 text-[#757D6F]" />
                         {format(new Date(evt.start), 'EEE, MMM d, yyyy • HH:mm')} -{' '}
                         {format(new Date(evt.end), 'HH:mm')}
                       </span>
                       {evt.location && (
                         <span className="flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5 text-slate-500" />
+                          <MapPin className="w-3.5 h-3.5 text-[#757D6F]" />
                           {evt.location}
                         </span>
                       )}
                     </div>
                     {evt.description && (
-                      <p className="text-xs text-slate-400 mt-2 line-clamp-2">
+                      <p className="text-xs text-[#C4BFAC] mt-2 line-clamp-2">
                         {evt.description}
                       </p>
                     )}
@@ -384,7 +407,7 @@ export const CalendarView: React.FC = () => {
                     target="_blank"
                     rel="noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="px-3 py-1.5 rounded-lg bg-blue-600/15 text-blue-400 hover:bg-blue-600/25 text-xs font-semibold flex items-center gap-1.5 border border-blue-500/30"
+                    className="px-3 py-1.5 rounded-lg bg-[#6D0808] hover:bg-[#8F0F0F] text-[#EEEAD7] text-xs font-bold flex items-center gap-1.5 border border-[#EEEAD7]/30 shadow-sm"
                   >
                     <Video className="w-3.5 h-3.5" />
                     <span>Join</span>

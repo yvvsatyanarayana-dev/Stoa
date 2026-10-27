@@ -21,10 +21,14 @@ export const api = {
       resources: Resource[]
       settings: ChronoDeskSettings
       timetables: Timetable[]
+      subjects: Subject[]
     }> => ipcRenderer.invoke('data:get-initial')
   },
   calendars: {
     list: (): Promise<Calendar[]> => ipcRenderer.invoke('calendars:list'),
+    create: (cal: Calendar): Promise<Calendar[]> => ipcRenderer.invoke('calendars:create', cal),
+    update: (cal: Calendar): Promise<Calendar[]> => ipcRenderer.invoke('calendars:update', cal),
+    delete: (id: string): Promise<Calendar[]> => ipcRenderer.invoke('calendars:delete', id),
     toggle: (id: string, visible: boolean): Promise<Calendar[]> => ipcRenderer.invoke('calendars:toggle', id, visible)
   },
   events: {
@@ -43,6 +47,9 @@ export const api = {
     list: (): Promise<Timetable[]> => ipcRenderer.invoke('timetables:list'),
     get: (id: string): Promise<{ timetable: Timetable; slots: TimetableSlot[]; subjects: Subject[] } | null> =>
       ipcRenderer.invoke('timetables:get', id),
+    create: (tt: Timetable): Promise<Timetable[]> => ipcRenderer.invoke('timetables:create', tt),
+    update: (tt: Timetable): Promise<Timetable[]> => ipcRenderer.invoke('timetables:update', tt),
+    delete: (id: string): Promise<Timetable[]> => ipcRenderer.invoke('timetables:delete', id),
     saveSlot: (slot: TimetableSlot): Promise<{ success: boolean }> =>
       ipcRenderer.invoke('timetables:save-slot', slot),
     deleteSlot: (id: string): Promise<{ success: boolean }> =>
@@ -53,6 +60,11 @@ export const api = {
       ipcRenderer.invoke('timetables:save-version', timetableId, snapshotJson),
     getVersions: (timetableId: string): Promise<any[]> =>
       ipcRenderer.invoke('timetables:get-versions', timetableId)
+  },
+  subjects: {
+    list: (): Promise<Subject[]> => ipcRenderer.invoke('subjects:list'),
+    create: (sub: Subject): Promise<Subject[]> => ipcRenderer.invoke('subjects:create', sub),
+    delete: (id: string): Promise<Subject[]> => ipcRenderer.invoke('subjects:delete', id)
   },
   resources: {
     list: (): Promise<Resource[]> => ipcRenderer.invoke('resources:list'),

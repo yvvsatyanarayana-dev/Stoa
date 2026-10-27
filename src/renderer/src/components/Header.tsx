@@ -45,41 +45,41 @@ export const Header: React.FC = () => {
   const formattedDate = format(selectedDate, 'MMMM yyyy')
 
   return (
-    <header className="h-14 bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 flex items-center justify-between shrink-0 select-none">
+    <header className="h-14 bg-[#2D0000] border-b border-[#551010] px-4 flex items-center justify-between shrink-0 select-none text-[#EEEAD7]">
       {/* Left: View Title & Date Controls */}
       <div className="flex items-center gap-4">
         {currentView === 'calendar' ? (
           <div className="flex items-center gap-2">
             <button
               onClick={handleToday}
-              className="px-2.5 py-1 text-xs font-semibold rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors border border-slate-700"
+              className="px-2.5 py-1 text-xs font-bold rounded-md bg-[#380505] hover:bg-[#480707] text-[#EEEAD7] transition-colors border border-[#551010]"
             >
               Today
             </button>
-            <div className="flex items-center bg-slate-800 rounded-md border border-slate-700 p-0.5">
+            <div className="flex items-center bg-[#1F0000] rounded-md border border-[#551010] p-0.5">
               <button
                 onClick={handlePrev}
-                className="p-1 hover:bg-slate-700 rounded text-slate-300 transition-colors"
+                className="p-1 hover:bg-[#380505] rounded text-[#757D6F] hover:text-[#EEEAD7] transition-colors"
                 title="Previous"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={handleNext}
-                className="p-1 hover:bg-slate-700 rounded text-slate-300 transition-colors"
+                className="p-1 hover:bg-[#380505] rounded text-[#757D6F] hover:text-[#EEEAD7] transition-colors"
                 title="Next"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
             <div className="flex items-center gap-1.5 ml-1">
-              <CalendarDays className="w-4 h-4 text-blue-400" />
-              <span className="text-sm font-bold text-slate-100">{formattedDate}</span>
+              <CalendarDays className="w-4 h-4 text-[#757D6F]" />
+              <span className="text-sm font-bold text-[#EEEAD7]">{formattedDate}</span>
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-slate-100 capitalize">
+            <span className="text-sm font-bold text-[#EEEAD7] capitalize">
               {currentView === 'timetable'
                 ? 'Timetable Builder'
                 : currentView === 'resources'
@@ -94,17 +94,17 @@ export const Header: React.FC = () => {
         )}
       </div>
 
-      {/* Middle: Calendar View Switcher (when on calendar view) */}
+      {/* Middle: Calendar View Switcher */}
       {currentView === 'calendar' && (
-        <div className="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800 text-xs">
+        <div className="flex items-center bg-[#1F0000] p-0.5 rounded-lg border border-[#551010] text-xs">
           {(['day', 'week', 'month', 'agenda'] as CalendarViewType[]).map((type) => (
             <button
               key={type}
               onClick={() => setCalendarViewType(type)}
-              className={`px-3 py-1 rounded-md capitalize font-medium transition-all ${
+              className={`px-3 py-1 rounded-md capitalize font-bold transition-all ${
                 calendarViewType === type
-                  ? 'bg-blue-600 text-white shadow-sm font-semibold'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-[#6D0808] text-[#EEEAD7] shadow-sm'
+                  : 'text-[#757D6F] hover:text-[#EEEAD7]'
               }`}
             >
               {type}
@@ -117,38 +117,38 @@ export const Header: React.FC = () => {
       <div className="flex items-center gap-3">
         {/* Search */}
         <div className="relative w-48">
-          <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
+          <Search className="w-3.5 h-3.5 text-[#757D6F] absolute left-2.5 top-2.5" />
           <input
             type="text"
-            placeholder="Search events... (Ctrl+K)"
+            placeholder="Search events..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') fetchEvents()
             }}
-            className="w-full bg-slate-950 border border-slate-800 rounded-md pl-8 pr-3 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full bg-[#1F0000] border border-[#551010] rounded-md pl-8 pr-3 py-1 text-xs text-[#EEEAD7] placeholder-[#757D6F] focus:outline-none focus:border-[#EEEAD7] transition-colors"
           />
         </div>
 
         {/* Notification Icon */}
         <button
           onClick={() => setCurrentView('notifications')}
-          className="relative p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
+          className="relative p-1.5 text-[#757D6F] hover:text-[#EEEAD7] hover:bg-[#380505] rounded-lg transition-colors"
           title="Notification Center"
         >
           <Bell className="w-4 h-4" />
           {notificationLogs.length > 0 && (
-            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-blue-500" />
+            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#6D0808] border border-[#EEEAD7]" />
           )}
         </button>
 
-        {/* Quick Add */}
+        {/* Quick Add Event */}
         <button
           onClick={() => {
             setSelectedEvent(null)
             setIsEventModalOpen(true)
           }}
-          className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md text-xs font-semibold shadow-sm transition-all"
+          className="flex items-center gap-1.5 bg-[#6D0808] hover:bg-[#8F0F0F] text-[#EEEAD7] px-3 py-1.5 rounded-md text-xs font-bold shadow-sm transition-all border border-[#EEEAD7]/30"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Add</span>

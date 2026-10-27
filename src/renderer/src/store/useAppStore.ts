@@ -49,22 +49,47 @@ interface AppState {
   isSlotModalOpen: boolean
   setIsSlotModalOpen: (open: boolean) => void
 
+  isCalendarModalOpen: boolean
+  setIsCalendarModalOpen: (open: boolean) => void
+
+  isTimetableModalOpen: boolean
+  setIsTimetableModalOpen: (open: boolean) => void
+
+  isSubjectModalOpen: boolean
+  setIsSubjectModalOpen: (open: boolean) => void
+
   isLoading: boolean
   fetchInitialData: () => Promise<void>
   fetchEvents: () => Promise<void>
+
+  // User Calendar Actions
+  createCalendar: (name: string, color: string) => Promise<void>
+  updateCalendar: (cal: Calendar) => Promise<void>
+  deleteCalendar: (id: string) => Promise<void>
   toggleCalendar: (id: string) => Promise<void>
+
+  // User Event Actions
   createEvent: (event: CalendarEvent, resourceIds?: string[]) => Promise<void>
   updateEvent: (event: CalendarEvent, resourceIds?: string[]) => Promise<void>
   deleteEvent: (id: string) => Promise<void>
 
+  // User Timetable Actions
+  createTimetable: (name: string, startDate: string, endDate: string) => Promise<void>
+  deleteTimetable: (id: string) => Promise<void>
   selectTimetable: (id: string) => Promise<void>
   saveSlot: (slot: TimetableSlot) => Promise<void>
   deleteSlot: (id: string) => Promise<void>
 
+  // User Subject Actions
+  createSubject: (name: string, color: string) => Promise<void>
+  deleteSubject: (id: string) => Promise<void>
+
+  // User Resource Actions
   createResource: (res: Resource) => Promise<void>
   updateResource: (res: Resource) => Promise<void>
   deleteResource: (id: string) => Promise<void>
 
+  // Reminder Actions
   snoozeReminder: (id: string, minutes: number) => Promise<void>
   dismissReminder: (id: string) => Promise<void>
   fetchNotifications: () => Promise<void>
@@ -106,6 +131,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   isSlotModalOpen: false,
   setIsSlotModalOpen: (isSlotModalOpen) => set({ isSlotModalOpen }),
 
+  isCalendarModalOpen: false,
+  setIsCalendarModalOpen: (isCalendarModalOpen) => set({ isCalendarModalOpen }),
+
+  isTimetableModalOpen: false,
+  setIsTimetableModalOpen: (isTimetableModalOpen) => set({ isTimetableModalOpen }),
+
+  isSubjectModalOpen: false,
+  setIsSubjectModalOpen: (isSubjectModalOpen) => set({ isSubjectModalOpen }),
+
   isLoading: false,
 
   fetchInitialData: async () => {
@@ -117,13 +151,13 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       let activeTtId = data.timetables.length > 0 ? data.timetables[0].id : null
       let activeSlots: TimetableSlot[] = []
-      let subjects: Subject[] = []
+      let subs: Subject[] = data.subjects || []
 
       if (activeTtId) {
         const ttData = await window.api.timetables.get(activeTtId)
         if (ttData) {
           activeSlots = ttData.slots
-          subjects = ttData.subjects
+          subs = ttData.subjects
         }
       }
 
@@ -135,7 +169,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         timetables: data.timetables,
         activeTimetableId: activeTtId,
         activeTimetableSlots: activeSlots,
-        subjects,
+        subjects: subs,
         events,
         notificationLogs: notifs,
         isLoading: false
@@ -153,6 +187,31 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch (err) {
       console.error('Error fetching events:', err)
     }
+  },
+
+  createCalendar: async (name: string, color: string) => {
+    const newCal: Calendar = {
+      id: `cal-${Date.now()}`,
+      name,
+      color,
+      source: 'local',
+      visible: true,
+      is_default: false
+    }
+    const updated = await window.api.calendars.create(newCal)
+    set({ calendars: updated })
+  },
+
+  updateCalendar: async (cal: Calendar) => {
+    const updated = await window.api.calendars.update(cal)
+    set({ calendars: updated })
+    get().fetchEvents()
+  },
+
+  deleteCalendar: async (id: string) => {
+    const updated = await window.api.calendars.delete(id)
+    set({ calendars: updated })
+    get().fetchEvents()
   },
 
   toggleCalendar: async (id: string) => {
@@ -178,6 +237,31 @@ export const useAppStore = create<AppState>((set, get) => ({
     await get().fetchEvents()
   },
 
+  createTimetable: async (name: string, startDate: string, endDate: string) => {
+    const newTt: Timetable = {
+      id: `tt-${Date.now()}`,
+      name,
+      start_date: startDate,
+      end_date: endDate,
+      status: 'draft',
+      settings_json: JSON.stringify({ slotDuration: 60, dayStartTime: '08:00', dayEndTime: '18:00' }),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+    const list = await window.api.timetables.create(newTt)
+    set({ timetables: list, activeTimetableId: newTt.id, activeTimetableSlots: [] })
+    await get().selectTimetable(newTt.id)
+  },
+
+  deleteTimetable: async (id: string) => {
+    const list = await window.api.timetables.delete(id)
+    const nextId = list.length > 0 ? list[0].id : null
+    set({ timetables: list, activeTimetableId: nextId, activeTimetableSlots: [] })
+    if (nextId) {
+      await get().selectTimetable(nextId)
+    }
+  },
+
   selectTimetable: async (id: string) => {
     const res = await window.api.timetables.get(id)
     if (res) {
@@ -198,6 +282,25 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   deleteSlot: async (id: string) => {
     await window.api.timetables.deleteSlot(id)
+    if (get().activeTimetableId) {
+      await get().selectTimetable(get().activeTimetableId!)
+    }
+  },
+
+  createSubject: async (name: string, color: string) => {
+    const newSub: Subject = {
+      id: `sub-${Date.now()}`,
+      name,
+      color,
+      weekly_hours: 0
+    }
+    const subs = await window.api.subjects.create(newSub)
+    set({ subjects: subs })
+  },
+
+  deleteSubject: async (id: string) => {
+    const subs = await window.api.subjects.delete(id)
+    set({ subjects: subs })
     if (get().activeTimetableId) {
       await get().selectTimetable(get().activeTimetableId!)
     }

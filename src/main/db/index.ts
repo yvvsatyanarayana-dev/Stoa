@@ -25,7 +25,6 @@ export function getDb(): DatabaseSync {
 }
 
 export function initDatabase(): void {
-  // Determine path: userData in production/development, or fallback
   const isDev = !app.isPackaged
   let dbDir: string
   try {
@@ -48,7 +47,6 @@ export function initDatabase(): void {
   db.exec('PRAGMA foreign_keys = ON;')
   db.exec('PRAGMA synchronous = NORMAL;')
 
-  // Create tables according to PRD
   createSchema()
   seedInitialData()
 }
@@ -208,133 +206,25 @@ function createSchema(): void {
 }
 
 function seedInitialData(): void {
-  // Check if calendars exist
+  // Only create a starter calendar if none exists (completely user editable/removable)
   const existingCal = db.prepare('SELECT count(*) as count FROM calendars').get() as { count: number }
   if (Number(existingCal.count) === 0) {
-    console.log('[Database] Seeding default calendars, categories, and resources...')
+    console.log('[Database] Creating clean user workspace...')
     
-    // Calendars
+    // User's default initial calendar with requested palette
     const insertCal = db.prepare('INSERT INTO calendars (id, name, color, source, visible, is_default) VALUES (?, ?, ?, ?, ?, ?)')
-    insertCal.run('cal-primary', 'Corporate & Operations', '#3b82f6', 'local', 1, 1)
-    insertCal.run('cal-clients', 'Client Meetings', '#10b981', 'local', 1, 0)
-    insertCal.run('cal-training', 'Training & Workshops', '#8b5cf6', 'local', 1, 0)
-    insertCal.run('cal-conferences', 'Conferences & Events', '#f59e0b', 'local', 1, 0)
+    insertCal.run('cal-primary', 'Main Calendar', '#6D0808', 'local', 1, 1)
 
-    // Categories
+    // Base categories styled with the user's theme palette
     const insertCat = db.prepare('INSERT INTO categories (id, name, color, icon) VALUES (?, ?, ?, ?)')
-    insertCat.run('cat-meeting', 'Meeting', '#3b82f6', 'Users')
-    insertCat.run('cat-appointment', 'Client Appointment', '#10b981', 'UserCheck')
-    insertCat.run('cat-interview', 'Interview', '#06b6d4', 'Briefcase')
-    insertCat.run('cat-training', 'Training Session', '#8b5cf6', 'GraduationCap')
-    insertCat.run('cat-webinar', 'Webinar / Stream', '#ec4899', 'Video')
-    insertCat.run('cat-conference', 'Conference Track', '#f59e0b', 'Presentation')
-    insertCat.run('cat-deadline', 'Project Milestone', '#ef4444', 'Flag')
-
-    // Default Resources
-    const insertRes = db.prepare('INSERT INTO resources (id, name, type, capacity, availability_json) VALUES (?, ?, ?, ?, ?)')
-    insertRes.run('res-room-a', 'Executive Boardroom', 'room', 16, JSON.stringify({ workingHours: { start: '08:00', end: '19:00' }, workingDays: [1,2,3,4,5] }))
-    insertRes.run('res-room-b', 'Conference Room Alpha', 'room', 30, JSON.stringify({ workingHours: { start: '08:00', end: '20:00' }, workingDays: [1,2,3,4,5,6] }))
-    insertRes.run('res-room-c', 'Meeting Pod 1', 'room', 4, JSON.stringify({ workingHours: { start: '08:00', end: '20:00' }, workingDays: [1,2,3,4,5,6,7] }))
-    insertRes.run('res-person-1', 'Dr. Sarah Mitchell (Lead Consultant)', 'person', 1, JSON.stringify({ workingHours: { start: '09:00', end: '17:00' }, workingDays: [1,2,3,4,5] }))
-    insertRes.run('res-person-2', 'Marcus Vance (Principal Trainer)', 'person', 1, JSON.stringify({ workingHours: { start: '08:30', end: '16:30' }, workingDays: [1,2,3,4,5] }))
-    insertRes.run('res-eq-1', 'Main 4K Projector & Audio Rig', 'equipment', 1, null)
-
-    // Default Subjects for Timetable
-    const insertSub = db.prepare('INSERT INTO subjects (id, name, color, icon, weekly_hours) VALUES (?, ?, ?, ?, ?)')
-    insertSub.run('sub-1', 'Executive Briefing & Strategy', '#3b82f6', 'TrendingUp', 4)
-    insertSub.run('sub-2', 'Technical Architecture Workshop', '#8b5cf6', 'Code', 6)
-    insertSub.run('sub-3', 'Operations Review', '#10b981', 'CheckCircle', 3)
-    insertSub.run('sub-4', 'Client Consultation Window', '#f59e0b', 'MessageSquare', 5)
-
-    // Default sample timetable
-    const insertTt = db.prepare('INSERT INTO timetables (id, name, start_date, end_date, status, settings_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-    const nowIso = new Date().toISOString()
-    insertTt.run(
-      'tt-default',
-      'Q4 Master Operations & Training Roster',
-      '2026-10-01',
-      '2026-12-31',
-      'published',
-      JSON.stringify({
-        slotDuration: 60,
-        dayStartTime: '08:00',
-        dayEndTime: '18:00',
-        daysToShow: [1, 2, 3, 4, 5],
-        lunchBreak: { start: '12:00', end: '13:00' }
-      }),
-      nowIso,
-      nowIso
-    )
-
-    // Default timetable slots
-    const insertSlot = db.prepare('INSERT INTO timetable_slots (id, timetable_id, subject_id, resource_id, day, start, end, room, week_pattern) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    insertSlot.run('slot-1', 'tt-default', 'sub-1', 'res-person-1', 1, '09:00', '11:00', 'Executive Boardroom', 'all')
-    insertSlot.run('slot-2', 'tt-default', 'sub-2', 'res-person-2', 2, '10:00', '12:00', 'Conference Room Alpha', 'all')
-    insertSlot.run('slot-3', 'tt-default', 'sub-3', 'res-person-1', 3, '14:00', '16:00', 'Executive Boardroom', 'all')
-    insertSlot.run('slot-4', 'tt-default', 'sub-4', 'res-person-2', 4, '09:30', '11:30', 'Meeting Pod 1', 'all')
-
-    // Initial seed events (Today + upcoming)
-    const today = new Date()
-    const fmtDate = (d: Date, hour: number, minute: number): string => {
-      const copy = new Date(d)
-      copy.setHours(hour, minute, 0, 0)
-      return copy.toISOString()
-    }
-
-    const insertEvent = db.prepare(`
-      INSERT INTO events (id, calendar_id, title, description, location, meeting_url, start, end, all_day, timezone, priority, status, category_id, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `)
-
-    insertEvent.run(
-      'evt-1',
-      'cal-primary',
-      'Senior Leadership Sync & Roadmap',
-      'Reviewing Q4 OKRs, budget approvals, and timeline milestones.',
-      'Executive Boardroom',
-      'https://teams.microsoft.com/l/meetup-join/sample-link',
-      fmtDate(today, 10, 0),
-      fmtDate(today, 11, 30),
-      0,
-      Intl.DateTimeFormat().resolvedOptions().timeZone,
-      'high',
-      'confirmed',
-      'cat-meeting',
-      nowIso,
-      nowIso
-    )
-
-    insertEvent.run(
-      'evt-2',
-      'cal-clients',
-      'AcroCorp Architecture Onboarding',
-      'Technical architecture handover with the client engineering directors.',
-      'Conference Room Alpha',
-      'https://meet.google.com/abc-defg-hij',
-      fmtDate(today, 14, 0),
-      fmtDate(today, 15, 0),
-      0,
-      Intl.DateTimeFormat().resolvedOptions().timeZone,
-      'urgent',
-      'confirmed',
-      'cat-appointment',
-      nowIso,
-      nowIso
-    )
-
-    // Add reminders
-    const insertRem = db.prepare('INSERT INTO reminders (id, event_id, offset_minutes, channel) VALUES (?, ?, ?, ?)')
-    insertRem.run('rem-1', 'evt-1', 15, 'both')
-    insertRem.run('rem-2', 'evt-2', 10, 'both')
-
-    // Add event resources
-    const insertEvtRes = db.prepare('INSERT INTO event_resources (event_id, resource_id) VALUES (?, ?)')
-    insertEvtRes.run('evt-1', 'res-room-a')
-    insertEvtRes.run('evt-1', 'res-person-1')
-    insertEvtRes.run('evt-2', 'res-room-b')
+    insertCat.run('cat-meeting', 'Meeting', '#6D0808', 'Users')
+    insertCat.run('cat-appointment', 'Appointment', '#757D6F', 'UserCheck')
+    insertCat.run('cat-training', 'Training / Session', '#8A1B1B', 'GraduationCap')
+    insertCat.run('cat-event', 'Special Event', '#A33B3B', 'Presentation')
+    insertCat.run('cat-deadline', 'Milestone & Deadline', '#C45555', 'Flag')
   }
 
-  // Ensure default settings exist
+  // Ensure default settings exist with user's theme palette defaults
   const existingSettings = db.prepare('SELECT count(*) as count FROM settings').get() as { count: number }
   if (Number(existingSettings.count) === 0) {
     const defaultSettings: ChronoDeskSettings = {
@@ -347,7 +237,7 @@ function seedInitialData(): void {
       quiet_hours_start: '22:00',
       quiet_hours_end: '08:00',
       company_name: 'ChronoDesk Enterprise',
-      company_footer: 'Confidential & Proprietary'
+      company_footer: 'Personal & Confidential'
     }
 
     const insertSetting = db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)')
@@ -361,12 +251,26 @@ function seedInitialData(): void {
 
 export const calendarDb = {
   list(): Calendar[] {
-    const rows = getDb().prepare('SELECT * FROM calendars ORDER BY name ASC').all()
+    const rows = getDb().prepare('SELECT * FROM calendars ORDER BY is_default DESC, name ASC').all()
     return rows.map((r: any) => ({
       ...r,
       visible: Boolean(r.visible),
       is_default: Boolean(r.is_default)
     }))
+  },
+  create(cal: Calendar): Calendar[] {
+    getDb().prepare('INSERT INTO calendars (id, name, color, source, visible, is_default) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(cal.id, cal.name, cal.color, cal.source || 'local', cal.visible ? 1 : 0, cal.is_default ? 1 : 0)
+    return calendarDb.list()
+  },
+  update(cal: Calendar): Calendar[] {
+    getDb().prepare('UPDATE calendars SET name = ?, color = ? WHERE id = ?')
+      .run(cal.name, cal.color, cal.id)
+    return calendarDb.list()
+  },
+  delete(id: string): Calendar[] {
+    getDb().prepare('DELETE FROM calendars WHERE id = ?').run(id)
+    return calendarDb.list()
   },
   toggleVisibility(id: string, visible: boolean): void {
     getDb().prepare('UPDATE calendars SET visible = ? WHERE id = ?').run(visible ? 1 : 0, id)
@@ -376,6 +280,15 @@ export const calendarDb = {
 export const categoryDb = {
   list(): Category[] {
     return getDb().prepare('SELECT * FROM categories ORDER BY name ASC').all() as unknown as Category[]
+  },
+  create(cat: Category): Category[] {
+    getDb().prepare('INSERT INTO categories (id, name, color, icon) VALUES (?, ?, ?, ?)')
+      .run(cat.id, cat.name, cat.color, cat.icon || null)
+    return categoryDb.list()
+  },
+  delete(id: string): Category[] {
+    getDb().prepare('DELETE FROM categories WHERE id = ?').run(id)
+    return categoryDb.list()
   }
 }
 
@@ -383,16 +296,19 @@ export const resourceDb = {
   list(): Resource[] {
     return getDb().prepare('SELECT * FROM resources ORDER BY name ASC').all() as unknown as Resource[]
   },
-  create(res: Resource): void {
+  create(res: Resource): Resource[] {
     getDb().prepare('INSERT INTO resources (id, name, type, capacity, availability_json) VALUES (?, ?, ?, ?, ?)')
       .run(res.id, res.name, res.type, res.capacity, res.availability_json || null)
+    return resourceDb.list()
   },
-  update(res: Resource): void {
+  update(res: Resource): Resource[] {
     getDb().prepare('UPDATE resources SET name = ?, type = ?, capacity = ?, availability_json = ? WHERE id = ?')
       .run(res.name, res.type, res.capacity, res.availability_json || null, res.id)
+    return resourceDb.list()
   },
-  delete(id: string): void {
+  delete(id: string): Resource[] {
     getDb().prepare('DELETE FROM resources WHERE id = ?').run(id)
+    return resourceDb.list()
   }
 }
 
@@ -432,7 +348,6 @@ export const eventDb = {
     sql += ' ORDER BY e.start ASC'
     const rows = db.prepare(sql).all(...params) as any[]
 
-    // Attach attendees, resources, and reminders
     return rows.map((r) => {
       const resRows = db.prepare(`
         SELECT r.* FROM resources r
@@ -554,9 +469,40 @@ export const eventDb = {
   }
 }
 
+export const subjectDb = {
+  list(): Subject[] {
+    return getDb().prepare('SELECT * FROM subjects ORDER BY name ASC').all() as unknown as Subject[]
+  },
+  create(sub: Subject): Subject[] {
+    getDb().prepare('INSERT INTO subjects (id, name, color, icon, weekly_hours) VALUES (?, ?, ?, ?, ?)')
+      .run(sub.id, sub.name, sub.color, sub.icon || null, sub.weekly_hours || 0)
+    return subjectDb.list()
+  },
+  delete(id: string): Subject[] {
+    getDb().prepare('DELETE FROM subjects WHERE id = ?').run(id)
+    return subjectDb.list()
+  }
+}
+
 export const timetableDb = {
   list(): Timetable[] {
     return getDb().prepare('SELECT * FROM timetables ORDER BY created_at DESC').all() as unknown as Timetable[]
+  },
+  create(tt: Timetable): Timetable[] {
+    const now = new Date().toISOString()
+    getDb().prepare('INSERT INTO timetables (id, name, start_date, end_date, status, settings_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(tt.id, tt.name, tt.start_date, tt.end_date, tt.status || 'draft', tt.settings_json || null, now, now)
+    return timetableDb.list()
+  },
+  update(tt: Timetable): Timetable[] {
+    const now = new Date().toISOString()
+    getDb().prepare('UPDATE timetables SET name = ?, start_date = ?, end_date = ?, status = ?, settings_json = ?, updated_at = ? WHERE id = ?')
+      .run(tt.name, tt.start_date, tt.end_date, tt.status, tt.settings_json || null, now, tt.id)
+    return timetableDb.list()
+  },
+  delete(id: string): Timetable[] {
+    getDb().prepare('DELETE FROM timetables WHERE id = ?').run(id)
+    return timetableDb.list()
   },
   get(id: string): { timetable: Timetable; slots: TimetableSlot[]; subjects: Subject[] } | null {
     const db = getDb()
@@ -587,7 +533,7 @@ export const timetableDb = {
       resource: s.res_name ? { id: s.resource_id, name: s.res_name, type: s.res_type, capacity: 1 } : undefined
     }))
 
-    const subjects = db.prepare('SELECT * FROM subjects ORDER BY name ASC').all() as unknown as Subject[]
+    const subjects = subjectDb.list()
 
     return { timetable: tt, slots: formattedSlots, subjects }
   },
@@ -625,7 +571,6 @@ export const reminderDb = {
   getDueReminders(): Array<{ reminder: Reminder; event: CalendarEvent }> {
     const db = getDb()
     const now = new Date()
-    // Find reminders where (event.start - offset_minutes) <= now AND fired_at IS NULL AND (snoozed_until IS NULL OR snoozed_until <= now)
     const sql = `
       SELECT r.*, e.title as evt_title, e.start as evt_start, e.end as evt_end, e.location as evt_location, e.meeting_url as evt_meeting_url, e.calendar_id as evt_cal_id
       FROM reminders r
@@ -697,7 +642,7 @@ export const settingsDb = {
     for (const r of rows) {
       if (r.value === 'true') result[r.key] = true
       else if (r.value === 'false') result[r.key] = false
-      else if (!isNaN(Number(r.value)) && r.key.includes('offset') || r.key.includes('day')) result[r.key] = Number(r.value)
+      else if (!isNaN(Number(r.value)) && (r.key.includes('offset') || r.key.includes('day'))) result[r.key] = Number(r.value)
       else result[r.key] = r.value
     }
     return result as ChronoDeskSettings

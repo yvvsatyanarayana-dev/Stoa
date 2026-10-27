@@ -9,6 +9,9 @@ import { NotificationsView } from './components/notifications/NotificationsView'
 import { SettingsView } from './components/settings/SettingsView'
 import { EventModal } from './components/modals/EventModal'
 import { SlotModal } from './components/modals/SlotModal'
+import { CalendarModal } from './components/modals/CalendarModal'
+import { TimetableModal } from './components/modals/TimetableModal'
+import { SubjectModal } from './components/modals/SubjectModal'
 import { useAppStore } from './store/useAppStore'
 
 export const App: React.FC = () => {
@@ -30,18 +33,18 @@ export const App: React.FC = () => {
   }, [])
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 font-sans">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#2D0000] text-[#EEEAD7] font-sans">
       {/* Primary Sidebar */}
       <Sidebar />
 
       {/* Main Workspace Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-[#2D0000]">
         <Header />
 
-        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative bg-[#2D0000]">
           {isLoading ? (
-            <div className="flex-1 flex items-center justify-center bg-slate-950 text-xs text-slate-500">
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping mr-2" />
+            <div className="flex-1 flex items-center justify-center bg-[#2D0000] text-xs text-[#757D6F]">
+              <span className="w-2 h-2 rounded-full bg-[#6D0808] animate-ping mr-2" />
               Loading ChronoDesk Pro...
             </div>
           ) : (
@@ -57,9 +60,12 @@ export const App: React.FC = () => {
         </main>
       </div>
 
-      {/* Global Modals */}
+      {/* Global Modals for full user data creation */}
       <EventModal />
       <SlotModal />
+      <CalendarModal />
+      <TimetableModal />
+      <SubjectModal />
     </div>
   )
 }
