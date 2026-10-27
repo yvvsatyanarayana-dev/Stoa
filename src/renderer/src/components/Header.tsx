@@ -7,7 +7,9 @@ import {
   Calendar as CalendarIcon,
   Plus,
   Sun,
-  Moon
+  Moon,
+  Zap,
+  Globe
 } from 'lucide-react'
 import { useAppStore, CalendarViewType } from '../store/useAppStore'
 import { format, addWeeks, subWeeks, addDays, subDays, addMonths, subMonths } from 'date-fns'
@@ -26,6 +28,8 @@ export const Header: React.FC = () => {
     setCurrentView,
     setIsEventModalOpen,
     setSelectedEvent,
+    setIsFreeSlotFinderOpen,
+    setIsWorldClockOpen,
     themeMode,
     toggleThemeMode
   } = useAppStore()
@@ -90,6 +94,8 @@ export const Header: React.FC = () => {
                 ? 'Timetable Builder'
                 : currentView === 'resources'
                 ? 'Resource & Room Booking'
+                : currentView === 'conferences'
+                ? 'Conference & Multi-Track Planner'
                 : currentView === 'dashboard'
                 ? 'Analytics & Utilization Dashboard'
                 : currentView === 'notifications'
@@ -141,6 +147,24 @@ export const Header: React.FC = () => {
             ↵
           </kbd>
         </div>
+
+        {/* Smart Free Slot Finder */}
+        <button
+          onClick={() => setIsFreeSlotFinderOpen(true)}
+          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
+          title="Smart Free Slot Finder"
+        >
+          <Zap className="w-3.5 h-3.5 text-amber-500" />
+        </button>
+
+        {/* World Clock & Timezone Planner */}
+        <button
+          onClick={() => setIsWorldClockOpen(true)}
+          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
+          title="World Clock & Cross-Timezone Planner"
+        >
+          <Globe className="w-3.5 h-3.5" />
+        </button>
 
         {/* Theme Switcher Toggle (Light <-> Dark) */}
         <button

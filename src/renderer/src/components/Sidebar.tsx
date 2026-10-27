@@ -3,11 +3,13 @@ import {
   Calendar as CalendarIcon,
   TableProperties,
   Users,
+  Presentation,
   LayoutDashboard,
   Bell,
   Settings as SettingsIcon,
   Plus,
-  Trash2
+  Trash2,
+  Rss
 } from 'lucide-react'
 import { useAppStore, AppView } from '../store/useAppStore'
 
@@ -21,13 +23,15 @@ export const Sidebar: React.FC = () => {
     notificationLogs,
     setIsEventModalOpen,
     setSelectedEvent,
-    setIsCalendarModalOpen
+    setIsCalendarModalOpen,
+    setIsFeedSubscriptionModalOpen
   } = useAppStore()
 
   const navItems: Array<{ id: AppView; label: string; icon: React.ReactNode; badge?: number }> = [
     { id: 'calendar', label: 'Calendar', icon: <CalendarIcon className="w-3.5 h-3.5" /> },
     { id: 'timetable', label: 'Timetable Builder', icon: <TableProperties className="w-3.5 h-3.5" /> },
     { id: 'resources', label: 'Resources & Rooms', icon: <Users className="w-3.5 h-3.5" /> },
+    { id: 'conferences', label: 'Conferences & Events', icon: <Presentation className="w-3.5 h-3.5" /> },
     { id: 'dashboard', label: 'Dashboard & Reports', icon: <LayoutDashboard className="w-3.5 h-3.5" /> },
     {
       id: 'notifications',
@@ -97,13 +101,22 @@ export const Sidebar: React.FC = () => {
           <span className="text-[10px] font-semibold tracking-wider uppercase text-[var(--text-muted)]">
             Calendars
           </span>
-          <button
-            onClick={() => setIsCalendarModalOpen(true)}
-            className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded transition-colors"
-            title="Create Custom Calendar"
-          >
-            <Plus className="w-3 h-3" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setIsFeedSubscriptionModalOpen(true)}
+              className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded transition-colors"
+              title="Subscribe to External Feed (.ics / Webcal)"
+            >
+              <Rss className="w-3 h-3" />
+            </button>
+            <button
+              onClick={() => setIsCalendarModalOpen(true)}
+              className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded transition-colors"
+              title="Create Custom Calendar"
+            >
+              <Plus className="w-3 h-3" />
+            </button>
+          </div>
         </div>
         <div className="space-y-0.5">
           {calendars.map((cal) => (

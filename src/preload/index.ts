@@ -9,7 +9,12 @@ import type {
   TimetableSlot,
   Subject,
   ChronoDeskSettings,
-  NotificationLog
+  NotificationLog,
+  Conference,
+  FreeSlotRequest,
+  FreeSlotOption,
+  SolverOptions,
+  SolverResult
 } from '../types'
 import type { ConflictReport } from '../main/engine/conflictEngine'
 
@@ -47,7 +52,11 @@ export const api = {
     delete: (id: string): Promise<{ success: boolean }> =>
       ipcRenderer.invoke('events:delete', id),
     checkConflicts: (event: Partial<CalendarEvent>, resourceIds: string[], excludeEventId?: string): Promise<ConflictReport> =>
-      ipcRenderer.invoke('events:check-conflicts', event, resourceIds, excludeEventId)
+      ipcRenderer.invoke('events:check-conflicts', event, resourceIds, excludeEventId),
+    findFreeSlots: (req: FreeSlotRequest): Promise<FreeSlotOption[]> =>
+      ipcRenderer.invoke('calendar:find-free-slots', req),
+    importIcs: (options: { url?: string; content?: string; calendarName?: string; calendarColor?: string }): Promise<{ calendar: Calendar; importedCount: number }> =>
+      ipcRenderer.invoke('calendar:import-ics', options)
   },
   timetables: {
     list: (): Promise<Timetable[]> => ipcRenderer.invoke('timetables:list'),
@@ -65,7 +74,11 @@ export const api = {
     saveVersion: (timetableId: string, snapshotJson: string): Promise<string> =>
       ipcRenderer.invoke('timetables:save-version', timetableId, snapshotJson),
     getVersions: (timetableId: string): Promise<any[]> =>
-      ipcRenderer.invoke('timetables:get-versions', timetableId)
+      ipcRenderer.invoke('timetables:get-versions', timetableId),
+    autoGenerate: (options: SolverOptions): Promise<SolverResult> =>
+      ipcRenderer.invoke('timetables:auto-generate', options),
+    applyGenerated: (slots: TimetableSlot[]): Promise<{ success: boolean; count: number }> =>
+      ipcRenderer.invoke('timetables:apply-generated', slots)
   },
   subjects: {
     list: (): Promise<Subject[]> => ipcRenderer.invoke('subjects:list'),
@@ -98,6 +111,13 @@ export const api = {
   settings: {
     get: (): Promise<ChronoDeskSettings> => ipcRenderer.invoke('settings:get'),
     set: (key: string, value: any): Promise<ChronoDeskSettings> => ipcRenderer.invoke('settings:set', key, value)
+  },
+  conferences: {
+    list: (): Promise<Conference[]> => ipcRenderer.invoke('conferences:list'),
+    get: (id: string): Promise<Conference | null> => ipcRenderer.invoke('conferences:get', id),
+    create: (conf: Conference): Promise<Conference> => ipcRenderer.invoke('conferences:create', conf),
+    update: (conf: Conference): Promise<Conference> => ipcRenderer.invoke('conferences:update', conf),
+    delete: (id: string): Promise<{ success: boolean }> => ipcRenderer.invoke('conferences:delete', id)
   }
 }
 

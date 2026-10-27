@@ -8,7 +8,8 @@ import {
   Printer,
   Trash2,
   TableProperties,
-  BookOpen
+  BookOpen,
+  Sparkles
 } from 'lucide-react'
 
 export const TimetableBuilderView: React.FC = () => {
@@ -24,6 +25,7 @@ export const TimetableBuilderView: React.FC = () => {
     setIsSlotModalOpen,
     setIsTimetableModalOpen,
     setIsSubjectModalOpen,
+    setIsAutoGenerateModalOpen,
     deleteSubject
   } = useAppStore()
 
@@ -234,8 +236,17 @@ export const TimetableBuilderView: React.FC = () => {
           </button>
 
           <button
-            onClick={() => handleAddSlot(1, '09:00')}
+            onClick={() => setIsAutoGenerateModalOpen(true)}
             className="btn-primary flex items-center gap-1.5 py-1 px-2.5 text-xs font-medium"
+            title="Auto-Generate Conflict-Free Roster"
+          >
+            <Sparkles className="w-3 h-3 stroke-[2]" />
+            <span>Auto-Generate</span>
+          </button>
+
+          <button
+            onClick={() => handleAddSlot(1, '09:00')}
+            className="btn-secondary flex items-center gap-1.5 py-1 px-2.5 text-xs font-medium"
           >
             <Plus className="w-3 h-3 stroke-[2.5]" />
             <span>Add Slot</span>

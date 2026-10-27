@@ -5,6 +5,7 @@ import { Header } from './components/Header'
 import { CalendarView } from './components/calendar/CalendarView'
 import { TimetableBuilderView } from './components/timetable/TimetableBuilderView'
 import { ResourcesView } from './components/resources/ResourcesView'
+import { ConferenceView } from './components/conference/ConferenceView'
 import { DashboardView } from './components/dashboard/DashboardView'
 import { NotificationsView } from './components/notifications/NotificationsView'
 import { SettingsView } from './components/settings/SettingsView'
@@ -13,6 +14,10 @@ import { SlotModal } from './components/modals/SlotModal'
 import { CalendarModal } from './components/modals/CalendarModal'
 import { TimetableModal } from './components/modals/TimetableModal'
 import { SubjectModal } from './components/modals/SubjectModal'
+import { AutoGenerateModal } from './components/modals/AutoGenerateModal'
+import { FreeSlotFinderModal } from './components/modals/FreeSlotFinderModal'
+import { WorldClockModal } from './components/modals/WorldClockModal'
+import { FeedSubscriptionModal } from './components/modals/FeedSubscriptionModal'
 import { useAppStore } from './store/useAppStore'
 
 export const App: React.FC = () => {
@@ -58,6 +63,7 @@ export const App: React.FC = () => {
                 {currentView === 'calendar' && <CalendarView />}
                 {currentView === 'timetable' && <TimetableBuilderView />}
                 {currentView === 'resources' && <ResourcesView />}
+                {currentView === 'conferences' && <ConferenceView />}
                 {currentView === 'dashboard' && <DashboardView />}
                 {currentView === 'notifications' && <NotificationsView />}
                 {currentView === 'settings' && <SettingsView />}
@@ -73,6 +79,10 @@ export const App: React.FC = () => {
       <CalendarModal />
       <TimetableModal />
       <SubjectModal />
+      <AutoGenerateModal />
+      <FreeSlotFinderModal />
+      <WorldClockModal />
+      <FeedSubscriptionModal />
     </div>
   )
 }

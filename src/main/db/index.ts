@@ -12,7 +12,8 @@ import type {
   Subject,
   Reminder,
   NotificationLog,
-  ChronoDeskSettings
+  ChronoDeskSettings,
+  Conference
 } from '../../types'
 
 let db: DatabaseSync
@@ -195,6 +196,18 @@ function createSchema(): void {
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS conferences (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      date TEXT NOT NULL,
+      venue TEXT,
+      tracks_json TEXT NOT NULL DEFAULT '[]',
+      sessions_json TEXT NOT NULL DEFAULT '[]',
+      runsheet_json TEXT NOT NULL DEFAULT '[]',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
     );
 
     CREATE INDEX IF NOT EXISTS idx_events_start ON events(start);
@@ -663,5 +676,62 @@ export const notificationLogDb = {
   },
   clear(): void {
     getDb().prepare('DELETE FROM notifications_log').run()
+  }
+}
+
+export const conferenceDb = {
+  list(): Conference[] {
+    const rows = getDb().prepare('SELECT * FROM conferences ORDER BY date ASC').all() as any[]
+    return rows.map((r) => ({
+      ...r,
+      tracks: JSON.parse(r.tracks_json || '[]'),
+      sessions: JSON.parse(r.sessions_json || '[]'),
+      runsheet: JSON.parse(r.runsheet_json || '[]')
+    }))
+  },
+  get(id: string): Conference | null {
+    const r = getDb().prepare('SELECT * FROM conferences WHERE id = ?').get(id) as any
+    if (!r) return null
+    return {
+      ...r,
+      tracks: JSON.parse(r.tracks_json || '[]'),
+      sessions: JSON.parse(r.sessions_json || '[]'),
+      runsheet: JSON.parse(r.runsheet_json || '[]')
+    }
+  },
+  create(conf: Conference): void {
+    getDb().prepare(`
+      INSERT INTO conferences (id, title, date, venue, tracks_json, sessions_json, runsheet_json, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      conf.id,
+      conf.title,
+      conf.date,
+      conf.venue || null,
+      conf.tracks_json,
+      conf.sessions_json,
+      conf.runsheet_json,
+      conf.created_at,
+      conf.updated_at
+    )
+  },
+  update(conf: Conference): void {
+    getDb().prepare(`
+      UPDATE conferences SET
+        title = ?, date = ?, venue = ?, tracks_json = ?, sessions_json = ?, runsheet_json = ?, updated_at = ?
+      WHERE id = ?
+    `).run(
+      conf.title,
+      conf.date,
+      conf.venue || null,
+      conf.tracks_json,
+      conf.sessions_json,
+      conf.runsheet_json,
+      new Date().toISOString(),
+      conf.id
+    )
+  },
+  delete(id: string): void {
+    getDb().prepare('DELETE FROM conferences WHERE id = ?').run(id)
   }
 }

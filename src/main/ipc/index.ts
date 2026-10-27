@@ -8,10 +8,14 @@ import {
   subjectDb,
   reminderDb,
   settingsDb,
-  notificationLogDb
+  notificationLogDb,
+  conferenceDb
 } from '../db'
 import { checkEventConflicts, checkTimetableSlotConflicts } from '../engine/conflictEngine'
-import type { Calendar, CalendarEvent, Resource, Timetable, TimetableSlot, Subject } from '../../types'
+import { solveTimetable, SolverOptions } from '../engine/timetableSolver'
+import { findCommonFreeSlots, FreeSlotRequest } from '../engine/slotFinder'
+import { parseIcsText, fetchIcsFeed } from '../engine/icsFeed'
+import type { Calendar, CalendarEvent, Resource, Timetable, TimetableSlot, Subject, Conference } from '../../types'
 
 let activeMainWindow: BrowserWindow | null = null
 
@@ -97,6 +101,48 @@ export function registerIpcHandlers(): void {
     return checkEventConflicts(event, resourceIds, excludeEventId)
   })
 
+  // Intelligent Free Slot Finder
+  ipcMain.handle('calendar:find-free-slots', async (_, req: FreeSlotRequest) => {
+    const allEvents = eventDb.list()
+    return findCommonFreeSlots(allEvents, req)
+  })
+
+  // External Calendar Feed Import (.ics / Webcal)
+  ipcMain.handle('calendar:import-ics', async (_, options: { url?: string; content?: string; calendarName?: string; calendarColor?: string }) => {
+    let rawContent = options.content || ''
+    if (options.url) {
+      rawContent = await fetchIcsFeed(options.url)
+    }
+
+    const calId = `cal-feed-${Date.now()}`
+    const parsed = parseIcsText(rawContent, calId)
+    const finalCalName = options.calendarName || parsed.calendarName || 'Imported Calendar'
+
+    // Create Calendar
+    const newCal: Calendar = {
+      id: calId,
+      name: finalCalName,
+      color: options.calendarColor || '#737373',
+      source: options.url ? 'feed' : 'ics_import',
+      visible: true
+    }
+    calendarDb.create(newCal)
+
+    // Insert parsed events
+    let importedCount = 0
+    for (const evt of parsed.events) {
+      if (evt.start && evt.end && evt.title) {
+        eventDb.create(evt as CalendarEvent)
+        importedCount++
+      }
+    }
+
+    return {
+      calendar: newCal,
+      importedCount
+    }
+  })
+
   // Timetables
   ipcMain.handle('timetables:list', async () => {
     return timetableDb.list()
@@ -138,6 +184,18 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('timetables:get-versions', async (_, timetableId: string) => {
     return timetableDb.getVersions(timetableId)
+  })
+
+  // Constraint Solver Auto-Generator
+  ipcMain.handle('timetables:auto-generate', async (_, options: SolverOptions) => {
+    return solveTimetable(options)
+  })
+
+  ipcMain.handle('timetables:apply-generated', async (_, slots: TimetableSlot[]) => {
+    for (const slot of slots) {
+      timetableDb.saveSlot(slot)
+    }
+    return { success: true, count: slots.length }
   })
 
   // Subjects
@@ -198,5 +256,29 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('settings:set', async (_, key: string, value: any) => {
     settingsDb.set(key, value)
     return settingsDb.get()
+  })
+
+  // Conferences & Run-Sheets
+  ipcMain.handle('conferences:list', async () => {
+    return conferenceDb.list()
+  })
+
+  ipcMain.handle('conferences:get', async (_, id: string) => {
+    return conferenceDb.get(id)
+  })
+
+  ipcMain.handle('conferences:create', async (_, conf: Conference) => {
+    conferenceDb.create(conf)
+    return conferenceDb.get(conf.id)
+  })
+
+  ipcMain.handle('conferences:update', async (_, conf: Conference) => {
+    conferenceDb.update(conf)
+    return conferenceDb.get(conf.id)
+  })
+
+  ipcMain.handle('conferences:delete', async (_, id: string) => {
+    conferenceDb.delete(id)
+    return { success: true }
   })
 }

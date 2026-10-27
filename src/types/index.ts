@@ -150,3 +150,95 @@ export interface ChronoDeskSettings {
   company_logo?: string
   company_footer?: string
 }
+
+// ----------------- Multi-Track Conference & Run-Sheet Planner -----------------
+
+export interface ConferenceTrack {
+  id: string
+  name: string
+  room?: string
+  color?: string
+}
+
+export interface ConferenceSession {
+  id: string
+  track_id: string
+  title: string
+  speaker: string
+  speaker_role?: string
+  start: string // "09:00"
+  end: string   // "10:00"
+  description?: string
+}
+
+export interface RunSheetItem {
+  id: string
+  time: string // "08:30"
+  title: string
+  lead_person?: string
+  status: 'upcoming' | 'live' | 'completed'
+  notes?: string
+}
+
+export interface Conference {
+  id: string
+  title: string
+  date: string // YYYY-MM-DD
+  venue?: string
+  tracks_json: string // serialized ConferenceTrack[]
+  sessions_json: string // serialized ConferenceSession[]
+  runsheet_json: string // serialized RunSheetItem[]
+  created_at: string
+  updated_at: string
+  // Populated in UI
+  tracks?: ConferenceTrack[]
+  sessions?: ConferenceSession[]
+  runsheet?: RunSheetItem[]
+}
+
+// ----------------- Free Slot Finder Types -----------------
+
+export interface FreeSlotRequest {
+  durationMinutes: number
+  startDate: string // YYYY-MM-DD
+  daysToSearch: number
+  workingHoursStart?: string
+  workingHoursEnd?: string
+  targetResourceIds?: string[]
+}
+
+export interface FreeSlotOption {
+  start: string
+  end: string
+  date: string
+  timeRange: string
+  score: number
+  recommendedReason: string
+}
+
+// ----------------- Solver Types -----------------
+
+export interface SolverSubjectRequirement {
+  subject_id: string
+  required_sessions: number
+  resource_id?: string
+  room?: string
+}
+
+export interface SolverOptions {
+  timetable_id: string
+  days: number[]
+  time_slots: Array<{ start: string; end: string }>
+  requirements: SolverSubjectRequirement[]
+  resources: Resource[]
+  subjects: Subject[]
+  max_sessions_per_day?: number
+}
+
+export interface SolverResult {
+  success: boolean
+  slots: TimetableSlot[]
+  unscheduledCount: number
+  message: string
+}
+

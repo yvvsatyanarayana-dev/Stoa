@@ -278,13 +278,29 @@ export const EventModal: React.FC = () => {
                 </div>
               ))}
               {conflictReport.suggestedFreeSlots && conflictReport.suggestedFreeSlots.length > 0 && (
-                <div className="pt-1 text-[11px] text-[var(--text-primary)] pl-6 flex items-center gap-1.5 font-semibold">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>
-                    Suggested free slot:{' '}
-                    {format(new Date(conflictReport.suggestedFreeSlots[0].start), 'HH:mm')} -{' '}
-                    {format(new Date(conflictReport.suggestedFreeSlots[0].end), 'HH:mm')}
-                  </span>
+                <div className="pt-2 pl-6 flex items-center justify-between">
+                  <div className="text-[11px] text-[var(--text-primary)] flex items-center gap-1.5 font-semibold">
+                    <Clock className="w-3.5 h-3.5 opacity-70" />
+                    <span>
+                      Alternative Free Window:{' '}
+                      {format(new Date(conflictReport.suggestedFreeSlots[0].start), 'HH:mm')} -{' '}
+                      {format(new Date(conflictReport.suggestedFreeSlots[0].end), 'HH:mm')}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const altStart = new Date(conflictReport.suggestedFreeSlots![0].start)
+                      const altEnd = new Date(conflictReport.suggestedFreeSlots![0].end)
+                      setStartDate(format(altStart, 'yyyy-MM-dd'))
+                      setStartTime(format(altStart, 'HH:mm'))
+                      setEndDate(format(altEnd, 'yyyy-MM-dd'))
+                      setEndTime(format(altEnd, 'HH:mm'))
+                    }}
+                    className="btn-primary text-[10px] font-semibold py-0.5 px-2.5 shadow-xs"
+                  >
+                    1-Click Resolve
+                  </button>
                 </div>
               )}
             </div>
