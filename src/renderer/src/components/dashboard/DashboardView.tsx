@@ -43,36 +43,36 @@ export const DashboardView: React.FC = () => {
   const personResources = resources.filter((r) => r.type === 'person')
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 space-y-6 text-[var(--text-primary)]">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 space-y-5 text-[var(--text-primary)]">
+      <div className="max-w-5xl mx-auto space-y-5">
         {/* Next Meeting Banner */}
-        <div className="card p-6 relative overflow-hidden shadow-md">
+        <div className="card p-5 relative overflow-hidden shadow-xs">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
             <div>
-              <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1">
-                <Clock className="w-4 h-4 text-[var(--accent)]" />
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">
+                <Clock className="w-3.5 h-3.5 opacity-70" />
                 <span>Next Scheduled Event</span>
               </div>
-              <h2 className="text-xl font-bold text-[var(--text-primary)]">
+              <h2 className="text-base font-semibold tracking-tight text-[var(--text-primary)]">
                 {nextEvent ? nextEvent.title : 'Schedule is Clear'}
               </h2>
               {nextEvent ? (
-                <p className="text-xs text-[var(--text-secondary)] font-mono mt-1">
+                <p className="text-[11px] text-[var(--text-muted)] font-mono mt-0.5">
                   {format(new Date(nextEvent.start), 'HH:mm')} - {format(new Date(nextEvent.end), 'HH:mm')}
                   {nextEvent.location ? ` • ${nextEvent.location}` : ''}
                 </p>
               ) : (
                 <p className="text-xs text-[var(--text-muted)] mt-1">
-                  You have no upcoming events. Click "Create Event" to schedule your next appointment or session.
+                  You have no upcoming events. Click below to schedule your next appointment or session.
                 </p>
               )}
             </div>
 
             {nextEvent ? (
-              <div className="flex items-center gap-3">
-                <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] px-4 py-2.5 rounded-[var(--radius-md)] text-center">
-                  <div className="text-[10px] text-[var(--text-muted)] uppercase font-bold">Starts in</div>
-                  <div className="text-sm font-bold text-[var(--text-primary)] font-mono">{countdown}</div>
+              <div className="flex items-center gap-2.5">
+                <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] px-3 py-1.5 rounded-[var(--radius-md)] text-center">
+                  <div className="text-[9px] text-[var(--text-muted)] uppercase font-mono tracking-wider">Starts in</div>
+                  <div className="text-xs font-semibold text-[var(--text-primary)] font-mono mt-0.5">{countdown}</div>
                 </div>
 
                 {nextEvent.meeting_url && (
@@ -80,9 +80,9 @@ export const DashboardView: React.FC = () => {
                     href={nextEvent.meeting_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="btn-primary text-xs py-2.5 px-4 flex items-center gap-2"
+                    className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5"
                   >
-                    <Video className="w-4 h-4" />
+                    <Video className="w-3.5 h-3.5" />
                     <span>Join Call</span>
                   </a>
                 )}
@@ -93,74 +93,77 @@ export const DashboardView: React.FC = () => {
                   setSelectedEvent(null)
                   setIsEventModalOpen(true)
                 }}
-                className="btn-primary text-xs py-2 px-4 flex items-center gap-2"
+                className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-xs"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Create Event</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Top KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="card p-4 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-default)] flex items-center justify-center text-[var(--text-primary)]">
-              <CalendarIcon className="w-5 h-5" />
+        {/* Top Metric Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="card p-3.5 flex items-center gap-3 shadow-xs">
+            <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-primary)]">
+              <CalendarIcon className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-[var(--text-primary)]">{todayEvents.length}</div>
-              <div className="text-xs text-[var(--text-muted)]">Today's Events</div>
+              <div className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{todayEvents.length}</div>
+              <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-wider">Today's Events</div>
             </div>
           </div>
 
-          <div className="card p-4 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-default)] flex items-center justify-center text-[var(--text-primary)]">
-              <DoorClosed className="w-5 h-5" />
+          <div className="card p-3.5 flex items-center gap-3 shadow-xs">
+            <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-primary)]">
+              <DoorClosed className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-[var(--text-primary)]">{roomResources.length}</div>
-              <div className="text-xs text-[var(--text-muted)]">Registered Rooms</div>
+              <div className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{roomResources.length}</div>
+              <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-wider">Rooms & Venues</div>
             </div>
           </div>
 
-          <div className="card p-4 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-default)] flex items-center justify-center text-[var(--text-primary)]">
-              <Users className="w-5 h-5" />
+          <div className="card p-3.5 flex items-center gap-3 shadow-xs">
+            <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-primary)]">
+              <Users className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-[var(--text-primary)]">{personResources.length}</div>
-              <div className="text-xs text-[var(--text-muted)]">Personnel & Staff</div>
+              <div className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{personResources.length}</div>
+              <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-wider">Staff & Trainers</div>
             </div>
           </div>
 
-          <div className="card p-4 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-default)] flex items-center justify-center text-[var(--text-primary)]">
-              <TrendingUp className="w-5 h-5" />
+          <div className="card p-3.5 flex items-center gap-3 shadow-xs">
+            <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-primary)]">
+              <TrendingUp className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-[var(--text-primary)]">{events.length}</div>
-              <div className="text-xs text-[var(--text-muted)]">Total Scheduled Events</div>
+              <div className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{events.length}</div>
+              <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-wider">Total Schedules</div>
             </div>
           </div>
         </div>
 
         {/* Schedule Timeline & Category Distribution */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Today Timeline */}
-          <div className="lg:col-span-2 card p-5 flex flex-col">
-            <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-[var(--accent)]" />
-              <span>Today's Schedule Timeline</span>
-            </h3>
+          <div className="lg:col-span-2 card p-4 space-y-3 shadow-xs">
+            <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+              <h3 className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
+                Today's Timeline
+              </h3>
+              <span className="text-[10px] text-[var(--text-muted)] font-mono">
+                {format(new Date(), 'EEEE, MMMM d')}
+              </span>
+            </div>
 
             {todayEvents.length === 0 ? (
-              <div className="text-center py-10 text-[var(--text-muted)] text-xs space-y-1">
-                <p>No events scheduled for today.</p>
-                <p>Click any slot in the Calendar view to book a time.</p>
+              <div className="py-12 text-center text-xs text-[var(--text-muted)]">
+                No events scheduled for today.
               </div>
             ) : (
-              <div className="space-y-3 flex-1 overflow-y-auto">
+              <div className="space-y-2">
                 {todayEvents.map((evt) => (
                   <div
                     key={evt.id}
@@ -168,58 +171,53 @@ export const DashboardView: React.FC = () => {
                       setSelectedEvent(evt)
                       setIsEventModalOpen(true)
                     }}
-                    className="p-3 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] rounded-[var(--radius-md)] cursor-pointer transition-all flex items-center justify-between"
+                    className="p-2.5 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] cursor-pointer transition-colors flex items-center justify-between"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-8 rounded-full bg-[var(--border-strong)]" />
-                      <div>
-                        <div className="text-xs font-bold text-[var(--text-primary)]">{evt.title}</div>
-                        <div className="text-[11px] text-[var(--text-secondary)] font-mono">
-                          {format(new Date(evt.start), 'HH:mm')} - {format(new Date(evt.end), 'HH:mm')}
-                          {evt.location ? ` • ${evt.location}` : ''}
-                        </div>
+                    <div>
+                      <div className="text-xs font-semibold text-[var(--text-primary)] truncate">
+                        {evt.title || '(Untitled Event)'}
+                      </div>
+                      <div className="text-[10px] text-[var(--text-muted)] font-mono mt-0.5">
+                        {format(new Date(evt.start), 'HH:mm')} - {format(new Date(evt.end), 'HH:mm')}
+                        {evt.location ? ` • ${evt.location}` : ''}
                       </div>
                     </div>
-
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full capitalize bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border-default)]">
-                      {evt.status}
-                    </span>
+                    {evt.status === 'confirmed' && (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    )}
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Categories Allocation */}
-          <div className="card p-5">
-            <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">Event Categories Breakdown</h3>
-            <div className="space-y-3">
-              {categories.map((cat, idx) => {
-                const count = events.filter((e) => e.category_id === cat.id).length
-                const pct = events.length > 0 ? Math.round((count / events.length) * 100) : 0
-                const shade = idx % 2 === 0 ? 'var(--text-primary)' : 'var(--text-secondary)'
+          {/* Quick Summary */}
+          <div className="card p-4 space-y-3 shadow-xs">
+            <div className="pb-2 border-b border-[var(--border-subtle)]">
+              <h3 className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
+                Categories
+              </h3>
+            </div>
 
-                return (
-                  <div key={cat.id} className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-[var(--text-primary)] font-semibold flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full border border-current" />
-                        {cat.name}
-                      </span>
-                      <span className="text-[var(--text-muted)] font-mono">
-                        {count} ({pct}%)
-                      </span>
-                    </div>
-                    <div className="w-full bg-[var(--bg-subtle)] h-1.5 rounded-full overflow-hidden border border-[var(--border-subtle)]">
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${pct}%`, backgroundColor: shade }}
+            {categories.length === 0 ? (
+              <div className="py-8 text-center text-xs text-[var(--text-muted)]">
+                No categories defined yet.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {categories.map((cat) => (
+                  <div key={cat.id} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: cat.color || 'var(--accent)' }}
                       />
+                      <span className="text-[var(--text-primary)] font-medium">{cat.name}</span>
                     </div>
                   </div>
-                )
-              })}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

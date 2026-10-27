@@ -3,7 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { initDatabase } from './db'
-import { registerIpcHandlers } from './ipc'
+import { registerIpcHandlers, setIpcMainWindow } from './ipc'
 import { initScheduler, stopScheduler } from './scheduler'
 
 let mainWindow: BrowserWindow | null = null
@@ -15,6 +15,7 @@ function createWindow(): void {
     minWidth: 1024,
     minHeight: 700,
     show: false,
+    frame: false, // Frameless window with app-themed custom titlebar
     autoHideMenuBar: true,
     title: 'ChronoDesk Pro',
     backgroundColor: '#000000',
@@ -26,6 +27,9 @@ function createWindow(): void {
       nodeIntegration: false
     }
   })
+
+  // Provide main window to IPC handlers for minimize, maximize, close
+  setIpcMainWindow(mainWindow)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()

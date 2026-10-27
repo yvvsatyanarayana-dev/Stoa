@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron'
+import { ipcMain, BrowserWindow } from 'electron'
 import {
   calendarDb,
   categoryDb,
@@ -13,7 +13,34 @@ import {
 import { checkEventConflicts, checkTimetableSlotConflicts } from '../engine/conflictEngine'
 import type { Calendar, CalendarEvent, Resource, Timetable, TimetableSlot, Subject } from '../../types'
 
+let activeMainWindow: BrowserWindow | null = null
+
+export function setIpcMainWindow(window: BrowserWindow | null): void {
+  activeMainWindow = window
+}
+
 export function registerIpcHandlers(): void {
+  // Window Controls
+  ipcMain.handle('window:minimize', () => {
+    activeMainWindow?.minimize()
+  })
+
+  ipcMain.handle('window:maximize', () => {
+    if (activeMainWindow?.isMaximized()) {
+      activeMainWindow.unmaximize()
+    } else {
+      activeMainWindow?.maximize()
+    }
+  })
+
+  ipcMain.handle('window:close', () => {
+    activeMainWindow?.close()
+  })
+
+  ipcMain.handle('window:is-maximized', () => {
+    return activeMainWindow?.isMaximized() ?? false
+  })
+
   // Initial Hydration
   ipcMain.handle('data:get-initial', async () => {
     return {

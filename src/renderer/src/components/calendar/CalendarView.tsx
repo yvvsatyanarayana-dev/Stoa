@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   startOfWeek,
   endOfWeek,
@@ -11,7 +11,7 @@ import {
 } from 'date-fns'
 import { useAppStore } from '../../store/useAppStore'
 import { CalendarEvent } from '../../../../types'
-import { Clock, MapPin, Video, Plus } from 'lucide-react'
+import { Clock, MapPin, Video, Plus, Calendar as CalendarIcon } from 'lucide-react'
 
 export const CalendarView: React.FC = () => {
   const {
@@ -23,8 +23,21 @@ export const CalendarView: React.FC = () => {
     setIsEventModalOpen
   } = useAppStore()
 
+  // Track live current time for the red "now" indicator line
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000)
+    return () => clearInterval(timer)
+  }, [])
+
   const visibleCalendarIds = new Set(calendars.filter((c) => c.visible).map((c) => c.id))
   const filteredEvents = events.filter((e) => visibleCalendarIds.has(e.calendar_id))
+
+  const getCalendarColor = (calId: string): string => {
+    const cal = calendars.find((c) => c.id === calId)
+    return cal?.color || 'var(--accent)'
+  }
 
   const handleSlotClick = (date: Date, hour: number): void => {
     const start = new Date(date)
@@ -55,37 +68,41 @@ export const CalendarView: React.FC = () => {
     setIsEventModalOpen(true)
   }
 
-  // ---------------- Render Views ----------------
-
+  // ---------------- Render Week View ----------------
   const renderWeekView = (): React.ReactElement => {
     const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 })
     const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 1 })
     const days = eachDayOfInterval({ start: weekStart, end: weekEnd })
-    const hours = Array.from({ length: 14 }, (_, i) => i + 7) // 07:00 to 20:00
+    const hours = Array.from({ length: 15 }, (_, i) => i + 7) // 07:00 to 21:00
+
+    // Current time position in pixels
+    const currentHour = currentTime.getHours() + currentTime.getMinutes() / 60
+    const nowTop = (currentHour - 7) * 56
+    const isNowVisible = currentHour >= 7 && currentHour <= 22
 
     return (
       <div className="flex-1 flex flex-col overflow-hidden bg-[var(--bg-app)] text-[var(--text-primary)]">
         {/* Days Header */}
-        <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] shrink-0">
-          <div className="p-2 border-r border-[var(--border-subtle)] text-center text-[10px] text-[var(--text-muted)] font-bold uppercase">
-            Time
+        <div className="grid grid-cols-[56px_repeat(7,1fr)] border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] shrink-0 select-none">
+          <div className="p-2 border-r border-[var(--border-subtle)] flex items-center justify-center text-[10px] text-[var(--text-muted)] font-mono font-medium tracking-wider">
+            GMT
           </div>
           {days.map((day) => {
             const today = isToday(day)
             return (
               <div
                 key={day.toISOString()}
-                className={`py-2 px-1 text-center border-r border-[var(--border-subtle)] last:border-r-0 ${
+                className={`py-2 px-1 text-center border-r border-[var(--border-subtle)] last:border-r-0 transition-colors ${
                   today ? 'bg-[var(--cal-today-bg)]' : ''
                 }`}
               >
-                <div className="text-[11px] font-semibold text-[var(--text-secondary)]">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
                   {format(day, 'EEE')}
                 </div>
                 <div
-                  className={`text-sm font-bold inline-flex items-center justify-center w-6 h-6 rounded-full mt-0.5 ${
+                  className={`text-xs font-bold inline-flex items-center justify-center w-6 h-6 rounded-full mt-0.5 transition-all ${
                     today
-                      ? 'bg-[var(--cal-selected-bg)] text-[var(--cal-selected-text)] shadow'
+                      ? 'bg-[var(--accent)] text-[var(--accent-text)] shadow-xs'
                       : 'text-[var(--text-primary)]'
                   }`}
                 >
@@ -96,11 +113,11 @@ export const CalendarView: React.FC = () => {
           })}
         </div>
 
-        {/* Time Grid with scroll */}
+        {/* Time Grid with smooth scroll */}
         <div className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-[60px_repeat(7,1fr)] relative min-h-[700px]">
+          <div className="grid grid-cols-[56px_repeat(7,1fr)] relative min-h-[840px]">
             {/* Time labels column */}
-            <div className="border-r border-[var(--cal-grid-line)] bg-[var(--bg-sidebar)]">
+            <div className="border-r border-[var(--border-subtle)] bg-[var(--bg-sidebar)] select-none">
               {hours.map((h) => (
                 <div
                   key={h}
@@ -120,7 +137,7 @@ export const CalendarView: React.FC = () => {
                 <div
                   key={day.toISOString()}
                   className={`border-r border-[var(--cal-grid-line)] last:border-r-0 relative ${
-                    today ? 'bg-[var(--cal-today-bg)]/40' : ''
+                    today ? 'bg-[var(--cal-today-bg)]/20' : ''
                   }`}
                 >
                   {/* Grid hour cells */}
@@ -129,10 +146,22 @@ export const CalendarView: React.FC = () => {
                       key={h}
                       onClick={() => handleSlotClick(day, h)}
                       className="h-14 border-b border-[var(--cal-grid-line)] hover:bg-[var(--bg-hover)] cursor-pointer transition-colors"
+                      title={`Click to schedule at ${String(h).padStart(2, '0')}:00`}
                     />
                   ))}
 
-                  {/* Event Blocks positioned absolutely */}
+                  {/* Live Now Indicator Line */}
+                  {today && isNowVisible && (
+                    <div
+                      style={{ top: `${nowTop}px` }}
+                      className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+                    >
+                      <div className="w-2.5 h-2.5 rounded-full bg-rose-500 -ml-1.5 shadow-sm animate-pulse" />
+                      <div className="flex-1 h-[1.5px] bg-rose-500" />
+                    </div>
+                  )}
+
+                  {/* Event Blocks */}
                   {dayEvents.map((evt) => {
                     const start = new Date(evt.start)
                     const end = new Date(evt.end)
@@ -140,7 +169,8 @@ export const CalendarView: React.FC = () => {
                     const endHour = end.getHours() + end.getMinutes() / 60
 
                     const top = Math.max(0, (startHour - 7) * 56)
-                    const height = Math.max(28, (endHour - startHour) * 56)
+                    const height = Math.max(26, (endHour - startHour) * 56)
+                    const calColor = getCalendarColor(evt.calendar_id)
 
                     return (
                       <div
@@ -148,27 +178,33 @@ export const CalendarView: React.FC = () => {
                         onClick={(e) => handleEventClick(evt, e)}
                         style={{
                           top: `${top}px`,
-                          height: `${height}px`
+                          height: `${height}px`,
+                          borderLeftColor: calColor
                         }}
-                        className={`event-block absolute left-1 right-1 rounded-[var(--radius-sm)] bg-[var(--event-1-bg)] text-[var(--event-1-text)] cursor-pointer shadow-sm transition-all z-10 overflow-hidden flex flex-col justify-between ${
-                          evt.status === 'tentative' ? 'tentative' : evt.status === 'cancelled' ? 'cancelled' : ''
+                        className={`absolute left-1 right-1 rounded-[var(--radius-sm)] p-1.5 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] border-l-[3px] text-[var(--text-primary)] cursor-pointer shadow-xs hover:shadow-md hover:border-[var(--border-strong)] transition-all z-10 overflow-hidden flex flex-col justify-between select-none ${
+                          evt.status === 'tentative'
+                            ? 'opacity-75 border-dashed'
+                            : evt.status === 'cancelled'
+                            ? 'line-through opacity-40'
+                            : ''
                         }`}
                       >
-                        <div>
-                          <div className="font-semibold truncate flex items-center gap-1">
-                            {evt.meeting_url && <Video className="w-3 h-3 shrink-0 opacity-80" />}
-                            <span className="truncate">{evt.title}</span>
+                        <div className="min-w-0">
+                          <div className="text-[11px] font-semibold truncate flex items-center gap-1 leading-tight">
+                            {evt.meeting_url && <Video className="w-2.5 h-2.5 shrink-0 text-[var(--text-secondary)]" />}
+                            <span className="truncate">{evt.title || '(Untitled Event)'}</span>
                           </div>
-                          <div className="text-[10px] opacity-80 font-mono mt-0.5 truncate flex items-center gap-1">
-                            <Clock className="w-2.5 h-2.5 shrink-0 opacity-70" />
+                          <div className="text-[9px] text-[var(--text-muted)] font-mono mt-0.5 truncate flex items-center gap-1">
+                            <Clock className="w-2.5 h-2.5 shrink-0 opacity-60" />
                             <span>
                               {format(start, 'HH:mm')} - {format(end, 'HH:mm')}
                             </span>
                           </div>
                         </div>
-                        {evt.location && (
-                          <div className="text-[10px] opacity-80 truncate flex items-center gap-1 mt-0.5">
-                            <MapPin className="w-2.5 h-2.5 shrink-0" />
+
+                        {evt.location && height >= 42 && (
+                          <div className="text-[9px] text-[var(--text-secondary)] truncate flex items-center gap-1 mt-0.5">
+                            <MapPin className="w-2.5 h-2.5 shrink-0 opacity-60" />
                             <span className="truncate">{evt.location}</span>
                           </div>
                         )}
@@ -184,34 +220,55 @@ export const CalendarView: React.FC = () => {
     )
   }
 
+  // ---------------- Render Day View ----------------
   const renderDayView = (): React.ReactElement => {
-    const hours = Array.from({ length: 14 }, (_, i) => i + 7)
+    const hours = Array.from({ length: 15 }, (_, i) => i + 7)
     const dayEvents = filteredEvents.filter((e) => isSameDay(new Date(e.start), selectedDate))
+    const today = isToday(selectedDate)
+
+    const currentHour = currentTime.getHours() + currentTime.getMinutes() / 60
+    const nowTop = (currentHour - 7) * 64
+    const isNowVisible = currentHour >= 7 && currentHour <= 22
 
     return (
       <div className="flex-1 flex flex-col overflow-hidden bg-[var(--bg-app)] text-[var(--text-primary)]">
-        <div className="p-3 border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] flex items-center justify-between">
+        {/* Day Header */}
+        <div className="px-6 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] flex items-center justify-between shrink-0">
           <div>
-            <h2 className="text-base font-bold text-[var(--text-primary)]">
+            <h2 className="text-sm font-semibold tracking-tight text-[var(--text-primary)]">
               {format(selectedDate, 'EEEE, MMMM d, yyyy')}
             </h2>
-            <p className="text-xs text-[var(--text-secondary)]">
-              {dayEvents.length} scheduled event{dayEvents.length === 1 ? '' : 's'} today
+            <p className="text-[11px] text-[var(--text-muted)] font-mono mt-0.5">
+              {dayEvents.length} event{dayEvents.length === 1 ? '' : 's'} scheduled
             </p>
           </div>
+          <button
+            onClick={() => {
+              handleSlotClick(selectedDate, 9)
+            }}
+            className="btn-primary text-xs py-1 px-3 flex items-center gap-1.5"
+          >
+            <Plus className="w-3 h-3 stroke-[2.5]" />
+            <span>Add Event</span>
+          </button>
         </div>
+
+        {/* Day Schedule Grid */}
         <div className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-[80px_1fr] relative min-h-[700px]">
-            <div className="border-r border-[var(--cal-grid-line)] bg-[var(--bg-sidebar)]">
+          <div className="grid grid-cols-[64px_1fr] relative min-h-[960px]">
+            {/* Time labels column */}
+            <div className="border-r border-[var(--border-subtle)] bg-[var(--bg-sidebar)] select-none">
               {hours.map((h) => (
                 <div
                   key={h}
-                  className="h-16 border-b border-[var(--cal-hour-line)] text-right pr-3 text-xs text-[var(--text-muted)] font-mono pt-1"
+                  className="h-16 border-b border-[var(--cal-hour-line)] text-right pr-3 text-[11px] text-[var(--text-muted)] font-mono pt-1"
                 >
                   {String(h).padStart(2, '0')}:00
                 </div>
               ))}
             </div>
+
+            {/* Event slots column */}
             <div className="relative">
               {hours.map((h) => (
                 <div
@@ -220,13 +277,27 @@ export const CalendarView: React.FC = () => {
                   className="h-16 border-b border-[var(--cal-grid-line)] hover:bg-[var(--bg-hover)] cursor-pointer transition-colors"
                 />
               ))}
+
+              {/* Live Now Indicator */}
+              {today && isNowVisible && (
+                <div
+                  style={{ top: `${nowTop}px` }}
+                  className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+                >
+                  <div className="w-3 h-3 rounded-full bg-rose-500 -ml-1.5 shadow-sm animate-pulse" />
+                  <div className="flex-1 h-[2px] bg-rose-500" />
+                </div>
+              )}
+
+              {/* Day Events */}
               {dayEvents.map((evt) => {
                 const start = new Date(evt.start)
                 const end = new Date(evt.end)
                 const startHour = start.getHours() + start.getMinutes() / 60
                 const endHour = end.getHours() + end.getMinutes() / 60
                 const top = Math.max(0, (startHour - 7) * 64)
-                const height = Math.max(36, (endHour - startHour) * 64)
+                const height = Math.max(38, (endHour - startHour) * 64)
+                const calColor = getCalendarColor(evt.calendar_id)
 
                 return (
                   <div
@@ -234,29 +305,37 @@ export const CalendarView: React.FC = () => {
                     onClick={(e) => handleEventClick(evt, e)}
                     style={{
                       top: `${top}px`,
-                      height: `${height}px`
+                      height: `${height}px`,
+                      borderLeftColor: calColor
                     }}
-                    className={`event-block absolute left-3 right-6 rounded-[var(--radius-md)] p-2.5 bg-[var(--event-1-bg)] text-[var(--event-1-text)] cursor-pointer shadow-md transition-all z-10 flex flex-col justify-between ${
-                      evt.status === 'tentative' ? 'tentative' : evt.status === 'cancelled' ? 'cancelled' : ''
+                    className={`absolute left-3 right-6 rounded-[var(--radius-md)] p-3 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] border-l-4 text-[var(--text-primary)] cursor-pointer shadow-xs hover:shadow-md hover:border-[var(--border-strong)] transition-all z-10 flex flex-col justify-between ${
+                      evt.status === 'tentative'
+                        ? 'opacity-75 border-dashed'
+                        : evt.status === 'cancelled'
+                        ? 'line-through opacity-40'
+                        : ''
                     }`}
                   >
                     <div>
-                      <div className="font-semibold text-sm flex items-center justify-between">
-                        <span>{evt.title}</span>
+                      <div className="font-semibold text-xs flex items-center justify-between">
+                        <span className="truncate">{evt.title || '(Untitled Event)'}</span>
                         {evt.priority === 'urgent' && (
-                          <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded border border-current">
+                          <span className="text-[9px] uppercase font-mono tracking-wider px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-500 border border-rose-500/20 font-bold">
                             Urgent
                           </span>
                         )}
                       </div>
-                      <div className="text-xs opacity-80 font-mono mt-1">
-                        {format(start, 'HH:mm')} - {format(end, 'HH:mm')}
+                      <div className="text-[11px] text-[var(--text-muted)] font-mono mt-0.5 flex items-center gap-1.5">
+                        <Clock className="w-3 h-3 opacity-70" />
+                        <span>
+                          {format(start, 'HH:mm')} - {format(end, 'HH:mm')}
+                        </span>
                       </div>
                     </div>
                     {evt.location && (
-                      <div className="text-xs opacity-80 flex items-center gap-1.5 mt-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        <span>{evt.location}</span>
+                      <div className="text-[11px] text-[var(--text-secondary)] flex items-center gap-1.5 mt-1">
+                        <MapPin className="w-3 h-3 opacity-70" />
+                        <span className="truncate">{evt.location}</span>
                       </div>
                     )}
                   </div>
@@ -269,6 +348,7 @@ export const CalendarView: React.FC = () => {
     )
   }
 
+  // ---------------- Render Month View ----------------
   const renderMonthView = (): React.ReactElement => {
     const monthStart = startOfMonth(selectedDate)
     const monthEnd = endOfMonth(monthStart)
@@ -278,9 +358,9 @@ export const CalendarView: React.FC = () => {
 
     return (
       <div className="flex-1 flex flex-col overflow-hidden bg-[var(--bg-app)] text-[var(--text-primary)]">
-        <div className="grid grid-cols-7 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] py-2">
+        <div className="grid grid-cols-7 border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] py-2 select-none">
           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
-            <div key={d} className="text-center text-xs font-bold text-[var(--text-secondary)]">
+            <div key={d} className="text-center text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
               {d}
             </div>
           ))}
@@ -295,31 +375,42 @@ export const CalendarView: React.FC = () => {
               <div
                 key={day.toISOString()}
                 onClick={() => handleSlotClick(day, 9)}
-                className={`border-b border-r border-[var(--cal-grid-line)] p-2 flex flex-col min-h-[100px] cursor-pointer hover:bg-[var(--bg-hover)] transition-colors ${
+                className={`border-b border-r border-[var(--cal-grid-line)] p-1.5 flex flex-col min-h-[90px] cursor-pointer hover:bg-[var(--bg-hover)] transition-colors ${
                   !isCurrentMonth ? 'opacity-30' : ''
-                } ${today ? 'bg-[var(--cal-today-bg)]' : ''}`}
+                } ${today ? 'bg-[var(--cal-today-bg)]/30' : ''}`}
               >
                 <div className="flex justify-between items-center mb-1">
                   <span
-                    className={`text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center ${
-                      today ? 'bg-[var(--cal-selected-bg)] text-[var(--cal-selected-text)]' : 'text-[var(--text-secondary)]'
+                    className={`text-[11px] font-semibold w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                      today
+                        ? 'bg-[var(--accent)] text-[var(--accent-text)] shadow-xs'
+                        : 'text-[var(--text-secondary)]'
                     }`}
                   >
                     {format(day, 'd')}
                   </span>
                 </div>
                 <div className="space-y-1 overflow-y-auto flex-1">
-                  {dayEvents.slice(0, 3).map((evt) => (
-                    <div
-                      key={evt.id}
-                      onClick={(e) => handleEventClick(evt, e)}
-                      className="event-block text-[10px] px-1.5 py-0.5 rounded-[var(--radius-sm)] truncate font-semibold bg-[var(--event-1-bg)] text-[var(--event-1-text)]"
-                    >
-                      <span className="truncate">{evt.title}</span>
-                    </div>
-                  ))}
+                  {dayEvents.slice(0, 3).map((evt) => {
+                    const calColor = getCalendarColor(evt.calendar_id)
+                    return (
+                      <div
+                        key={evt.id}
+                        onClick={(e) => handleEventClick(evt, e)}
+                        className="text-[10px] px-1.5 py-0.5 rounded-[var(--radius-sm)] truncate font-medium bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex items-center gap-1 hover:border-[var(--border-strong)] transition-colors"
+                      >
+                        <span
+                          className="w-1.5 h-1.5 rounded-full shrink-0"
+                          style={{ backgroundColor: calColor }}
+                        />
+                        <span className="truncate text-[var(--text-primary)]">
+                          {evt.title || '(Untitled)'}
+                        </span>
+                      </div>
+                    )
+                  })}
                   {dayEvents.length > 3 && (
-                    <div className="text-[10px] text-[var(--text-muted)] font-bold px-1">
+                    <div className="text-[9px] text-[var(--text-muted)] font-mono font-medium px-1">
                       +{dayEvents.length - 3} more
                     </div>
                   )}
@@ -332,6 +423,7 @@ export const CalendarView: React.FC = () => {
     )
   }
 
+  // ---------------- Render Agenda View ----------------
   const renderAgendaView = (): React.ReactElement => {
     const sorted = [...filteredEvents].sort(
       (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
@@ -339,81 +431,110 @@ export const CalendarView: React.FC = () => {
 
     return (
       <div className="flex-1 overflow-y-auto p-6 bg-[var(--bg-app)] text-[var(--text-primary)]">
-        <div className="max-w-3xl mx-auto space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-base font-bold text-[var(--text-primary)]">Upcoming Schedule Agenda</h2>
+        <div className="max-w-2xl mx-auto space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+            <div>
+              <h2 className="text-sm font-semibold tracking-tight text-[var(--text-primary)]">
+                Upcoming Agenda
+              </h2>
+              <p className="text-[11px] text-[var(--text-muted)] font-mono">
+                {sorted.length} scheduled item{sorted.length === 1 ? '' : 's'}
+              </p>
+            </div>
             <button
               onClick={() => {
                 setSelectedEvent(null)
                 setIsEventModalOpen(true)
               }}
-              className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5"
+              className="btn-primary text-xs py-1 px-3 flex items-center gap-1.5"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3 h-3 stroke-[2.5]" />
               <span>Create Event</span>
             </button>
           </div>
 
           {sorted.length === 0 ? (
             <div className="text-center py-16 card p-8 space-y-3">
-              <p className="text-sm font-semibold text-[var(--text-secondary)]">Your schedule is completely clear.</p>
-              <p className="text-xs text-[var(--text-muted)]">Click "+ Create Event" or click any slot on the calendar grid to add your first event.</p>
+              <div className="w-10 h-10 rounded-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center mx-auto text-[var(--text-muted)]">
+                <CalendarIcon className="w-5 h-5 stroke-[1.5]" />
+              </div>
+              <p className="text-sm font-semibold text-[var(--text-primary)]">
+                Your schedule is clean and empty
+              </p>
+              <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
+                No events currently scheduled. Click below or pick any slot on the calendar grid to build your schedule.
+              </p>
               <button
                 onClick={() => {
                   setSelectedEvent(null)
                   setIsEventModalOpen(true)
                 }}
-                className="btn-primary text-xs py-2 px-4 inline-flex items-center gap-1.5 shadow-sm"
+                className="btn-primary text-xs py-1.5 px-4 inline-flex items-center gap-1.5 shadow-xs"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Create First Event</span>
               </button>
             </div>
           ) : (
-            sorted.map((evt) => (
-              <div
-                key={evt.id}
-                onClick={(e) => handleEventClick(evt, e)}
-                className="card p-4 cursor-pointer hover:border-[var(--border-strong)] transition-all flex items-start justify-between"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="w-1.5 h-12 rounded-full bg-[var(--border-strong)] shrink-0" />
-                  <div>
-                    <h3 className="text-sm font-bold text-[var(--text-primary)]">{evt.title}</h3>
-                    <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)] mt-1">
-                      <span className="flex items-center gap-1 font-mono">
-                        <Clock className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-                        {format(new Date(evt.start), 'EEE, MMM d, yyyy • HH:mm')} -{' '}
-                        {format(new Date(evt.end), 'HH:mm')}
-                      </span>
-                      {evt.location && (
+            sorted.map((evt) => {
+              const calColor = getCalendarColor(evt.calendar_id)
+              return (
+                <div
+                  key={evt.id}
+                  onClick={(e) => handleEventClick(evt, e)}
+                  className="card p-3.5 cursor-pointer hover:border-[var(--border-strong)] transition-all flex items-start justify-between group"
+                >
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div
+                      className="w-1 h-10 rounded-full shrink-0 mt-0.5"
+                      style={{ backgroundColor: calColor }}
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xs font-semibold text-[var(--text-primary)] truncate">
+                          {evt.title || '(Untitled Event)'}
+                        </h3>
+                        {evt.priority === 'urgent' && (
+                          <span className="text-[9px] uppercase font-mono px-1.5 py-0.2 rounded bg-rose-500/10 text-rose-500 border border-rose-500/20 font-bold">
+                            Urgent
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-[11px] text-[var(--text-muted)] font-mono mt-1">
                         <span className="flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-                          {evt.location}
+                          <Clock className="w-3 h-3 opacity-60" />
+                          {format(new Date(evt.start), 'EEE, MMM d • HH:mm')} -{' '}
+                          {format(new Date(evt.end), 'HH:mm')}
                         </span>
+                        {evt.location && (
+                          <span className="flex items-center gap-1 text-[var(--text-secondary)]">
+                            <MapPin className="w-3 h-3 opacity-60" />
+                            <span className="truncate">{evt.location}</span>
+                          </span>
+                        )}
+                      </div>
+                      {evt.description && (
+                        <p className="text-xs text-[var(--text-secondary)] mt-1.5 line-clamp-1">
+                          {evt.description}
+                        </p>
                       )}
                     </div>
-                    {evt.description && (
-                      <p className="text-xs text-[var(--text-secondary)] mt-2 line-clamp-2">
-                        {evt.description}
-                      </p>
-                    )}
                   </div>
+                  {evt.meeting_url && (
+                    <a
+                      href={evt.meeting_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="btn-secondary text-[11px] py-1 px-2.5 flex items-center gap-1 shrink-0 ml-3"
+                    >
+                      <Video className="w-3 h-3" />
+                      <span>Join</span>
+                    </a>
+                  )}
                 </div>
-                {evt.meeting_url && (
-                  <a
-                    href={evt.meeting_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
-                  >
-                    <Video className="w-3.5 h-3.5" />
-                    <span>Join</span>
-                  </a>
-                )}
-              </div>
-            ))
+              )
+            })
           )}
         </div>
       </div>

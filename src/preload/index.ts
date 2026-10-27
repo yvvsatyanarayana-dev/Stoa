@@ -14,6 +14,12 @@ import type {
 import type { ConflictReport } from '../main/engine/conflictEngine'
 
 export const api = {
+  window: {
+    minimize: (): Promise<void> => ipcRenderer.invoke('window:minimize'),
+    maximize: (): Promise<void> => ipcRenderer.invoke('window:maximize'),
+    close: (): Promise<void> => ipcRenderer.invoke('window:close'),
+    isMaximized: (): Promise<boolean> => ipcRenderer.invoke('window:is-maximized')
+  },
   data: {
     getInitial: (): Promise<{
       calendars: Calendar[]
