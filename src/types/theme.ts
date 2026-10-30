@@ -114,21 +114,21 @@ export const DEFAULT_BW_PALETTE: ThemePalette = {
 };
 
 export const DEFAULT_DARK_PALETTE: ThemePalette = {
-  background: { l: 0.0, c: 0, h: 0 },         // #000000
-  surface: { l: 0.04, c: 0, h: 0 },           // #0A0A0A
-  surfaceElevated: { l: 0.07, c: 0, h: 0 },   // #111111
-  primary: { l: 1.0, c: 0, h: 0 },            // #FFFFFF
-  primaryHover: { l: 0.9, c: 0, h: 0 },       // #E5E5E5
-  text: { l: 0.98, c: 0, h: 0 },              // #FAFAFA
-  textMuted: { l: 0.45, c: 0, h: 0 },         // #737373
-  border: { l: 0.18, c: 0, h: 0 },            // #2E2E2E
+  background: { l: 0.17, c: 0.015, h: 268 },         // #0D0F17 Deep Obsidian Midnight
+  surface: { l: 0.13, c: 0.012, h: 272 },            // #090A0F Grounded Navigation Surface
+  surfaceElevated: { l: 0.22, c: 0.022, h: 272 },    // #161926 Elevated Glassmorphic Card/Modal
+  primary: { l: 0.62, c: 0.19, h: 260 },            // #3B82F6 Refined Electric Blue Accent
+  primaryHover: { l: 0.54, c: 0.20, h: 260 },       // #2563EB
+  text: { l: 0.98, c: 0.005, h: 265 },              // #F8FAFC Crisp Snow White
+  textMuted: { l: 0.55, c: 0.025, h: 260 },         // #64748B Slate Muted Text
+  border: { l: 0.28, c: 0.028, h: 272 },            // #242837 Visible, Elegant Architectural Borders
   eventStops: [
-    { l: 1.0, c: 0, h: 0 },    // #FFFFFF
-    { l: 0.83, c: 0, h: 0 },   // #D4D4D4
-    { l: 0.64, c: 0, h: 0 },   // #A3A3A3
-    { l: 0.45, c: 0, h: 0 },   // #737373
-    { l: 0.25, c: 0, h: 0 },   // #404040
-    { l: 0.0, c: 0, h: 0 },    // #000000 (outlined)
+    { l: 0.62, c: 0.19, h: 260 }, // Electric Blue (#3B82F6)
+    { l: 0.65, c: 0.18, h: 160 }, // Vivid Emerald (#10B981)
+    { l: 0.62, c: 0.20, h: 295 }, // Modern Purple (#8B5CF6)
+    { l: 0.72, c: 0.16, h: 75 },  // Warm Amber (#F59E0B)
+    { l: 0.62, c: 0.22, h: 25 },  // Coral Crimson (#EF4444)
+    { l: 0.68, c: 0.14, h: 200 }, // Cyan Teal (#06B6D4)
   ],
 };
 

@@ -245,10 +245,10 @@ export const SLATE_LIGHT_PALETTE: ThemePalette = {
 // ----------------------------------------------------
 
 export const ALL_BUILT_IN_THEMES: ThemeConfig[] = [
-  // 1. ChronoDesk Classic B&W (Dark)
+  // 1. ChronoDesk Dark (Obsidian & Blue)
   {
     id: 'preset-classic-dark',
-    name: 'ChronoDesk Classic (Dark B&W)',
+    name: 'ChronoDesk Dark',
     mode: 'manual',
     basePalette: DEFAULT_DARK_PALETTE,
     circadianOffsetMinutes: 0,

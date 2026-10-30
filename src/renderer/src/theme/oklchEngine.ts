@@ -178,44 +178,44 @@ export function paletteToCssVariables(palette: ThemePalette, isDark: boolean): R
     [`--bg-app`]: oklchToHex(palette.background),
     [`--bg-sidebar`]: oklchToHex(palette.surface),
     [`--bg-elevated`]: oklchToHex(palette.surfaceElevated),
-    [`--bg-subtle`]: oklchToHex({ ...palette.surface, l: clampL(isDark ? palette.surface.l + 0.03 : palette.surface.l - 0.03) }),
-    [`--bg-hover`]: oklchToHex({ ...palette.surface, l: clampL(isDark ? palette.surface.l + 0.06 : palette.surface.l - 0.06) }),
-    [`--bg-active`]: oklchToHex({ ...palette.surface, l: clampL(isDark ? palette.surface.l + 0.10 : palette.surface.l - 0.10) }),
+    [`--bg-subtle`]: oklchToHex({ ...palette.surface, l: clampL(isDark ? palette.surface.l + 0.05 : palette.surface.l - 0.04) }),
+    [`--bg-hover`]: oklchToHex({ ...palette.surface, l: clampL(isDark ? palette.surface.l + 0.09 : palette.surface.l - 0.07) }),
+    [`--bg-active`]: oklchToHex({ ...palette.surface, l: clampL(isDark ? palette.surface.l + 0.14 : palette.surface.l - 0.11) }),
 
     [`--text-primary`]: oklchToHex(palette.text),
     [`--text-secondary`]: oklchToHex({ ...palette.text, l: clampL(isDark ? palette.text.l - 0.25 : palette.text.l + 0.25) }),
     [`--text-muted`]: oklchToHex(palette.textMuted),
     [`--text-inverse`]: oklchToHex(isDark ? palette.background : palette.text),
 
-    [`--border-subtle`]: oklchToHex({ ...palette.border, l: clampL(isDark ? palette.border.l - 0.05 : palette.border.l + 0.05) }),
+    [`--border-subtle`]: oklchToHex({ ...palette.border, l: clampL(isDark ? palette.border.l - 0.06 : palette.border.l + 0.06) }),
     [`--border-default`]: oklchToHex(palette.border),
-    [`--border-strong`]: oklchToHex(palette.text),
+    [`--border-strong`]: oklchToHex({ ...palette.border, l: clampL(isDark ? palette.border.l + 0.14 : palette.border.l - 0.14) }),
 
     [`--accent`]: oklchToHex(palette.primary),
     [`--accent-hover`]: oklchToHex(palette.primaryHover),
-    [`--accent-active`]: oklchToHex({ ...palette.primary, l: clampL(isDark ? palette.primary.l - 0.1 : palette.primary.l + 0.1) }),
-    [`--accent-text`]: palette.primary.l > 0.6 ? '#000000' : '#FFFFFF',
+    [`--accent-active`]: oklchToHex({ ...palette.primary, l: clampL(isDark ? palette.primary.l - 0.08 : palette.primary.l + 0.08) }),
+    [`--accent-text`]: palette.primary.l > 0.78 ? '#000000' : '#FFFFFF',
 
-    [`--focus-ring`]: `0 0 0 2px ${oklchToHex(isDark ? palette.background : { l: 1, c: 0, h: 0 })}, 0 0 0 4px ${oklchToHex(palette.primary)}`,
+    [`--focus-ring`]: `0 0 0 2px ${oklchToHex(isDark ? palette.background : { l: 1, c: 0, h: 0 })}, 0 0 0 4px ${oklchToHex(palette.primary)}66`,
 
     // Calendar specifics
-    [`--cal-grid-line`]: oklchToHex({ ...palette.border, l: clampL(isDark ? palette.border.l - 0.03 : palette.border.l + 0.03) }),
+    [`--cal-grid-line`]: oklchToHex({ ...palette.border, l: clampL(isDark ? palette.border.l - 0.08 : palette.border.l + 0.08) }),
     [`--cal-hour-line`]: oklchToHex(palette.border),
-    [`--cal-today-bg`]: oklchToHex({ ...palette.surface, l: clampL(isDark ? palette.surface.l + 0.03 : palette.surface.l - 0.03) }),
-    [`--cal-weekend-bg`]: oklchToHex({ ...palette.background, l: clampL(isDark ? palette.background.l + 0.02 : palette.background.l - 0.02) }),
-    [`--cal-now-line`]: oklchToHex(palette.primary),
+    [`--cal-today-bg`]: isDark ? 'rgba(59, 130, 246, 0.05)' : 'rgba(59, 130, 246, 0.08)',
+    [`--cal-weekend-bg`]: oklchToHex({ ...palette.background, l: clampL(isDark ? palette.background.l - 0.03 : palette.background.l + 0.02) }),
+    [`--cal-now-line`]: '#EF4444',
     [`--cal-selected-bg`]: oklchToHex(palette.primary),
-    [`--cal-selected-text`]: palette.primary.l > 0.6 ? '#000000' : '#FFFFFF',
+    [`--cal-selected-text`]: palette.primary.l > 0.78 ? '#000000' : '#FFFFFF',
 
     // Status
     [`--status-confirmed`]: oklchToHex(palette.primary),
-    [`--status-tentative`]: oklchToHex(palette.textMuted),
-    [`--status-cancelled`]: oklchToHex({ ...palette.textMuted, l: clampL(isDark ? palette.textMuted.l - 0.1 : palette.textMuted.l + 0.1) }),
+    [`--status-tentative`]: '#F59E0B',
+    [`--status-cancelled`]: '#64748B',
 
     // Shadows
-    [`--shadow-sm`]: `0 1px 2px ${isDark ? 'rgba(0,0,0,.6)' : 'rgba(0,0,0,.06)'}`,
-    [`--shadow-md`]: `0 4px 12px ${isDark ? 'rgba(0,0,0,.7)' : 'rgba(0,0,0,.10)'}`,
-    [`--shadow-lg`]: `0 12px 32px ${isDark ? 'rgba(0,0,0,.8)' : 'rgba(0,0,0,.16)'}`,
+    [`--shadow-sm`]: `0 1px 3px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,.06)'}`,
+    [`--shadow-md`]: `0 4px 16px -2px ${isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,.10)'}`,
+    [`--shadow-lg`]: `0 20px 40px -10px ${isDark ? 'rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.08)' : 'rgba(0,0,0,.16)'}`,
   };
 
   // Event stops

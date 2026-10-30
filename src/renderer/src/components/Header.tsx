@@ -153,7 +153,7 @@ export const Header: React.FC = () => {
             onKeyDown={(e) => {
               if (e.key === 'Enter') fetchEvents()
             }}
-            className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] pl-8 pr-10 py-1 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--border-strong)] transition-all"
+            className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] pl-8 pr-10 py-1 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all shadow-xs"
           />
           <kbd className="absolute right-2 top-1.5 text-[9px] font-mono text-[var(--text-muted)] px-1 py-0.5 bg-[var(--bg-hover)] border border-[var(--border-subtle)] rounded">
             ↵

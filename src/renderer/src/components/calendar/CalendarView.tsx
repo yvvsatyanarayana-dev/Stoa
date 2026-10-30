@@ -135,7 +135,7 @@ export const CalendarView: React.FC = () => {
     return (
       <div className="flex-1 flex flex-col overflow-hidden bg-[var(--bg-app)] text-[var(--text-primary)]">
         {/* Days Header */}
-        <div className="grid grid-cols-[56px_repeat(7,1fr)] border-b border-[var(--border-subtle)] bg-[var(--bg-sidebar)] shrink-0 select-none">
+        <div className="grid grid-cols-[56px_repeat(7,1fr)] border-b border-[var(--border-subtle)] bg-[var(--bg-subtle)]/75 shrink-0 select-none backdrop-blur-xs">
           <div className="p-2 border-r border-[var(--border-subtle)] flex items-center justify-center text-[10px] text-[var(--text-muted)] font-mono font-medium tracking-wider">
             GMT
           </div>
@@ -154,7 +154,7 @@ export const CalendarView: React.FC = () => {
                 <div
                   className={`text-xs font-bold inline-flex items-center justify-center w-6 h-6 rounded-full mt-0.5 transition-all ${
                     today
-                      ? 'bg-[var(--accent)] text-[var(--accent-text)] shadow-xs'
+                      ? 'bg-[var(--accent)] text-[var(--accent-text)] shadow-sm font-black'
                       : 'text-[var(--text-primary)]'
                   }`}
                 >
@@ -645,7 +645,7 @@ export const CalendarView: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
       {/* Category C Power Toolbar */}
-      <div className="bg-[var(--bg-sidebar)] border-b border-[var(--border-subtle)] px-4 py-1.5 flex items-center justify-between gap-2 shrink-0 select-none text-xs">
+      <div className="bg-[var(--bg-subtle)]/50 backdrop-blur-xs border-b border-[var(--border-subtle)] px-4 py-1.5 flex items-center justify-between gap-2 shrink-0 select-none text-xs">
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
