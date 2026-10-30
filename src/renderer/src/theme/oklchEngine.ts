@@ -194,7 +194,7 @@ export function paletteToCssVariables(palette: ThemePalette, isDark: boolean): R
     [`--accent`]: oklchToHex(palette.primary),
     [`--accent-hover`]: oklchToHex(palette.primaryHover),
     [`--accent-active`]: oklchToHex({ ...palette.primary, l: clampL(isDark ? palette.primary.l - 0.1 : palette.primary.l + 0.1) }),
-    [`--accent-text`]: oklchToHex(isDark ? palette.background : { l: 1, c: 0, h: 0 }),
+    [`--accent-text`]: palette.primary.l > 0.6 ? '#000000' : '#FFFFFF',
 
     [`--focus-ring`]: `0 0 0 2px ${oklchToHex(isDark ? palette.background : { l: 1, c: 0, h: 0 })}, 0 0 0 4px ${oklchToHex(palette.primary)}`,
 
@@ -205,7 +205,7 @@ export function paletteToCssVariables(palette: ThemePalette, isDark: boolean): R
     [`--cal-weekend-bg`]: oklchToHex({ ...palette.background, l: clampL(isDark ? palette.background.l + 0.02 : palette.background.l - 0.02) }),
     [`--cal-now-line`]: oklchToHex(palette.primary),
     [`--cal-selected-bg`]: oklchToHex(palette.primary),
-    [`--cal-selected-text`]: oklchToHex(isDark ? palette.background : { l: 1, c: 0, h: 0 }),
+    [`--cal-selected-text`]: palette.primary.l > 0.6 ? '#000000' : '#FFFFFF',
 
     // Status
     [`--status-confirmed`]: oklchToHex(palette.primary),

@@ -1,9 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { ThemeConfig, ThemePalette, ThemeMode, TimeOfDayPhase, CircadianSettings } from '../../../types/theme';
-import { PRESET_THEMES } from '../../../types/theme';
 import { getCurrentPhase, normalizeCircadianSettings } from '../theme/circadian';
-import { getPhasePalette, getSeasonalPalette, getCombinedPalette, getCurrentSeason } from '../theme/ThemePresets';
+import { ALL_BUILT_IN_THEMES, getPhasePalette, getSeasonalPalette, getCombinedPalette, getCurrentSeason } from '../theme/ThemePresets';
 import { generatePaletteFromBase, hexToOklch, paletteToCssVariables } from '../theme/oklchEngine';
 
 interface ThemeState {
@@ -27,6 +26,7 @@ interface ThemeState {
   addTheme: (theme: ThemeConfig) => void;
   updateTheme: (theme: ThemeConfig) => void;
   deleteTheme: (id: string) => void;
+  clearCustomThemes: () => void;
   setActiveTheme: (id: string) => Promise<void>;
   setMode: (mode: ThemeMode) => Promise<void>;
   setHighContrast: (enabled: boolean) => Promise<void>;
@@ -71,8 +71,8 @@ export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
       // Initial state
-      themes: [],
-      activeThemeId: null,
+      themes: ALL_BUILT_IN_THEMES,
+      activeThemeId: ALL_BUILT_IN_THEMES[0].id,
       circadianSettings: {
         latitude: 0,
         longitude: 0,
@@ -84,8 +84,8 @@ export const useThemeStore = create<ThemeState>()(
       mode: 'manual',
 
       // Computed
-      activeTheme: null,
-      effectivePalette: null,
+      activeTheme: ALL_BUILT_IN_THEMES[0],
+      effectivePalette: ALL_BUILT_IN_THEMES[0].basePalette,
       isDark: true,
       currentPhase: null,
       currentSeason: 'winter',
@@ -93,73 +93,117 @@ export const useThemeStore = create<ThemeState>()(
       // Initialize from IPC
       initialize: async () => {
         try {
-          const [themes, activeId, circadian, contrast, mode] = await Promise.all([
-            window.api.theme.list(),
-            window.api.settings.get().then(s => s.activeThemeId),
-            window.api.theme.circadian.get(),
-            window.api.settings.get().then(s => s.highContrast),
-            window.api.settings.get().then(s => s.themeMode),
+          const [dbThemes, activeId, circadian, contrast, mode] = await Promise.all([
+            window.api?.theme?.list().catch(() => []) ?? [],
+            window.api?.settings?.get().then(s => s.activeThemeId).catch(() => null),
+            window.api?.theme?.circadian?.get().catch(() => null),
+            window.api?.settings?.get().then(s => s.highContrast).catch(() => false),
+            window.api?.settings?.get().then(s => s.themeMode).catch(() => 'manual'),
           ]);
 
-          const normalizedCircadian = normalizeCircadianSettings(circadian);
-          const initialThemes = themes.length > 0 ? themes : PRESET_THEMES.map((p, i) => ({
-            ...p,
-            id: `preset-${i}`,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }));
+          const normalizedCircadian = normalizeCircadianSettings(circadian || get().circadianSettings);
+          
+          // Merge custom themes from DB with built-ins (avoid duplicates)
+          const customThemes = (dbThemes || []).filter((dt: ThemeConfig) => 
+            !ALL_BUILT_IN_THEMES.some(bt => bt.id === dt.id)
+          );
+
+          // Filter out accidental duplicate custom themes from earlier sessions
+          const stateThemes = get().themes || [];
+          const existingCustom = stateThemes.filter(t => t.id.startsWith('custom-') && !t.name.endsWith('(Dark)'));
+
+          const mergedThemes = [...ALL_BUILT_IN_THEMES, ...customThemes, ...existingCustom];
+          const uniqueThemes = Array.from(new Map(mergedThemes.map(t => [t.id, t])).values());
+
+          const targetActiveId = activeId || get().activeThemeId || ALL_BUILT_IN_THEMES[0].id;
+          const resolvedActiveId = uniqueThemes.some(t => t.id === targetActiveId)
+            ? targetActiveId
+            : ALL_BUILT_IN_THEMES[0].id;
 
           set({
-            themes: initialThemes,
-            activeThemeId: activeId || initialThemes[0].id,
+            themes: uniqueThemes,
+            activeThemeId: resolvedActiveId,
             circadianSettings: normalizedCircadian,
-            highContrast: contrast || false,
-            mode: mode || 'manual',
+            highContrast: Boolean(contrast),
+            mode: (mode as ThemeMode) || 'manual',
           });
 
           get().updateComputed();
         } catch (error) {
           console.error('Failed to initialize theme store:', error);
-          // Fallback to defaults
-          const fallbackThemes = PRESET_THEMES.map((p, i) => ({
-            ...p,
-            id: `preset-${i}`,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }));
-          set({ themes: fallbackThemes, activeThemeId: fallbackThemes[0].id });
+          set({ themes: ALL_BUILT_IN_THEMES, activeThemeId: ALL_BUILT_IN_THEMES[0].id });
           get().updateComputed();
         }
       },
 
       setThemes: (themes) => set({ themes }),
 
-      addTheme: (theme) => set((state) => ({ themes: [...state.themes, theme] })),
+      addTheme: (theme) => {
+        set((state) => ({ themes: [...state.themes, theme] }));
+        if (window.api?.theme?.create) {
+          window.api.theme.create(theme).catch(() => {});
+        }
+      },
 
-      updateTheme: (theme) => set((state) => ({
-        themes: state.themes.map((t) => (t.id === theme.id ? theme : t)),
-      })),
+      updateTheme: (theme) => {
+        set((state) => ({
+          themes: state.themes.map((t) => (t.id === theme.id ? theme : t)),
+        }));
+        if (window.api?.theme?.update) {
+          window.api.theme.update(theme).catch(() => {});
+        }
+      },
 
-      deleteTheme: (id) => set((state) => {
-        const newThemes = state.themes.filter((t) => t.id !== id);
-        const newActiveId = state.activeThemeId === id ? newThemes[0]?.id || null : state.activeThemeId;
-        return { themes: newThemes, activeThemeId: newActiveId };
-      }),
+      deleteTheme: (id) => {
+        set((state) => {
+          const newThemes = state.themes.filter((t) => t.id !== id);
+          const newActiveId = state.activeThemeId === id ? ALL_BUILT_IN_THEMES[0].id : state.activeThemeId;
+          return { themes: newThemes, activeThemeId: newActiveId };
+        });
+        if (window.api?.theme?.delete) {
+          window.api.theme.delete(id).catch(() => {});
+        }
+        get().updateComputed();
+      },
+
+      clearCustomThemes: () => {
+        set((state) => {
+          const onlyBuiltIns = state.themes.filter(t => !t.id.startsWith('custom-'));
+          const fallbackId = ALL_BUILT_IN_THEMES[0].id;
+          return {
+            themes: onlyBuiltIns.length > 0 ? onlyBuiltIns : ALL_BUILT_IN_THEMES,
+            activeThemeId: state.activeThemeId?.startsWith('custom-') ? fallbackId : state.activeThemeId,
+          };
+        });
+        get().updateComputed();
+      },
 
       setActiveTheme: async (id) => {
-        await window.api.theme.setActive(id);
+        try {
+          if (window.api?.theme?.setActive) {
+            await window.api.theme.setActive(id);
+          }
+        } catch {}
         set({ activeThemeId: id });
         get().updateComputed();
       },
 
       setMode: async (mode) => {
-        await window.api.settings.set('themeMode', mode);
+        try {
+          if (window.api?.settings?.set) {
+            await window.api.settings.set('themeMode', mode);
+          }
+        } catch {}
         set({ mode });
         get().updateComputed();
       },
 
       setHighContrast: async (enabled) => {
-        await window.api.settings.set('highContrast', enabled);
+        try {
+          if (window.api?.settings?.set) {
+            await window.api.settings.set('highContrast', enabled);
+          }
+        } catch {}
         set({ highContrast: enabled });
         const { activeTheme, isDark } = get();
         if (activeTheme) {
@@ -169,7 +213,11 @@ export const useThemeStore = create<ThemeState>()(
 
       setCircadianSettings: async (settings) => {
         const normalized = normalizeCircadianSettings({ ...get().circadianSettings, ...settings });
-        await window.api.theme.circadian.set(normalized);
+        try {
+          if (window.api?.theme?.circadian?.set) {
+            await window.api.theme.circadian.set(normalized);
+          }
+        } catch {}
         set({ circadianSettings: normalized });
         get().updateComputed();
       },
@@ -181,12 +229,8 @@ export const useThemeStore = create<ThemeState>()(
 
       updateComputed: () => {
         const { themes, activeThemeId, mode, circadianSettings, highContrast } = get();
-        const activeTheme = themes.find((t) => t.id === activeThemeId) || themes[0] || null;
-
-        if (!activeTheme) {
-          set({ activeTheme: null, effectivePalette: null, isDark: true, currentPhase: null, currentSeason: 'winter' });
-          return;
-        }
+        const allAvailable = themes.length > 0 ? themes : ALL_BUILT_IN_THEMES;
+        const activeTheme = allAvailable.find((t) => t.id === activeThemeId) || allAvailable[0] || ALL_BUILT_IN_THEMES[0];
 
         let effectivePalette = activeTheme.basePalette;
         let isDark = effectivePalette.background.l < 0.5;
@@ -254,7 +298,6 @@ export const useThemeStore = create<ThemeState>()(
 
 // Auto-update computed when mode/circadian changes
 if (typeof window !== 'undefined') {
-  // Update every minute for time-of-day changes
   setInterval(() => {
     const { mode } = useThemeStore.getState();
     if (mode === 'time-of-day' || mode === 'circadian') {
