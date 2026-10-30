@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Minus, Square, Copy, X, Calendar } from 'lucide-react'
+import { Minus, Square, Copy, X, Calendar, Lock } from 'lucide-react'
+import { useAppStore } from '../store/useAppStore'
 
 export const TitleBar: React.FC = () => {
+  const { setIsWorkspaceLocked, activeProfileId, setCurrentView } = useAppStore()
   const [isMaximized, setIsMaximized] = useState(false)
 
   useEffect(() => {
@@ -59,6 +61,16 @@ export const TitleBar: React.FC = () => {
             ChronoDesk<span className="font-normal opacity-60 ml-1">Pro</span>
           </span>
         </div>
+
+        {/* Workspace Profile Pill */}
+        <button
+          onClick={() => setCurrentView('settings')}
+          className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors flex items-center gap-1 ml-1"
+          title="Switch or Manage Workspace Profiles"
+        >
+          <span>🏢</span>
+          <span className="capitalize">{activeProfileId.replace('prof-', '')}</span>
+        </button>
       </div>
 
       {/* Middle: Draggable center area */}
@@ -69,6 +81,16 @@ export const TitleBar: React.FC = () => {
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         className="flex items-center -mr-3 h-full"
       >
+        {/* Quick Lock Button (H4) */}
+        <button
+          onClick={() => setIsWorkspaceLocked(true)}
+          className="h-full w-9 flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors focus:outline-none"
+          title="Lock Workspace (Ctrl+Shift+L)"
+          aria-label="Lock Workspace"
+        >
+          <Lock className="w-3 h-3" />
+        </button>
+
         {/* Minimize */}
         <button
           onClick={handleMinimize}

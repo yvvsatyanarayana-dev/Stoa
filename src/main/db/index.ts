@@ -316,6 +316,19 @@ function createSchema(): void {
     CREATE INDEX IF NOT EXISTS idx_events_calendar ON events(calendar_id);
     CREATE INDEX IF NOT EXISTS idx_reminders_event ON reminders(event_id);
     CREATE INDEX IF NOT EXISTS idx_timetable_slots_day ON timetable_slots(timetable_id, day);
+
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id TEXT PRIMARY KEY,
+      entity_type TEXT NOT NULL,
+      entity_id TEXT NOT NULL,
+      entity_title TEXT NOT NULL,
+      action TEXT NOT NULL,
+      previous_payload TEXT,
+      new_payload TEXT,
+      user_actor TEXT NOT NULL DEFAULT 'Enterprise Admin',
+      timestamp TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp);
   `)
 }
 
@@ -588,6 +601,10 @@ export const eventDb = {
     }
 
     return eventDb.list({ query: event.title }).find((e) => e.id === event.id) || event
+  },
+
+  get(id: string): CalendarEvent | undefined {
+    return eventDb.list().find((e) => e.id === id)
   },
 
   delete(id: string): void {
@@ -1238,5 +1255,63 @@ export const bundleMetadataDb = {
   },
   delete(id: string): void {
     getDb().prepare('DELETE FROM bundle_metadata WHERE id = ?').run(id)
+  }
+}
+
+export interface AuditLogEntry {
+  id: string
+  entity_type: 'event' | 'resource' | 'timetable' | 'calendar'
+  entity_id: string
+  entity_title: string
+  action: 'create' | 'update' | 'delete' | 'reschedule' | 'rollback'
+  previous_payload?: string
+  new_payload?: string
+  user_actor: string
+  timestamp: string
+}
+
+export const auditLogDb = {
+  add(entry: AuditLogEntry): void {
+    try {
+      getDb()
+        .prepare(
+          `INSERT INTO audit_logs (id, entity_type, entity_id, entity_title, action, previous_payload, new_payload, user_actor, timestamp)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        )
+        .run(
+          entry.id,
+          entry.entity_type,
+          entry.entity_id,
+          entry.entity_title,
+          entry.action,
+          entry.previous_payload || null,
+          entry.new_payload || null,
+          entry.user_actor || 'Enterprise Admin',
+          entry.timestamp
+        )
+    } catch (e) {
+      console.error('[AuditLog] Error recording audit log:', e)
+    }
+  },
+  list(limit: number = 200): AuditLogEntry[] {
+    try {
+      return getDb()
+        .prepare(`SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT ?`)
+        .all(limit) as unknown as AuditLogEntry[]
+    } catch {
+      return []
+    }
+  },
+  get(id: string): AuditLogEntry | undefined {
+    try {
+      return getDb().prepare(`SELECT * FROM audit_logs WHERE id = ?`).get(id) as unknown as AuditLogEntry | undefined
+    } catch {
+      return undefined
+    }
+  },
+  clear(): void {
+    try {
+      getDb().prepare(`DELETE FROM audit_logs`).run()
+    } catch {}
   }
 }

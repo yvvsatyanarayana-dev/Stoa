@@ -679,6 +679,59 @@ function createDefaultCommands(
       },
     },
 
+    // Category H Actions (Enterprise Suite)
+    {
+      id: 'action:template-marketplace',
+      title: 'Timetable Template Marketplace',
+      description: 'Load turnkey schedules: university semester, medical on-call, or 3-day conference',
+      category: 'actions',
+      keywords: ['template', 'marketplace', 'academic', 'medical', 'hospital', 'conference', 'load', 'turnkey'],
+      action: () => {
+        appStore.setIsTemplateMarketplaceOpen(true);
+      },
+    },
+    {
+      id: 'action:workspace-profiles',
+      title: 'Workspace Profiles Manager',
+      description: 'Switch between isolated enterprise profiles, clinical centers, and academic domains',
+      category: 'actions',
+      keywords: ['profile', 'workspace', 'switch', 'enterprise', 'medical', 'academic', 'practice'],
+      action: () => {
+        appStore.setCurrentView('settings');
+      },
+    },
+    {
+      id: 'action:audit-log',
+      title: 'Immutable Audit Log & Rollback',
+      description: 'Audit history of event changes with full previous snapshot reversion',
+      category: 'actions',
+      keywords: ['audit', 'log', 'history', 'rollback', 'revert', 'compliance', 'security'],
+      action: () => {
+        appStore.setCurrentView('settings');
+      },
+    },
+    {
+      id: 'action:data-portability',
+      title: 'Universal Data Portability Hub',
+      description: 'Full JSON backup, multi-table CSV export, and Google/Apple iCal import',
+      category: 'actions',
+      keywords: ['export', 'import', 'portability', 'backup', 'json', 'csv', 'migrate', 'restore'],
+      action: () => {
+        appStore.setCurrentView('settings');
+      },
+    },
+    {
+      id: 'action:lock-workspace',
+      title: 'Lock Workspace Screen',
+      description: 'Protect workspace with PIN security lock screen',
+      category: 'actions',
+      shortcut: 'Ctrl+Shift+L',
+      keywords: ['lock', 'security', 'pin', 'protect', 'privacy', 'screen'],
+      action: () => {
+        appStore.setIsWorkspaceLocked(true);
+      },
+    },
+
     // Command Commands
     {
       id: 'cmd:toggle-theme',

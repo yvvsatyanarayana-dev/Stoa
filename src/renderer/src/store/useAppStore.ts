@@ -118,6 +118,15 @@ interface AppState {
   preMeetingBriefingEvent: CalendarEvent | null
   setPreMeetingBriefingEvent: (event: CalendarEvent | null) => void
 
+  isWorkspaceLocked: boolean
+  setIsWorkspaceLocked: (locked: boolean) => void
+
+  isTemplateMarketplaceOpen: boolean
+  setIsTemplateMarketplaceOpen: (open: boolean) => void
+
+  activeProfileId: string
+  setActiveProfileId: (id: string) => void
+
   rescheduleEvent: (eventId: string, minutesToAdd: number) => Promise<void>
   moveEventToTomorrow: (eventId: string) => Promise<void>
 
@@ -262,6 +271,15 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   preMeetingBriefingEvent: null,
   setPreMeetingBriefingEvent: (preMeetingBriefingEvent) => set({ preMeetingBriefingEvent }),
+
+  isWorkspaceLocked: false,
+  setIsWorkspaceLocked: (isWorkspaceLocked) => set({ isWorkspaceLocked }),
+
+  isTemplateMarketplaceOpen: false,
+  setIsTemplateMarketplaceOpen: (isTemplateMarketplaceOpen) => set({ isTemplateMarketplaceOpen }),
+
+  activeProfileId: 'prof-enterprise',
+  setActiveProfileId: (activeProfileId) => set({ activeProfileId }),
 
   themeMode: 'dark',
   setThemeMode: (mode) => {

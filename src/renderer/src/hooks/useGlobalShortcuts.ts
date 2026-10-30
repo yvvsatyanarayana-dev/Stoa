@@ -38,7 +38,10 @@ export function useGlobalShortcuts(): void {
     isDailyDigestOpen,
     setIsDailyDigestOpen,
     preMeetingBriefingEvent,
-    setPreMeetingBriefingEvent
+    setPreMeetingBriefingEvent,
+    isTemplateMarketplaceOpen,
+    setIsTemplateMarketplaceOpen,
+    setIsWorkspaceLocked
   } = useAppStore()
 
   useEffect(() => {
@@ -53,6 +56,10 @@ export function useGlobalShortcuts(): void {
 
       // Escape key handles closing modals in priority order
       if (e.key === 'Escape') {
+        if (isTemplateMarketplaceOpen) {
+          setIsTemplateMarketplaceOpen(false)
+          return
+        }
         if (preMeetingBriefingEvent) {
           setPreMeetingBriefingEvent(null)
           return
@@ -136,6 +143,13 @@ export function useGlobalShortcuts(): void {
         if (e.shiftKey && e.key.toLowerCase() === 'n') {
           e.preventDefault()
           setIsNlpQuickAddOpen(true)
+          return
+        }
+
+        // Ctrl+Shift+L: Quick Lock Workspace (H4)
+        if (e.shiftKey && e.key.toLowerCase() === 'l') {
+          e.preventDefault()
+          setIsWorkspaceLocked(true)
           return
         }
 

@@ -36,6 +36,7 @@ const SHORTCUTS_DATA: ShortcutItem[] = [
 
   // Power Features & Displays
   { id: 'presentation', keys: ['Ctrl', 'P'], description: 'Launch Wallboard Presentation Mode', category: 'Power Features & Displays' },
+  { id: 'lock-workspace', keys: ['Ctrl', 'Shift', 'L'], description: 'Instant Lock Workspace Screen', category: 'Power Features & Displays' },
   { id: 'fullscreen', keys: ['F11'], description: 'Toggle Distraction-Free Fullscreen', category: 'Power Features & Displays' },
 ]
 

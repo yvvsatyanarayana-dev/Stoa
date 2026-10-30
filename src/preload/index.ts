@@ -36,7 +36,15 @@ export const api = {
       settings: ChronoDeskSettings
       timetables: Timetable[]
       subjects: Subject[]
-    }> => ipcRenderer.invoke('data:get-initial')
+    }> => ipcRenderer.invoke('data:get-initial'),
+    exportAll: (): Promise<any> => ipcRenderer.invoke('data:export-all'),
+    importAll: (payload: any, options?: { overwrite?: boolean }): Promise<{ success: boolean; importedCounts: any }> =>
+      ipcRenderer.invoke('data:import-all', payload, options)
+  },
+  audit: {
+    list: (limit?: number): Promise<any[]> => ipcRenderer.invoke('audit:list', limit),
+    clear: (): Promise<{ success: boolean }> => ipcRenderer.invoke('audit:clear'),
+    rollback: (logId: string): Promise<{ success: boolean }> => ipcRenderer.invoke('audit:rollback', logId)
   },
   calendars: {
     list: (): Promise<Calendar[]> => ipcRenderer.invoke('calendars:list'),

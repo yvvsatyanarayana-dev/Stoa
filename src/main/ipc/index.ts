@@ -15,6 +15,7 @@ import {
   themeDb,
   syncQueueDb,
   cacheDb,
+  auditLogDb,
   getDb
 } from '../db'
 import { checkEventConflicts, checkTimetableSlotConflicts } from '../engine/conflictEngine'
@@ -128,15 +129,58 @@ export function registerIpcHandlers(): void {
   })
 
   ipcMain.handle('events:create', async (_, event: CalendarEvent, resourceIds?: string[]) => {
-    return eventDb.create(event, resourceIds)
+    const res = eventDb.create(event, resourceIds)
+    try {
+      auditLogDb.add({
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        entity_type: 'event',
+        entity_id: event.id,
+        entity_title: event.title || 'Untitled Event',
+        action: 'create',
+        new_payload: JSON.stringify(res),
+        user_actor: 'Workspace Admin',
+        timestamp: new Date().toISOString()
+      })
+    } catch {}
+    return res
   })
 
   ipcMain.handle('events:update', async (_, event: CalendarEvent, resourceIds?: string[]) => {
-    return eventDb.update(event, resourceIds)
+    const prev = eventDb.get(event.id)
+    const res = eventDb.update(event, resourceIds)
+    try {
+      auditLogDb.add({
+        id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        entity_type: 'event',
+        entity_id: event.id,
+        entity_title: event.title || 'Untitled Event',
+        action: 'update',
+        previous_payload: prev ? JSON.stringify(prev) : undefined,
+        new_payload: JSON.stringify(res),
+        user_actor: 'Workspace Admin',
+        timestamp: new Date().toISOString()
+      })
+    } catch {}
+    return res
   })
 
   ipcMain.handle('events:delete', async (_, id: string) => {
+    const prev = eventDb.get(id)
     eventDb.delete(id)
+    if (prev) {
+      try {
+        auditLogDb.add({
+          id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          entity_type: 'event',
+          entity_id: id,
+          entity_title: prev.title || 'Untitled Event',
+          action: 'delete',
+          previous_payload: JSON.stringify(prev),
+          user_actor: 'Workspace Admin',
+          timestamp: new Date().toISOString()
+        })
+      } catch {}
+    }
     return { success: true }
   })
 
@@ -634,5 +678,108 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('shortcuts:get-registered', async () => {
     return Array.from(registeredShortcuts.keys())
+  })
+
+  // Audit Logs with Reversion (H2)
+  ipcMain.handle('audit:list', async (_, limit?: number) => {
+    return auditLogDb.list(limit || 200)
+  })
+
+  ipcMain.handle('audit:clear', async () => {
+    auditLogDb.clear()
+    return { success: true }
+  })
+
+  ipcMain.handle('audit:rollback', async (_, logId: string) => {
+    const entry = auditLogDb.get(logId)
+    if (!entry) throw new Error('Audit log entry not found')
+
+    if (entry.entity_type === 'event') {
+      if (entry.action === 'create') {
+        eventDb.delete(entry.entity_id)
+      } else if (entry.action === 'update' && entry.previous_payload) {
+        const prevEvent = JSON.parse(entry.previous_payload) as CalendarEvent
+        eventDb.update(prevEvent)
+      } else if (entry.action === 'delete' && entry.previous_payload) {
+        const prevEvent = JSON.parse(entry.previous_payload) as CalendarEvent
+        eventDb.create(prevEvent)
+      }
+    }
+
+    auditLogDb.add({
+      id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      entity_type: entry.entity_type,
+      entity_id: entry.entity_id,
+      entity_title: `Reverted: ${entry.entity_title}`,
+      action: 'rollback',
+      previous_payload: entry.new_payload,
+      new_payload: entry.previous_payload,
+      user_actor: 'Rollback System',
+      timestamp: new Date().toISOString()
+    })
+
+    return { success: true }
+  })
+
+  // Full System Data Portability (H5)
+  ipcMain.handle('data:export-all', async () => {
+    return {
+      calendars: calendarDb.list(),
+      categories: categoryDb.list(),
+      resources: resourceDb.list(),
+      events: eventDb.list(),
+      timetables: timetableDb.list(),
+      subjects: subjectDb.list(),
+      settings: settingsDb.get(),
+      exported_at: new Date().toISOString(),
+      app_version: '1.0.0'
+    }
+  })
+
+  ipcMain.handle('data:import-all', async (_, payload: any, options?: { overwrite?: boolean }) => {
+    if (!payload) throw new Error('Empty payload')
+    const importedCounts = { calendars: 0, events: 0, resources: 0, timetables: 0, subjects: 0 }
+
+    if (options?.overwrite) {
+      getDb().exec('DELETE FROM events; DELETE FROM timetable_slots; DELETE FROM timetables; DELETE FROM resources; DELETE FROM subjects;')
+    }
+
+    if (Array.isArray(payload.calendars)) {
+      for (const cal of payload.calendars) {
+        try {
+          calendarDb.create(cal)
+          importedCounts.calendars++
+        } catch {}
+      }
+    }
+
+    if (Array.isArray(payload.resources)) {
+      for (const res of payload.resources) {
+        try {
+          resourceDb.create(res)
+          importedCounts.resources++
+        } catch {}
+      }
+    }
+
+    if (Array.isArray(payload.subjects)) {
+      for (const sub of payload.subjects) {
+        try {
+          subjectDb.create(sub)
+          importedCounts.subjects++
+        } catch {}
+      }
+    }
+
+    if (Array.isArray(payload.events)) {
+      for (const evt of payload.events) {
+        try {
+          eventDb.create(evt)
+          importedCounts.events++
+        } catch {}
+      }
+    }
+
+    return { success: true, importedCounts }
   })
 }

@@ -26,6 +26,7 @@ export const TimetableBuilderView: React.FC = () => {
     setIsTimetableModalOpen,
     setIsSubjectModalOpen,
     setIsAutoGenerateModalOpen,
+    setIsTemplateMarketplaceOpen,
     deleteSubject
   } = useAppStore()
 
@@ -134,13 +135,22 @@ export const TimetableBuilderView: React.FC = () => {
               Create your own timetable roster from scratch. You can define weekly session hours, assign personnel, and prevent booking overlaps.
             </p>
           </div>
-          <button
-            onClick={() => setIsTimetableModalOpen(true)}
-            className="btn-primary w-full py-2 px-4 text-xs font-semibold flex items-center justify-center gap-2 shadow-xs"
-          >
-            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>Create First Timetable</span>
-          </button>
+          <div className="flex flex-col gap-2 w-full">
+            <button
+              onClick={() => setIsTimetableModalOpen(true)}
+              className="btn-primary w-full py-2 px-4 text-xs font-semibold flex items-center justify-center gap-2 shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Create First Timetable</span>
+            </button>
+            <button
+              onClick={() => setIsTemplateMarketplaceOpen(true)}
+              className="btn-secondary w-full py-2 px-4 text-xs font-semibold flex items-center justify-center gap-2"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <span>Browse Template Marketplace</span>
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -233,6 +243,15 @@ export const TimetableBuilderView: React.FC = () => {
           >
             <Printer className="w-3 h-3" />
             <span>Print</span>
+          </button>
+
+          <button
+            onClick={() => setIsTemplateMarketplaceOpen(true)}
+            className="btn-secondary flex items-center gap-1.5 py-1 px-2.5 text-xs font-medium"
+            title="Browse and load industry schedule templates"
+          >
+            <BookOpen className="w-3 h-3 text-[var(--accent)]" />
+            <span>Templates</span>
           </button>
 
           <button
