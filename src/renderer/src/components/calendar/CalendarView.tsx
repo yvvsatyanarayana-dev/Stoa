@@ -15,7 +15,6 @@ import { Clock, MapPin, Video, Plus, Calendar as CalendarIcon, Globe, CalendarOf
 import { expandRecurringEvents } from '../../utils/recurrenceEngine'
 import { getHolidaysForYear, scanHolidayConflicts } from '../../utils/holidayEngine'
 import { FocusBlockProtector } from './FocusBlockProtector'
-import { WorldClockPanel } from './WorldClockPanel'
 import { HolidayRescheduleModal } from '../modals/HolidayRescheduleModal'
 import { FixMyWeekModal } from '../modals/FixMyWeekModal'
 
@@ -26,14 +25,14 @@ export const CalendarView: React.FC = () => {
     events,
     calendars,
     setSelectedEvent,
-    setIsEventModalOpen
+    setIsEventModalOpen,
+    setIsWorldClockOpen
   } = useAppStore()
 
   // Track live current time for the red "now" indicator line
   const [currentTime, setCurrentTime] = useState(new Date())
 
   // Modal / panel states for Category C features
-  const [isWorldClockPanelOpen, setIsWorldClockPanelOpen] = useState<boolean>(false)
   const [isHolidayModalOpen, setIsHolidayModalOpen] = useState<boolean>(false)
   const [isFixMyWeekOpen, setIsFixMyWeekOpen] = useState<boolean>(false)
 
@@ -675,7 +674,7 @@ export const CalendarView: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setIsWorldClockPanelOpen(true)}
+            onClick={() => setIsWorldClockOpen(true)}
             className="px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium flex items-center gap-1.5 transition-colors"
             title="Open live multi-city world clock"
           >
@@ -701,10 +700,6 @@ export const CalendarView: React.FC = () => {
       </div>
 
       {/* Interactive Panels & Modals */}
-      <WorldClockPanel
-        isOpen={isWorldClockPanelOpen}
-        onClose={() => setIsWorldClockPanelOpen(false)}
-      />
       <HolidayRescheduleModal
         isOpen={isHolidayModalOpen}
         onClose={() => setIsHolidayModalOpen(false)}

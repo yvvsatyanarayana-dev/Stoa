@@ -39,10 +39,20 @@ const GLOBAL_CITIES: CityTimezone[] = [
 ]
 
 export const WorldClockPanel: React.FC<{
-  isOpen: boolean
-  onClose: () => void
-}> = ({ isOpen, onClose }) => {
-  const { calendars, setSelectedEvent, setIsEventModalOpen } = useAppStore()
+  isOpen?: boolean
+  onClose?: () => void
+}> = ({ isOpen: propIsOpen, onClose: propOnClose }) => {
+  const {
+    isWorldClockOpen,
+    setIsWorldClockOpen,
+    calendars,
+    setSelectedEvent,
+    setIsEventModalOpen
+  } = useAppStore()
+
+  // Determine visibility: props take precedence if provided, otherwise store
+  const isOpen = propIsOpen !== undefined ? propIsOpen : isWorldClockOpen
+  const handleClose = propOnClose !== undefined ? propOnClose : () => setIsWorldClockOpen(false)
 
   const [activeCities, setActiveCities] = useState<CityTimezone[]>([
     GLOBAL_CITIES[0], // London
@@ -58,6 +68,7 @@ export const WorldClockPanel: React.FC<{
 
   // Ticking clock every 1 second
   useEffect(() => {
+    if (!isOpen) return
     const timer = setInterval(() => {
       const now = new Date()
       setCurrentTime(now)
@@ -66,8 +77,9 @@ export const WorldClockPanel: React.FC<{
       }
     }, 1000)
     return () => clearInterval(timer)
-  }, [isScrubbing])
+  }, [isOpen, isScrubbing])
 
+  // Filter available cities for search
   const availableCities = useMemo(() => {
     return GLOBAL_CITIES.filter(
       (c) =>
@@ -78,9 +90,7 @@ export const WorldClockPanel: React.FC<{
     )
   }, [activeCities, searchQuery])
 
-  if (!isOpen) return null
-
-  // Reference date calculation
+  // Reference date calculation - ALWAYS calculated at hook level before any conditional return!
   const referenceDate = useMemo(() => {
     if (!isScrubbing) return currentTime
     const d = new Date(currentTime)
@@ -88,20 +98,12 @@ export const WorldClockPanel: React.FC<{
     return d
   }, [currentTime, isScrubbing, sliderHour])
 
+  // SAFE EARLY RETURN AFTER ALL HOOKS
+  if (!isOpen) return null
+
   const getCityInfo = (zone: string, date: Date) => {
     try {
-      const formatter24 = new Intl.DateTimeFormat('en-US', {
-        timeZone: zone,
-        hour: 'numeric',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      })
-      const parts24 = formatter24.formatToParts(date)
-      const hour24 = parseInt(parts24.find((p) => p.type === 'hour')?.value || '0', 10)
-      const minute = parts24.find((p) => p.type === 'minute')?.value || '00'
-      const second = parts24.find((p) => p.type === 'second')?.value || '00'
-
+      // 1. Format 12-hour display string
       const formatter12 = new Intl.DateTimeFormat('en-US', {
         timeZone: zone,
         hour: 'numeric',
@@ -110,22 +112,30 @@ export const WorldClockPanel: React.FC<{
       })
       const time12 = formatter12.format(date)
 
-      // Weekday
-      const weekday = new Intl.DateTimeFormat('en-US', {
+      // 2. Extract numeric 24-hour component for business status
+      const formatter24 = new Intl.DateTimeFormat('en-US', {
+        timeZone: zone,
+        hour: 'numeric',
+        hour12: false
+      })
+      const hour24 = parseInt(formatter24.format(date), 10) || 0
+
+      // 3. Day comparison (e.g. Today, Tomorrow, Yesterday)
+      const dayFormatter = new Intl.DateTimeFormat('en-US', {
         timeZone: zone,
         weekday: 'short'
-      }).format(date)
-
-      const localWeekday = new Intl.DateTimeFormat('en-US', {
+      })
+      const localDayFormatter = new Intl.DateTimeFormat('en-US', {
         weekday: 'short'
-      }).format(date)
-
+      })
+      const weekday = dayFormatter.format(date)
+      const localWeekday = localDayFormatter.format(date)
       const dayLabel = weekday === localWeekday ? 'Today' : weekday
 
-      // Business status
+      // 4. Business status
+      const isDay = hour24 >= 6 && hour24 < 18
       let statusLabel = 'Off-Hours'
       let statusColor = 'text-[var(--text-muted)] bg-[var(--bg-hover)] border-[var(--border-subtle)]'
-      let isDay = hour24 >= 6 && hour24 < 18
 
       if (hour24 >= 9 && hour24 < 17) {
         statusLabel = 'Working'
@@ -135,33 +145,67 @@ export const WorldClockPanel: React.FC<{
         statusColor = 'text-amber-500 bg-amber-500/10 border-amber-500/20 font-medium'
       }
 
-      // Offset relative to local
-      const localStr = date.toLocaleString('en-US', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
-      const targetStr = date.toLocaleString('en-US', { timeZone: zone })
-      const diffMs = new Date(targetStr).getTime() - new Date(localStr).getTime()
-      const diffHours = Math.round((diffMs / (1000 * 60 * 60)) * 10) / 10
+      // 5. Offset calculation via Intl formatToParts (avoids string parsing errors)
+      const targetParts = new Intl.DateTimeFormat('en-US', {
+        timeZone: zone,
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false
+      }).formatToParts(date)
+
+      const localParts = new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false
+      }).formatToParts(date)
+
+      const getNum = (parts: Intl.DateTimeFormatPart[], type: string) =>
+        parseInt(parts.find((p) => p.type === type)?.value || '0', 10)
+
+      const targetMs = Date.UTC(
+        getNum(targetParts, 'year'),
+        getNum(targetParts, 'month') - 1,
+        getNum(targetParts, 'day'),
+        getNum(targetParts, 'hour'),
+        getNum(targetParts, 'minute')
+      )
+
+      const localMs = Date.UTC(
+        getNum(localParts, 'year'),
+        getNum(localParts, 'month') - 1,
+        getNum(localParts, 'day'),
+        getNum(localParts, 'hour'),
+        getNum(localParts, 'minute')
+      )
+
+      const diffHours = Math.round(((targetMs - localMs) / (1000 * 60 * 60)) * 10) / 10
 
       let offsetLabel = 'Local'
-      if (diffHours > 0) offsetLabel = `+${diffHours}h`
-      else if (diffHours < 0) offsetLabel = `${diffHours}h`
+      if (!isNaN(diffHours)) {
+        if (diffHours > 0) offsetLabel = `+${diffHours}h`
+        else if (diffHours < 0) offsetLabel = `${diffHours}h`
+      }
 
       return {
         time12,
         hour24,
-        minute,
-        second,
         dayLabel,
         isDay,
         statusLabel,
         statusColor,
         offsetLabel
       }
-    } catch {
+    } catch (err) {
+      console.error('Error formatting city time:', err)
       return {
         time12: '12:00 PM',
         hour24: 12,
-        minute: '00',
-        second: '00',
         dayLabel: 'Today',
         isDay: true,
         statusLabel: 'Working',
@@ -172,13 +216,13 @@ export const WorldClockPanel: React.FC<{
   }
 
   const handleAddCity = (city: CityTimezone) => {
-    setActiveCities([...activeCities, city])
+    setActiveCities((prev) => [...prev, city])
     setSearchQuery('')
   }
 
   const handleRemoveCity = (zone: string) => {
     if (activeCities.length > 1) {
-      setActiveCities(activeCities.filter((c) => c.zone !== zone))
+      setActiveCities((prev) => prev.filter((c) => c.zone !== zone))
     }
   }
 
@@ -205,14 +249,17 @@ export const WorldClockPanel: React.FC<{
       updated_at: new Date().toISOString()
     })
 
-    onClose()
+    handleClose()
     setIsEventModalOpen(true)
   }
 
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs transition-opacity" onClick={onClose} />
+      <div
+        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs transition-opacity"
+        onClick={handleClose}
+      />
 
       {/* Slide-in Panel */}
       <div
@@ -230,7 +277,7 @@ export const WorldClockPanel: React.FC<{
                 <span className="text-sm font-semibold text-[var(--text-primary)]">
                   World Clock
                 </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[var(--bg-subtle)] text-[var(--text-muted)] border border-[var(--border-subtle)]">
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--bg-subtle)] text-[var(--text-muted)] border border-[var(--border-subtle)]">
                   {activeCities.length} zones
                 </span>
               </div>
@@ -240,7 +287,7 @@ export const WorldClockPanel: React.FC<{
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-sm)] hover:bg-[var(--bg-hover)] transition-colors"
           >
             <X className="w-4 h-4" />
@@ -256,7 +303,7 @@ export const WorldClockPanel: React.FC<{
                 <Clock className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>Time Scrubber</span>
                 {isScrubbing && (
-                  <span className="text-[10px] font-normal px-1.5 py-0.2 rounded bg-[var(--accent)]/15 text-[var(--accent)]">
+                  <span className="text-[10px] font-normal px-1.5 py-0.5 rounded bg-[var(--accent)]/15 text-[var(--accent)]">
                     Previewing
                   </span>
                 )}
@@ -273,7 +320,11 @@ export const WorldClockPanel: React.FC<{
                   </button>
                 )}
                 <span className="font-mono text-xs font-semibold text-[var(--text-primary)]">
-                  {referenceDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                  {referenceDate.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                  })}
                 </span>
               </div>
             </div>
@@ -331,13 +382,13 @@ export const WorldClockPanel: React.FC<{
                             <span className="text-sm font-semibold text-[var(--text-primary)] leading-tight">
                               {city.name}
                             </span>
-                            <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border-subtle)]">
+                            <span className="text-[10px] font-mono px-1 py-0.5 rounded bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border-subtle)]">
                               {city.cityCode}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-1.5 mt-1">
-                            <span className={`text-[10px] px-1.5 py-0.2 rounded border ${info.statusColor}`}>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded border ${info.statusColor}`}>
                               {info.statusLabel}
                             </span>
                             <span className="text-[10px] text-[var(--text-muted)] font-mono">
@@ -433,7 +484,14 @@ export const WorldClockPanel: React.FC<{
             className="w-full py-2 px-3 text-xs font-semibold rounded-[var(--radius-sm)] bg-[var(--accent)] text-[var(--accent-fg)] hover:opacity-90 flex items-center justify-center gap-2 shadow-xs transition-opacity"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Schedule Meeting at {referenceDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+            <span>
+              Schedule Meeting at{' '}
+              {referenceDate.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+              })}
+            </span>
           </button>
         </div>
       </div>
