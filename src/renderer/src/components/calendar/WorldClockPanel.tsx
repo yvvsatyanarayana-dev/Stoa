@@ -1,6 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAppStore } from '../../store/useAppStore'
-import { Globe, X, Plus, Trash2, Sun, Moon, Calendar, Search, Clock } from 'lucide-react'
+import {
+  Globe,
+  X,
+  Plus,
+  Trash2,
+  Sun,
+  Moon,
+  Calendar,
+  Search,
+  RotateCcw,
+  Clock,
+  Sparkles
+} from 'lucide-react'
 
 interface CityTimezone {
   name: string
@@ -41,42 +53,121 @@ export const WorldClockPanel: React.FC<{
 
   const [currentTime, setCurrentTime] = useState<Date>(new Date())
   const [searchQuery, setSearchQuery] = useState<string>('')
-  const [sliderUtcHour, setSliderUtcHour] = useState<number>(new Date().getUTCHours())
+  const [isScrubbing, setIsScrubbing] = useState<boolean>(false)
+  const [sliderHour, setSliderHour] = useState<number>(new Date().getHours())
 
   // Ticking clock every 1 second
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    const timer = setInterval(() => {
+      const now = new Date()
+      setCurrentTime(now)
+      if (!isScrubbing) {
+        setSliderHour(now.getHours())
+      }
+    }, 1000)
     return () => clearInterval(timer)
-  }, [])
+  }, [isScrubbing])
 
   const availableCities = useMemo(() => {
     return GLOBAL_CITIES.filter(
       (c) =>
         !activeCities.some((ac) => ac.zone === c.zone) &&
         (c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          c.country.toLowerCase().includes(searchQuery.toLowerCase()))
+          c.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          c.cityCode.toLowerCase().includes(searchQuery.toLowerCase()))
     )
   }, [activeCities, searchQuery])
 
   if (!isOpen) return null
 
-  const getCityTime = (zone: string, date: Date) => {
+  // Reference date calculation
+  const referenceDate = useMemo(() => {
+    if (!isScrubbing) return currentTime
+    const d = new Date(currentTime)
+    d.setHours(sliderHour, 0, 0, 0)
+    return d
+  }, [currentTime, isScrubbing, sliderHour])
+
+  const getCityInfo = (zone: string, date: Date) => {
     try {
-      const formatter = new Intl.DateTimeFormat('en-US', {
+      const formatter24 = new Intl.DateTimeFormat('en-US', {
         timeZone: zone,
-        hour: '2-digit',
+        hour: 'numeric',
         minute: '2-digit',
         second: '2-digit',
         hour12: false
       })
-      const parts = formatter.formatToParts(date)
-      const hour = parseInt(parts.find((p) => p.type === 'hour')?.value || '0', 10)
-      const minute = parts.find((p) => p.type === 'minute')?.value || '00'
-      const second = parts.find((p) => p.type === 'second')?.value || '00'
-      const isDaytime = hour >= 6 && hour < 18
-      return { hour, minute, second, isDaytime, timeStr: `${String(hour).padStart(2, '0')}:${minute}:${second}` }
+      const parts24 = formatter24.formatToParts(date)
+      const hour24 = parseInt(parts24.find((p) => p.type === 'hour')?.value || '0', 10)
+      const minute = parts24.find((p) => p.type === 'minute')?.value || '00'
+      const second = parts24.find((p) => p.type === 'second')?.value || '00'
+
+      const formatter12 = new Intl.DateTimeFormat('en-US', {
+        timeZone: zone,
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      })
+      const time12 = formatter12.format(date)
+
+      // Weekday
+      const weekday = new Intl.DateTimeFormat('en-US', {
+        timeZone: zone,
+        weekday: 'short'
+      }).format(date)
+
+      const localWeekday = new Intl.DateTimeFormat('en-US', {
+        weekday: 'short'
+      }).format(date)
+
+      const dayLabel = weekday === localWeekday ? 'Today' : weekday
+
+      // Business status
+      let statusLabel = 'Off-Hours'
+      let statusColor = 'text-[var(--text-muted)] bg-[var(--bg-hover)] border-[var(--border-subtle)]'
+      let isDay = hour24 >= 6 && hour24 < 18
+
+      if (hour24 >= 9 && hour24 < 17) {
+        statusLabel = 'Working'
+        statusColor = 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20 font-medium'
+      } else if ((hour24 >= 7 && hour24 < 9) || (hour24 >= 17 && hour24 < 20)) {
+        statusLabel = 'Extended'
+        statusColor = 'text-amber-500 bg-amber-500/10 border-amber-500/20 font-medium'
+      }
+
+      // Offset relative to local
+      const localStr = date.toLocaleString('en-US', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+      const targetStr = date.toLocaleString('en-US', { timeZone: zone })
+      const diffMs = new Date(targetStr).getTime() - new Date(localStr).getTime()
+      const diffHours = Math.round((diffMs / (1000 * 60 * 60)) * 10) / 10
+
+      let offsetLabel = 'Local'
+      if (diffHours > 0) offsetLabel = `+${diffHours}h`
+      else if (diffHours < 0) offsetLabel = `${diffHours}h`
+
+      return {
+        time12,
+        hour24,
+        minute,
+        second,
+        dayLabel,
+        isDay,
+        statusLabel,
+        statusColor,
+        offsetLabel
+      }
     } catch {
-      return { hour: date.getHours(), minute: '00', second: '00', isDaytime: true, timeStr: '12:00:00' }
+      return {
+        time12: '12:00 PM',
+        hour24: 12,
+        minute: '00',
+        second: '00',
+        dayLabel: 'Today',
+        isDay: true,
+        statusLabel: 'Working',
+        statusColor: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+        offsetLabel: 'Local'
+      }
     }
   }
 
@@ -91,19 +182,23 @@ export const WorldClockPanel: React.FC<{
     }
   }
 
-  const handleScheduleFromCity = (city: CityTimezone) => {
-    const now = new Date()
-    const target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), sliderUtcHour, 0, 0))
-    const end = new Date(target.getTime() + 60 * 60 * 1000)
+  const handleResetToNow = () => {
+    setIsScrubbing(false)
+    setSliderHour(new Date().getHours())
+  }
+
+  const handleScheduleAtCurrent = (specificCity?: CityTimezone) => {
+    const start = new Date(referenceDate)
+    const end = new Date(start.getTime() + 45 * 60 * 1000)
 
     setSelectedEvent({
       id: `evt-${Date.now()}`,
       calendar_id: calendars[0]?.id || 'cal-primary',
-      title: `Global Meeting (${city.name} Sync)`,
-      start: target.toISOString(),
+      title: specificCity ? `Sync with ${specificCity.name}` : 'Cross-Zone Meeting',
+      start: start.toISOString(),
       end: end.toISOString(),
       all_day: false,
-      timezone: city.zone,
+      timezone: specificCity?.zone || Intl.DateTimeFormat().resolvedOptions().timeZone,
       priority: 'medium',
       status: 'confirmed',
       created_at: new Date().toISOString(),
@@ -117,29 +212,36 @@ export const WorldClockPanel: React.FC<{
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-xs" onClick={onClose} />
+      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs transition-opacity" onClick={onClose} />
 
       {/* Slide-in Panel */}
       <div
-        className="fixed top-0 right-0 h-full w-96 z-50 flex flex-col bg-[var(--bg-elevated)] border-l border-[var(--border-subtle)] shadow-2xl animate-in slide-in-from-right duration-200"
+        className="fixed top-0 right-0 h-full w-[380px] max-w-[90vw] z-50 flex flex-col bg-[var(--bg-elevated)] border-l border-[var(--border-subtle)] shadow-2xl animate-in slide-in-from-right duration-200"
         style={{ top: '72px' }}
       >
         {/* Header */}
-        <div className="p-4 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-sidebar)] shrink-0">
-          <div className="flex items-center gap-2">
-            <Globe className="w-4 h-4 text-[var(--accent)]" />
+        <div className="px-4 py-3.5 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-sidebar)] shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-[var(--radius-sm)] bg-[var(--accent)]/10 text-[var(--accent)]">
+              <Globe className="w-4 h-4" />
+            </div>
             <div>
-              <span className="text-sm font-semibold text-[var(--text-primary)]">
-                World Clock Live Panel (C3)
-              </span>
-              <p className="text-[10px] text-[var(--text-muted)] font-mono">
-                Real-Time Ticking Multi-Zone Clock
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-[var(--text-primary)]">
+                  World Clock
+                </span>
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[var(--bg-subtle)] text-[var(--text-muted)] border border-[var(--border-subtle)]">
+                  {activeCities.length} zones
+                </span>
+              </div>
+              <p className="text-[11px] text-[var(--text-muted)]">
+                Global time zones & overlap planner
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded transition-colors"
+            className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-sm)] hover:bg-[var(--bg-hover)] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -147,99 +249,138 @@ export const WorldClockPanel: React.FC<{
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* Time Scrubber / Converter */}
-          <div className="p-3 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
+          {/* Time Scrubber */}
+          <div className="p-3.5 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-primary)]">
                 <Clock className="w-3.5 h-3.5 text-[var(--accent)]" />
-                <span>Cross-Zone Time Scrubber</span>
-              </span>
-              <span className="font-mono text-[11px] font-bold text-[var(--accent)]">
-                {String(sliderUtcHour).padStart(2, '0')}:00 UTC
-              </span>
+                <span>Time Scrubber</span>
+                {isScrubbing && (
+                  <span className="text-[10px] font-normal px-1.5 py-0.2 rounded bg-[var(--accent)]/15 text-[var(--accent)]">
+                    Previewing
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5">
+                {isScrubbing && (
+                  <button
+                    onClick={handleResetToNow}
+                    className="flex items-center gap-1 text-[11px] text-[var(--accent)] hover:underline font-medium"
+                    title="Reset to current time"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Now</span>
+                  </button>
+                )}
+                <span className="font-mono text-xs font-semibold text-[var(--text-primary)]">
+                  {referenceDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                </span>
+              </div>
             </div>
-            <input
-              type="range"
-              min="0"
-              max="23"
-              value={sliderUtcHour}
-              onChange={(e) => setSliderUtcHour(Number(e.target.value))}
-              className="w-full accent-[var(--accent)] cursor-pointer"
-            />
-            <div className="flex justify-between text-[9px] font-mono text-[var(--text-muted)]">
-              <span>00:00</span>
-              <span>06:00</span>
-              <span>12:00</span>
-              <span>18:00</span>
-              <span>23:00</span>
+
+            <div className="relative pt-1">
+              <input
+                type="range"
+                min="0"
+                max="23"
+                value={sliderHour}
+                onChange={(e) => {
+                  setIsScrubbing(true)
+                  setSliderHour(Number(e.target.value))
+                }}
+                className="w-full h-1.5 bg-[var(--border-subtle)] rounded-lg appearance-none cursor-pointer accent-[var(--accent)]"
+              />
+              <div className="flex justify-between text-[10px] font-mono text-[var(--text-muted)] mt-1.5">
+                <span>12 AM</span>
+                <span>6 AM</span>
+                <span>12 PM</span>
+                <span>6 PM</span>
+                <span>11 PM</span>
+              </div>
             </div>
           </div>
 
           {/* Active Cities List */}
           <div className="space-y-2">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-              Tracked City Clocks ({activeCities.length})
-            </span>
+            <div className="flex items-center justify-between text-[11px] font-medium text-[var(--text-muted)] px-1">
+              <span>LOCATION & STATUS</span>
+              <span>TIME & OFFSET</span>
+            </div>
 
             <div className="space-y-2">
               {activeCities.map((city) => {
-                const live = getCityTime(city.zone, currentTime)
-                const scrubDate = new Date(Date.UTC(2026, 0, 1, sliderUtcHour, 0, 0))
-                const scrubHour = getCityTime(city.zone, scrubDate).hour
+                const info = getCityInfo(city.zone, referenceDate)
 
                 return (
                   <div
                     key={city.zone}
-                    className="p-3 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] space-y-2 transition-colors hover:border-[var(--border-default)]"
+                    className="group relative p-3 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] transition-all hover:shadow-xs"
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {live.isDaytime ? (
-                          <Sun className="w-4 h-4 text-amber-500" />
-                        ) : (
-                          <Moon className="w-4 h-4 text-indigo-400" />
-                        )}
+                      {/* Left side: City & Status */}
+                      <div className="flex items-start gap-2.5">
+                        <div className="mt-0.5">
+                          {info.isDay ? (
+                            <Sun className="w-4 h-4 text-amber-500" />
+                          ) : (
+                            <Moon className="w-4 h-4 text-indigo-400" />
+                          )}
+                        </div>
                         <div>
-                          <div className="text-xs font-semibold text-[var(--text-primary)]">
-                            {city.name}
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-semibold text-[var(--text-primary)] leading-tight">
+                              {city.name}
+                            </span>
+                            <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border-subtle)]">
+                              {city.cityCode}
+                            </span>
                           </div>
-                          <div className="text-[10px] text-[var(--text-muted)] font-mono">
-                            {city.country} • {city.cityCode}
+
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className={`text-[10px] px-1.5 py-0.2 rounded border ${info.statusColor}`}>
+                              {info.statusLabel}
+                            </span>
+                            <span className="text-[10px] text-[var(--text-muted)] font-mono">
+                              {info.dayLabel}
+                            </span>
                           </div>
                         </div>
                       </div>
 
+                      {/* Right side: Time & Offset */}
                       <div className="flex items-center gap-2">
                         <div className="text-right">
-                          <div className="text-sm font-bold font-mono text-[var(--text-primary)]">
-                            {live.timeStr}
+                          <div className="text-base font-bold font-mono tracking-tight text-[var(--text-primary)]">
+                            {info.time12}
                           </div>
-                          <div className="text-[9px] font-mono text-[var(--text-muted)]">
-                            Scrubbed: {String(scrubHour).padStart(2, '0')}:00
+                          <div className="text-[10px] font-mono text-[var(--text-muted)]">
+                            {info.offsetLabel}
                           </div>
                         </div>
 
-                        {activeCities.length > 1 && (
+                        {/* Quick action buttons on hover */}
+                        <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity ml-1">
                           <button
                             type="button"
-                            onClick={() => handleRemoveCity(city.zone)}
-                            className="p-1 text-[var(--text-muted)] hover:text-red-400 rounded transition-colors"
-                            title="Remove city"
+                            onClick={() => handleScheduleAtCurrent(city)}
+                            className="p-1 text-[var(--text-muted)] hover:text-[var(--accent)] rounded hover:bg-[var(--bg-hover)] transition-colors"
+                            title={`Schedule meeting in ${city.name}`}
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Calendar className="w-3.5 h-3.5" />
                           </button>
-                        )}
+                          {activeCities.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveCity(city.zone)}
+                              className="p-1 text-[var(--text-muted)] hover:text-red-400 rounded hover:bg-[var(--bg-hover)] transition-colors"
+                              title="Remove city"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleScheduleFromCity(city)}
-                      className="w-full py-1 text-[10px] font-semibold rounded bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] text-[var(--text-primary)] flex items-center justify-center gap-1.5 transition-colors"
-                    >
-                      <Calendar className="w-3 h-3 text-[var(--accent)]" />
-                      <span>Book at {String(scrubHour).padStart(2, '0')}:00 {city.name} Time</span>
-                    </button>
                   </div>
                 )
               })}
@@ -248,37 +389,52 @@ export const WorldClockPanel: React.FC<{
 
           {/* Add City Section */}
           <div className="space-y-2 pt-2 border-t border-[var(--border-subtle)]">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+            <span className="text-[11px] font-semibold text-[var(--text-secondary)]">
               Add Global City
             </span>
 
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-[var(--text-muted)] absolute left-2.5 top-2" />
+              <Search className="w-3.5 h-3.5 text-[var(--text-muted)] absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="Search city or country..."
+                placeholder="Search city, code or country..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--border-strong)]"
+                className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--border-strong)] transition-colors"
               />
             </div>
 
             {availableCities.length > 0 && (
-              <div className="flex flex-wrap gap-1 max-h-36 overflow-y-auto pr-1">
+              <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pt-1 pr-1">
                 {availableCities.map((city) => (
                   <button
                     key={city.zone}
                     type="button"
                     onClick={() => handleAddCity(city)}
-                    className="px-2 py-1 rounded text-[10px] font-medium bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-1"
+                    className="px-2 py-1 rounded-[var(--radius-sm)] text-[11px] font-medium bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-1 group"
                   >
-                    <Plus className="w-2.5 h-2.5" />
+                    <Plus className="w-3 h-3 text-[var(--text-muted)] group-hover:text-[var(--accent)]" />
                     <span>{city.name}</span>
+                    <span className="text-[9px] font-mono text-[var(--text-muted)]">
+                      {city.cityCode}
+                    </span>
                   </button>
                 ))}
               </div>
             )}
           </div>
+        </div>
+
+        {/* Unified Footer Action */}
+        <div className="p-3.5 border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)] shrink-0">
+          <button
+            type="button"
+            onClick={() => handleScheduleAtCurrent()}
+            className="w-full py-2 px-3 text-xs font-semibold rounded-[var(--radius-sm)] bg-[var(--accent)] text-[var(--accent-fg)] hover:opacity-90 flex items-center justify-center gap-2 shadow-xs transition-opacity"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Schedule Meeting at {referenceDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
+          </button>
         </div>
       </div>
     </>

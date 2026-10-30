@@ -71,7 +71,7 @@ export const HolidayRescheduleModal: React.FC<{
             </div>
             <div>
               <h2 className="text-sm font-semibold tracking-tight text-[var(--text-primary)]">
-                Holiday-Aware Auto-Reschedule (C2)
+                Holiday-Aware Auto-Reschedule
               </h2>
               <p className="text-[11px] text-[var(--text-muted)]">
                 Detects appointments colliding with national holidays and shifts them to valid business days.

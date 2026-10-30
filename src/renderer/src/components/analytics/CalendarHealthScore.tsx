@@ -190,7 +190,7 @@ export const CalendarHealthScore: React.FC = () => {
           </div>
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-primary)]">
-              Calendar Health Score & Fatigue Index (B4)
+              Calendar Health Score & Fatigue Index
             </h3>
             <p className="text-[11px] text-[var(--text-muted)]">
               Composite audit evaluating buffer adequacy, lunch protection, working boundaries, and burnout risks.

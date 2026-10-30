@@ -77,7 +77,7 @@ export const TeamBottleneckDetector: React.FC = () => {
           </div>
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-primary)]">
-              Team Bottleneck & Workload Distribution (B5)
+              Team Bottleneck & Workload Distribution
             </h3>
             <p className="text-[11px] text-[var(--text-muted)]">
               Pinpoints overcommitted staff members and reveals underutilized team bandwidth.

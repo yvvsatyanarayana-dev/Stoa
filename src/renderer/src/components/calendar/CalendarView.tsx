@@ -651,7 +651,7 @@ export const CalendarView: React.FC = () => {
             title="Cluster fragmented meetings and recover deep work"
           >
             <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
-            <span>Fix My Week (C5)</span>
+            <span>Fix My Week</span>
           </button>
 
           <button
@@ -665,7 +665,7 @@ export const CalendarView: React.FC = () => {
             title="Scan & shift appointments colliding with public holidays"
           >
             <CalendarOff className="w-3.5 h-3.5" />
-            <span>Holiday Reschedule (C2)</span>
+            <span>Holiday Reschedule</span>
             {holidayConflicts.length > 0 && (
               <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-amber-500 text-black">
                 {holidayConflicts.length}
@@ -677,10 +677,10 @@ export const CalendarView: React.FC = () => {
             type="button"
             onClick={() => setIsWorldClockPanelOpen(true)}
             className="px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium flex items-center gap-1.5 transition-colors"
-            title="Open live ticking multi-city clock drawer"
+            title="Open live multi-city world clock"
           >
             <Globe className="w-3.5 h-3.5 text-[var(--accent)]" />
-            <span>World Clock Panel (C3)</span>
+            <span>World Clock</span>
           </button>
         </div>
 
@@ -689,7 +689,7 @@ export const CalendarView: React.FC = () => {
         </span>
       </div>
 
-      {/* Focus Block Protector Bar (C4) */}
+      {/* Focus Block Protector Bar */}
       <FocusBlockProtector />
 
       {/* Main Calendar View Body */}

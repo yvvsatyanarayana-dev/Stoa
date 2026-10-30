@@ -87,7 +87,7 @@ export const DashboardView: React.FC = () => {
               }`}
             >
               <BarChart2 className="w-3.5 h-3.5" />
-              <span>Analytics & Insights (B1–B5)</span>
+              <span>Analytics & Insights</span>
               <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border-subtle)]">
                 Live
               </span>
@@ -283,7 +283,7 @@ export const DashboardView: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 2: ADVANCED ANALYTICS (B1 - B5) */}
+        {/* TAB 2: ADVANCED ANALYTICS */}
         {activeTab === 'analytics' && (
           <div className="space-y-5 animate-in fade-in duration-200">
             {/* B1: Time-Use Heatmap */}

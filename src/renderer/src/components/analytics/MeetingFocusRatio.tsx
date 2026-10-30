@@ -118,7 +118,7 @@ export const MeetingFocusRatio: React.FC = () => {
           </div>
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-primary)]">
-              Meeting vs. Focus Ratio (B2)
+              Meeting vs. Focus Ratio
             </h3>
             <p className="text-[11px] text-[var(--text-muted)]">
               Calculates weekly meeting commitments vs. uninterrupted 90+ min deep focus intervals.

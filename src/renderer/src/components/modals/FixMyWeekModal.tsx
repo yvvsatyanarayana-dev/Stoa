@@ -126,7 +126,7 @@ export const FixMyWeekModal: React.FC<{
             </div>
             <div>
               <h2 className="text-sm font-semibold tracking-tight text-[var(--text-primary)]">
-                "Fix My Week" AI Schedule Optimizer (C5)
+                "Fix My Week" Schedule Optimizer
               </h2>
               <p className="text-[11px] text-[var(--text-muted)]">
                 Eliminates fragmented gaps, clusters meetings, and recovers continuous deep work blocks.

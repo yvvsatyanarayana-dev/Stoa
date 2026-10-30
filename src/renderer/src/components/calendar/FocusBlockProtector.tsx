@@ -104,7 +104,7 @@ export const FocusBlockProtector: React.FC = () => {
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1.5 font-semibold text-[var(--text-primary)]">
           <Shield className="w-3.5 h-3.5 text-[var(--accent)]" />
-          <span>Focus Block Shield (C4):</span>
+          <span>Focus Block Shield:</span>
         </div>
 
         <span className="text-[11px] text-[var(--text-muted)] font-mono">

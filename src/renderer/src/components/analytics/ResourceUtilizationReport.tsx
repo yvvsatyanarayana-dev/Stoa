@@ -126,7 +126,7 @@ export const ResourceUtilizationReport: React.FC = () => {
           </div>
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-primary)]">
-              Resource & Room Utilization Report (B3)
+              Resource & Room Utilization Report
             </h3>
             <p className="text-[11px] text-[var(--text-muted)]">
               Monitors load, capacity thresholds, and idle availability across all registered facilities and personnel.

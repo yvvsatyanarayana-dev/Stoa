@@ -109,7 +109,7 @@ export const TimeUseHeatmap: React.FC = () => {
           </div>
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-primary)]">
-              Real-Time Time-Use Heatmap (B1)
+              Time-Use Density Heatmap
             </h3>
             <p className="text-[11px] text-[var(--text-muted)]">
               Hourly density analysis showing peak concentration and idle slots across the week.
