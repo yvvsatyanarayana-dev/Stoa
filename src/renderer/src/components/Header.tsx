@@ -149,8 +149,8 @@ export const Header: React.FC = () => {
       {/* Right: Search, Theme Toggle, Notification Bell & Quick Add */}
       <div className="flex items-center gap-2">
         {/* Search Input with modern shortcut pill */}
-        <div className="relative w-44">
-          <Search className="w-3.5 h-3.5 text-[var(--text-muted)] absolute left-2.5 top-2" />
+        <div className="relative w-48 flex items-center">
+          <Search className="w-3.5 h-3.5 text-[var(--text-muted)] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             placeholder="Search events..."
@@ -159,9 +159,9 @@ export const Header: React.FC = () => {
             onKeyDown={(e) => {
               if (e.key === 'Enter') fetchEvents()
             }}
-            className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] pl-8 pr-10 py-1 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all shadow-xs"
+            className="w-full h-7 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] pl-8 pr-7 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all shadow-xs"
           />
-          <kbd className="absolute right-2 top-1.5 text-[9px] font-mono text-[var(--text-muted)] px-1 py-0.5 bg-[var(--bg-hover)] border border-[var(--border-subtle)] rounded">
+          <kbd className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center h-4 min-w-[16px] px-1 text-[9px] font-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] leading-none select-none">
             ↵
           </kbd>
         </div>
