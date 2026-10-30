@@ -21,6 +21,9 @@ export type AppView =
   | 'conferences'
   | 'dashboard'
   | 'notifications'
+  | 'profiles'
+  | 'theme-studio'
+  | 'audit-log'
   | 'settings'
 
 export type CalendarViewType = 'day' | 'week' | 'month' | 'agenda'

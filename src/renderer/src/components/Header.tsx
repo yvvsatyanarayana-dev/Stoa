@@ -112,6 +112,12 @@ export const Header: React.FC = () => {
                 ? 'Analytics & Utilization Dashboard'
                 : currentView === 'notifications'
                 ? 'Notification Center'
+                : currentView === 'profiles'
+                ? 'Workspace Profiles'
+                : currentView === 'theme-studio'
+                ? 'Theme Studio'
+                : currentView === 'audit-log'
+                ? 'Security & Audit Log'
                 : 'System Settings'}
             </span>
           </div>

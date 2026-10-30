@@ -3,28 +3,23 @@ import { useAppStore } from '../../store/useAppStore'
 import {
   Settings,
   Save,
-  Palette,
   Server,
   Database,
-  Briefcase,
-  FileText,
   Lock,
-  BookOpen
+  BookOpen,
+  ArrowRight,
+  Briefcase,
+  Palette,
+  ShieldCheck
 } from 'lucide-react'
-import { ThemeStudio } from './ThemeStudio'
 import { SyncStatus } from './SyncStatus'
 import { WorkspaceBackup } from './WorkspaceBackup'
-import { WorkspaceProfilesManager } from '../enterprise/WorkspaceProfilesManager'
-import { AuditLogViewer } from '../enterprise/AuditLogViewer'
 import { DataPortabilityTab } from '../enterprise/DataPortabilityTab'
 
 type SettingsTab =
   | 'general'
-  | 'profiles'
   | 'security'
-  | 'audit'
   | 'portability'
-  | 'theme'
   | 'sync'
   | 'backup'
 
@@ -35,7 +30,8 @@ export const SettingsView: React.FC = () => {
     themeMode,
     setThemeMode,
     setIsWorkspaceLocked,
-    setIsTemplateMarketplaceOpen
+    setIsTemplateMarketplaceOpen,
+    setCurrentView
   } = useAppStore()
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('general')
@@ -73,17 +69,51 @@ export const SettingsView: React.FC = () => {
 
   const tabs: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
     { id: 'general', label: 'General', icon: <Settings className="w-4 h-4" /> },
-    { id: 'profiles', label: 'Profiles', icon: <Briefcase className="w-4 h-4" /> },
     { id: 'security', label: 'Security & PIN', icon: <Lock className="w-4 h-4" /> },
-    { id: 'audit', label: 'Audit Log', icon: <FileText className="w-4 h-4" /> },
     { id: 'portability', label: 'Data Portability', icon: <Database className="w-4 h-4" /> },
-    { id: 'theme', label: 'Theme Studio', icon: <Palette className="w-4 h-4" /> },
     { id: 'sync', label: 'Sync & Offline', icon: <Server className="w-4 h-4" /> },
     { id: 'backup', label: 'Mirrors & Bundles', icon: <Database className="w-4 h-4" /> }
   ]
 
   return (
     <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 text-[var(--text-primary)]">
+      {/* Quick Jump to Dedicated Sidebar Management Views */}
+      <div className="mb-6 p-3 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+          <span className="font-semibold text-[var(--text-primary)]">Dedicated Sidebar Tools:</span>
+          <span>Access high-level administration views directly from the sidebar.</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setCurrentView('profiles')}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] hover:border-[var(--accent)] text-[var(--text-primary)] transition-colors text-[11px] font-medium"
+          >
+            <Briefcase className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+            <span>Profiles</span>
+            <ArrowRight className="w-3 h-3 text-[var(--text-muted)]" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setCurrentView('theme-studio')}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] hover:border-[var(--accent)] text-[var(--text-primary)] transition-colors text-[11px] font-medium"
+          >
+            <Palette className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+            <span>Theme Studio</span>
+            <ArrowRight className="w-3 h-3 text-[var(--text-muted)]" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setCurrentView('audit-log')}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] hover:border-[var(--accent)] text-[var(--text-primary)] transition-colors text-[11px] font-medium"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+            <span>Security Log</span>
+            <ArrowRight className="w-3 h-3 text-[var(--text-muted)]" />
+          </button>
+        </div>
+      </div>
+
       {/* Tab Navigation */}
       <div className="flex items-center justify-between border-b border-[var(--border-subtle)] mb-6 overflow-x-auto pb-0.5">
         <div className="flex gap-1 shrink-0">
@@ -254,14 +284,7 @@ export const SettingsView: React.FC = () => {
         </form>
       )}
 
-      {/* TAB 2: PROFILES (H1) */}
-      {activeTab === 'profiles' && (
-        <div className="max-w-4xl mx-auto">
-          <WorkspaceProfilesManager />
-        </div>
-      )}
-
-      {/* TAB 3: SECURITY & PIN LOCK (H4) */}
+      {/* TAB: SECURITY & PIN LOCK */}
       {activeTab === 'security' && (
         <div className="max-w-xl mx-auto space-y-5">
           <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
@@ -352,27 +375,17 @@ export const SettingsView: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 4: AUDIT LOG (H2) */}
-      {activeTab === 'audit' && (
-        <div className="max-w-4xl mx-auto">
-          <AuditLogViewer />
-        </div>
-      )}
-
-      {/* TAB 5: DATA PORTABILITY (H5) */}
+      {/* TAB: DATA PORTABILITY */}
       {activeTab === 'portability' && (
         <div className="max-w-4xl mx-auto">
           <DataPortabilityTab />
         </div>
       )}
 
-      {/* TAB 6: THEME STUDIO */}
-      {activeTab === 'theme' && <ThemeStudio />}
-
-      {/* TAB 7: SYNC */}
+      {/* TAB: SYNC */}
       {activeTab === 'sync' && <SyncStatus />}
 
-      {/* TAB 8: BACKUP */}
+      {/* TAB: BACKUP */}
       {activeTab === 'backup' && <WorkspaceBackup />}
     </div>
   )

@@ -9,6 +9,9 @@ import { ConferenceView } from './components/conference/ConferenceView'
 import { DashboardView } from './components/dashboard/DashboardView'
 import { NotificationsView } from './components/notifications/NotificationsView'
 import { SettingsView } from './components/settings/SettingsView'
+import { WorkspaceProfilesManager } from './components/enterprise/WorkspaceProfilesManager'
+import { ThemeStudio } from './components/settings/ThemeStudio'
+import { AuditLogViewer } from './components/enterprise/AuditLogViewer'
 import { EventModal } from './components/modals/EventModal'
 import { SlotModal } from './components/modals/SlotModal'
 import { CalendarModal } from './components/modals/CalendarModal'
@@ -60,7 +63,7 @@ export const App: React.FC = () => {
       if (targetView === 'presentation') {
         setIsPresentationModeOpen(true)
       } else if (
-        ['calendar', 'timetable', 'resources', 'conferences', 'dashboard', 'notifications', 'settings'].includes(targetView)
+        ['calendar', 'timetable', 'resources', 'conferences', 'dashboard', 'notifications', 'profiles', 'theme-studio', 'audit-log', 'settings'].includes(targetView)
       ) {
         setCurrentView(targetView as AppView)
       }
@@ -134,6 +137,45 @@ export const App: React.FC = () => {
                   {currentView === 'conferences' && <ConferenceView />}
                   {currentView === 'dashboard' && <DashboardView />}
                   {currentView === 'notifications' && <NotificationsView />}
+                  {currentView === 'profiles' && (
+                    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 text-[var(--text-primary)]">
+                      <div className="max-w-5xl mx-auto space-y-6">
+                        <div className="border-b border-[var(--border-subtle)] pb-4">
+                          <h1 className="text-base font-bold text-[var(--text-primary)]">Workspace Profiles</h1>
+                          <p className="text-xs text-[var(--text-muted)] mt-1">
+                            Switch between isolated institutional environments or configure custom operating domains.
+                          </p>
+                        </div>
+                        <WorkspaceProfilesManager />
+                      </div>
+                    </div>
+                  )}
+                  {currentView === 'theme-studio' && (
+                    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 text-[var(--text-primary)]">
+                      <div className="max-w-5xl mx-auto space-y-6">
+                        <div className="border-b border-[var(--border-subtle)] pb-4">
+                          <h1 className="text-base font-bold text-[var(--text-primary)]">Theme Studio</h1>
+                          <p className="text-xs text-[var(--text-muted)] mt-1">
+                            Customize circadian timing, seasonal palettes, and visual appearance.
+                          </p>
+                        </div>
+                        <ThemeStudio />
+                      </div>
+                    </div>
+                  )}
+                  {currentView === 'audit-log' && (
+                    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 text-[var(--text-primary)]">
+                      <div className="max-w-5xl mx-auto space-y-6">
+                        <div className="border-b border-[var(--border-subtle)] pb-4">
+                          <h1 className="text-base font-bold text-[var(--text-primary)]">Security & Audit Log</h1>
+                          <p className="text-xs text-[var(--text-muted)] mt-1">
+                            Immutable ledger of system events with rollback capabilities and security tracking.
+                          </p>
+                        </div>
+                        <AuditLogViewer />
+                      </div>
+                    </div>
+                  )}
                   {currentView === 'settings' && <SettingsView />}
                 </>
               )}

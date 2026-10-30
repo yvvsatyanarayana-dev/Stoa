@@ -260,6 +260,30 @@ function createDefaultCommands(
       shortcut: '⌘,',
       action: () => setCurrentView('settings'),
     },
+    {
+      id: 'nav:profiles-view',
+      title: 'Workspace Profiles',
+      description: 'Switch and manage isolated organization profiles',
+      category: 'navigation',
+      keywords: ['profiles', 'organization', 'workspace', 'domains'],
+      action: () => setCurrentView('profiles'),
+    },
+    {
+      id: 'nav:theme-studio-view',
+      title: 'Theme Studio',
+      description: 'Customize UI themes, colors, and contrast styles',
+      category: 'navigation',
+      keywords: ['theme', 'studio', 'palette', 'customization', 'colors', 'dark', 'monochrome'],
+      action: () => setCurrentView('theme-studio'),
+    },
+    {
+      id: 'nav:audit-log-view',
+      title: 'Security & Audit Log',
+      description: 'Inspect activity log, security events, and snapshot rollbacks',
+      category: 'navigation',
+      keywords: ['security', 'audit', 'log', 'history', 'revert', 'rollback', 'compliance'],
+      action: () => setCurrentView('audit-log'),
+    },
 
     // Action Commands
     {
@@ -697,7 +721,7 @@ function createDefaultCommands(
       category: 'actions',
       keywords: ['profile', 'workspace', 'switch', 'enterprise', 'medical', 'academic', 'practice'],
       action: () => {
-        appStore.setCurrentView('settings');
+        appStore.setCurrentView('profiles');
       },
     },
     {
@@ -707,7 +731,17 @@ function createDefaultCommands(
       category: 'actions',
       keywords: ['audit', 'log', 'history', 'rollback', 'revert', 'compliance', 'security'],
       action: () => {
-        appStore.setCurrentView('settings');
+        appStore.setCurrentView('audit-log');
+      },
+    },
+    {
+      id: 'action:theme-studio',
+      title: 'Theme Studio & Appearance',
+      description: 'Fine-tune monochrome tokens, OLED contrast, and custom accents',
+      category: 'actions',
+      keywords: ['theme', 'studio', 'appearance', 'palette', 'customization', 'black', 'white'],
+      action: () => {
+        appStore.setCurrentView('theme-studio');
       },
     },
     {

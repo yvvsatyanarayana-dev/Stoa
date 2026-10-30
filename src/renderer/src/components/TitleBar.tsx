@@ -82,7 +82,7 @@ export const TitleBar: React.FC = () => {
 
         {/* Workspace Profile Pill */}
         <button
-          onClick={() => setCurrentView('settings')}
+          onClick={() => setCurrentView('profiles')}
           className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors flex items-center gap-1.5 ml-1"
           title="Switch or Manage Workspace Profiles"
         >
