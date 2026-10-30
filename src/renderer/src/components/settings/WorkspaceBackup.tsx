@@ -13,7 +13,7 @@ import {
   CheckCircle,
   Loader2,
   Settings,
-  Link,
+  Link as LinkIcon,
   Plus
 } from 'lucide-react'
 
@@ -123,12 +123,12 @@ export const WorkspaceBackup: React.FC = () => {
   }
 
   const handleMirrorDelete = async (id: string) => {
-    if (!window.confirm('Delete this mirror and all its history?')) return
+    if (!window.confirm('Are you sure you want to delete this mirror?')) return
     setLoading(true)
     try {
       await window.api.icsMirror.delete(id)
       await loadMirrors()
-      setSuccess('Mirror deleted')
+      setSuccess('Mirror deleted successfully')
     } catch (err: any) {
       setError(err.message || 'Failed to delete mirror')
     } finally {
@@ -140,8 +140,8 @@ export const WorkspaceBackup: React.FC = () => {
     try {
       await window.api.icsMirror.toggle(id, enabled)
       await loadMirrors()
-    } catch (err) {
-      console.error('Failed to toggle mirror:', err)
+    } catch (err: any) {
+      setError(err.message || 'Failed to toggle mirror')
     }
   }
 
@@ -151,10 +151,8 @@ export const WorkspaceBackup: React.FC = () => {
     try {
       const result = await window.api.icsMirror.sync(id)
       await loadMirrors()
-      if (result.status === 'success') {
-        setSuccess(`Sync complete: +${result.eventsAdded} ~${result.eventsUpdated} -${result.eventsDeleted}`)
-      } else if (result.status === 'no_changes') {
-        setSuccess('No changes since last sync')
+      if (result.status === 'success' || result.status === 'no_changes') {
+        setSuccess(`Mirror synced: +${result.eventsAdded} added, ~${result.eventsUpdated} updated`)
       } else {
         setError(result.error || 'Sync failed')
       }
@@ -169,12 +167,10 @@ export const WorkspaceBackup: React.FC = () => {
     setLoading(true)
     setError(null)
     try {
-      const results = await window.api.icsMirror.syncAll(3)
+      const results = await window.api.icsMirror.syncAll()
       await loadMirrors()
-      const totalAdded = results.reduce((a, r) => a + r.eventsAdded, 0)
-      const totalUpdated = results.reduce((a, r) => a + r.eventsUpdated, 0)
-      const totalDeleted = results.reduce((a, r) => a + r.eventsDeleted, 0)
-      setSuccess(`All mirrors synced: +${totalAdded} ~${totalUpdated} -${totalDeleted}`)
+      const successfulCount = results.filter(r => r.status === 'success' || r.status === 'no_changes').length
+      setSuccess(`All mirrors synced: ${successfulCount}/${results.length} completed`)
     } catch (err: any) {
       setError(err.message || 'Sync all failed')
     } finally {
@@ -190,12 +186,10 @@ export const WorkspaceBackup: React.FC = () => {
     setExporting(true)
     setError(null)
     try {
-      const defaultPath = await window.api.workspaceBundle.getDefaultPath(exportName || 'backup')
-      const result = await window.api.workspaceBundle.exportAndSave({
-        name: exportName || 'ChronoDesk Backup',
-        description: exportDescription,
+      const result = await window.api.workspaceBundle.export({
         password: exportPassword,
-        outputPath: defaultPath
+        name: exportName || 'ChronoDesk Backup',
+        description: exportDescription
       })
       setExportPassword('')
       setExportName('')
@@ -222,7 +216,6 @@ export const WorkspaceBackup: React.FC = () => {
     setImportProgress(0)
     setError(null)
     try {
-      // Simulate progress since we can't track real progress from IPC
       const progressInterval = setInterval(() => {
         setImportProgress(p => Math.min(p + 10, 90))
       }, 200)
@@ -270,10 +263,14 @@ export const WorkspaceBackup: React.FC = () => {
 
   const getStatusBadge = (status?: string) => {
     switch (status) {
-      case 'success': return <span className="px-2 py-0.5 text-xs bg-emerald-900/30 text-emerald-400 rounded">Success</span>
-      case 'error': return <span className="px-2 py-0.5 text-xs bg-red-900/30 text-red-400 rounded">Error</span>
-      case 'no_changes': return <span className="px-2 py-0.5 text-xs bg-slate-900/30 text-slate-400 rounded">No Changes</span>
-      default: return <span className="px-2 py-0.5 text-xs bg-slate-900/30 text-slate-400 rounded">Pending</span>
+      case 'success':
+        return <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-500 border border-emerald-500/20 rounded">Success</span>
+      case 'error':
+        return <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-red-500/15 text-red-500 border border-red-500/20 rounded">Error</span>
+      case 'no_changes':
+        return <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border-subtle)] rounded">No Changes</span>
+      default:
+        return <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-[var(--bg-subtle)] text-[var(--text-muted)] border border-[var(--border-subtle)] rounded">Pending</span>
     }
   }
 
@@ -286,43 +283,49 @@ export const WorkspaceBackup: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6" onMouseEnter={() => recordView('settings:backup', {})}>
+    <div className="space-y-6 text-[var(--text-primary)]" onMouseEnter={() => recordView('settings:backup', {})}>
       {/* Section Tabs */}
-      <div className="flex gap-1 border-b border-slate-700">
+      <div className="flex gap-2 border-b border-[var(--border-subtle)]">
         <button
           onClick={() => setActiveSection('mirrors')}
-          className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-t-[var(--radius-md)] border-b-2 transition-all cursor-pointer ${
             activeSection === 'mirrors'
-              ? 'bg-slate-800/50 text-slate-100 border-b-2 border-emerald-400'
-              : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
+              ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--accent)] shadow-xs'
+              : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
           }`}
         >
-          <Link className="w-4 h-4 mr-2 inline-block" /> ICS Mirrors
+          <LinkIcon className="w-3.5 h-3.5" />
+          <span>ICS Mirrors & Calendar Sync</span>
         </button>
         <button
           onClick={() => setActiveSection('bundles')}
-          className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+          className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-t-[var(--radius-md)] border-b-2 transition-all cursor-pointer ${
             activeSection === 'bundles'
-              ? 'bg-slate-800/50 text-slate-100 border-b-2 border-emerald-400'
-              : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
+              ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--accent)] shadow-xs'
+              : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
           }`}
         >
-          <Database className="w-4 h-4 mr-2 inline-block" /> Workspace Bundles
+          <Database className="w-3.5 h-3.5" />
+          <span>Encrypted Workspace Backups</span>
         </button>
       </div>
 
       {error && (
-        <div className="p-3 rounded-lg bg-red-900/20 border border-red-500/30 text-red-400 text-sm flex items-center justify-between">
-          <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-          {error}
-          <button onClick={() => setError(null)} className="text-red-500 hover:text-red-300">✕</button>
+        <div className="p-3 rounded-[var(--radius-md)] bg-red-500/10 border border-red-500/30 text-red-500 text-xs flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+          <button onClick={() => setError(null)} className="text-red-500 hover:opacity-75">✕</button>
         </div>
       )}
       {success && (
-        <div className="p-3 rounded-lg bg-emerald-900/20 border border-emerald-500/30 text-emerald-400 text-sm flex items-center justify-between">
-          <CheckCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-          {success}
-          <button onClick={() => setSuccess(null)} className="text-emerald-500 hover:text-emerald-300">✕</button>
+        <div className="p-3 rounded-[var(--radius-md)] bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-xs flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{success}</span>
+          </div>
+          <button onClick={() => setSuccess(null)} className="text-emerald-500 hover:opacity-75">✕</button>
         </div>
       )}
 
@@ -330,11 +333,11 @@ export const WorkspaceBackup: React.FC = () => {
       {activeSection === 'mirrors' && (
         <div className="space-y-6">
           {/* Scheduler Status */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-slate-100 flex items-center gap-2">
-                <Settings className="w-5 h-5 text-emerald-400" />
-                Scheduler Status
+          <div className="p-6 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] space-y-4 shadow-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
+              <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <Settings className="w-4 h-4 text-[var(--accent)]" />
+                Background Polling Scheduler
               </h3>
               <button
                 onClick={async () => {
@@ -342,34 +345,36 @@ export const WorkspaceBackup: React.FC = () => {
                   await loadSchedulerStatus()
                 }}
                 disabled={loading}
-                className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-100 flex items-center gap-1"
+                className="py-1.5 px-3 text-xs font-semibold rounded-[var(--radius-md)] bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)] flex items-center gap-1.5 hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5" /> Reinitialize
               </button>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-slate-900/50 rounded-lg p-4">
-                <div className="text-xs text-slate-400 mb-1">Status</div>
-                <div className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${schedulerStatus?.initialized ? 'bg-emerald-400' : 'bg-slate-500'}`} />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="p-3.5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-subtle)] space-y-1">
+                <div className="text-xs font-medium text-[var(--text-secondary)]">Status</div>
+                <div className="text-lg font-bold font-mono text-[var(--text-primary)] flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${schedulerStatus?.initialized ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                   {schedulerStatus?.initialized ? 'Running' : 'Stopped'}
                 </div>
               </div>
-              <div className="bg-slate-900/50 rounded-lg p-4">
-                <div className="text-xs text-slate-400 mb-1">Scheduled Mirrors</div>
-                <div className="text-2xl font-bold text-slate-100">{schedulerStatus?.scheduledCount || 0}</div>
+
+              <div className="p-3.5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-subtle)] space-y-1">
+                <div className="text-xs font-medium text-[var(--text-secondary)]">Scheduled Mirrors</div>
+                <div className="text-xl font-bold font-mono text-[var(--text-primary)]">{schedulerStatus?.scheduledCount || 0}</div>
               </div>
-              <div className="bg-slate-900/50 rounded-lg p-4 md:col-span-2">
-                <div className="text-xs text-slate-400 mb-1">Next Runs</div>
-                <div className="space-y-1 max-h-32 overflow-y-auto">
+
+              <div className="p-3.5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-subtle)] space-y-1 md:col-span-2">
+                <div className="text-xs font-medium text-[var(--text-secondary)]">Next Scheduled Runs</div>
+                <div className="space-y-1 max-h-24 overflow-y-auto">
                   {schedulerStatus?.nextRuns?.slice(0, 3).map((run: any) => (
-                    <div key={run.mirrorId} className="text-sm text-slate-300 flex justify-between">
-                      <span className="truncate mr-2">{run.name}</span>
-                      <span className="text-slate-500">{formatDate(new Date(run.nextRun).toISOString())}</span>
+                    <div key={run.mirrorId} className="text-xs text-[var(--text-secondary)] flex justify-between">
+                      <span className="truncate mr-2 text-[var(--text-primary)] font-medium">{run.name}</span>
+                      <span className="text-[var(--text-muted)] font-mono">{formatDate(new Date(run.nextRun).toISOString())}</span>
                     </div>
                   )) || (
-                    <div className="text-slate-500 text-sm">No scheduled mirrors</div>
+                    <div className="text-[var(--text-muted)] text-xs">No active mirror cron jobs</div>
                   )}
                 </div>
               </div>
@@ -377,11 +382,11 @@ export const WorkspaceBackup: React.FC = () => {
           </div>
 
           {/* Mirror List */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-slate-100 flex items-center gap-2">
-                <Link className="w-5 h-5 text-blue-400" />
-                ICS Feed Mirrors
+          <div className="p-6 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] space-y-4 shadow-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
+              <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <LinkIcon className="w-4 h-4 text-[var(--accent)]" />
+                Configured ICS Feed Mirrors
               </h3>
               <button
                 onClick={() => {
@@ -389,55 +394,57 @@ export const WorkspaceBackup: React.FC = () => {
                   setMirrorForm({ calendarId: '', url: '', name: '', scheduleCron: '0 */6 * * *', enabled: true })
                   setShowMirrorForm(true)
                 }}
-                className="px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 rounded-lg text-slate-100 flex items-center gap-1"
+                className="py-1.5 px-3 text-xs font-semibold rounded-[var(--radius-md)] bg-[var(--accent)] text-[var(--accent-text)] border border-[var(--accent)] flex items-center gap-1.5 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" /> Add Mirror
               </button>
             </div>
 
             {showMirrorForm && (
-              <div className="mb-6 p-4 bg-slate-900/50 border border-slate-700 rounded-lg">
-                <h4 className="text-sm font-medium text-slate-100 mb-3">{editingMirror ? 'Edit Mirror' : 'Add Mirror'}</h4>
+              <div className="p-4 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-default)] space-y-3">
+                <h4 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
+                  {editingMirror ? 'Edit Mirror' : 'Configure New ICS Feed Mirror'}
+                </h4>
                 <form onSubmit={handleMirrorSubmit} className="space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Calendar ID *</label>
+                      <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Target Calendar ID *</label>
                       <input
                         type="text"
                         value={mirrorForm.calendarId}
                         onChange={(e) => setMirrorForm({ ...mirrorForm, calendarId: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-100 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                        placeholder="cal-primary"
+                        className="w-full px-3 py-2 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-[var(--radius-md)] text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                        placeholder="e.g. cal-work, cal-personal"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Feed URL *</label>
+                      <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">ICS Feed URL *</label>
                       <input
                         type="url"
                         value={mirrorForm.url}
                         onChange={(e) => setMirrorForm({ ...mirrorForm, url: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-100 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                        placeholder="https://example.com/calendar.ics or webcal://..."
+                        className="w-full px-3 py-2 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-[var(--radius-md)] text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                        placeholder="https://calendar.google.com/.../basic.ics"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Name</label>
+                      <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Mirror Name</label>
                       <input
                         type="text"
                         value={mirrorForm.name}
                         onChange={(e) => setMirrorForm({ ...mirrorForm, name: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-100 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                        placeholder="Google Calendar"
+                        className="w-full px-3 py-2 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-[var(--radius-md)] text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                        placeholder="e.g. Team Google Calendar"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Schedule (cron)</label>
+                      <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Polling Interval</label>
                       <select
                         value={mirrorForm.scheduleCron}
                         onChange={(e) => setMirrorForm({ ...mirrorForm, scheduleCron: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-100 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        className="w-full px-3 py-2 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-[var(--radius-md)] text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
                       >
                         <option value="0 */6 * * *">Every 6 hours</option>
                         <option value="0 */12 * * *">Every 12 hours</option>
@@ -447,30 +454,32 @@ export const WorkspaceBackup: React.FC = () => {
                       </select>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 pt-1">
                     <input
                       type="checkbox"
                       id="mirror-enabled"
                       checked={mirrorForm.enabled}
                       onChange={(e) => setMirrorForm({ ...mirrorForm, enabled: e.target.checked })}
-                      className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                      className="w-3.5 h-3.5 rounded border-[var(--border-default)] text-[var(--accent)] focus:ring-0 bg-[var(--bg-elevated)] accent-[var(--accent)] cursor-pointer"
                     />
-                    <label htmlFor="mirror-enabled" className="text-sm text-slate-300">Enabled</label>
+                    <label htmlFor="mirror-enabled" className="text-xs text-[var(--text-secondary)] cursor-pointer">
+                      Auto-sync enabled
+                    </label>
                   </div>
-                  <div className="flex justify-end gap-2 pt-2">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-[var(--border-subtle)]">
                     <button
                       type="button"
                       onClick={() => { setShowMirrorForm(false); setEditingMirror(null); }}
-                      className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium text-slate-100"
+                      className="py-1.5 px-3 text-xs font-semibold rounded-[var(--radius-md)] bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)] hover:bg-[var(--bg-hover)] transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={loading}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium text-slate-100 disabled:opacity-50"
+                      className="py-1.5 px-3 text-xs font-semibold rounded-[var(--radius-md)] bg-[var(--accent)] text-[var(--accent-text)] border border-[var(--accent)] hover:opacity-90 transition-all"
                     >
-                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : editingMirror ? 'Update' : 'Create'}
+                      {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : editingMirror ? 'Update Mirror' : 'Save Mirror'}
                     </button>
                   </div>
                 </form>
@@ -478,90 +487,89 @@ export const WorkspaceBackup: React.FC = () => {
             )}
 
             {mirrors.length === 0 && !showMirrorForm && (
-              <div className="text-center py-12 text-slate-500">
-                <Link className="w-12 h-12 mx-auto mb-4 text-slate-700" />
-                <p className="text-sm">No ICS mirrors configured</p>
-                <p className="text-xs mt-1">Add a mirror to automatically sync external calendars</p>
+              <div className="text-center py-10 text-[var(--text-muted)] space-y-2">
+                <LinkIcon className="w-8 h-8 mx-auto opacity-40" />
+                <p className="text-xs font-medium text-[var(--text-secondary)]">No ICS mirrors configured</p>
+                <p className="text-[11px] text-[var(--text-muted)]">Add an ICS or webcal link to automatically sync external calendars</p>
               </div>
             )}
 
             <div className="space-y-3">
               {mirrors.map((mirror) => (
-                <div key={mirror.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 mr-4">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-medium text-slate-100">{mirror.name || 'Unnamed Mirror'}</h4>
-                        <span className={`px-2 py-0.5 text-xs rounded ${mirror.enabled ? 'bg-emerald-900/30 text-emerald-400' : 'bg-slate-700 text-slate-400'}`}>
-                          {mirror.enabled ? 'Enabled' : 'Disabled'}
-                        </span>
-                        {mirror.lastSyncStatus && getStatusBadge(mirror.lastSyncStatus)}
+                <div
+                  key={mirror.id}
+                  className="p-4 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-subtle)] flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-[var(--border-default)] transition-colors"
+                >
+                  <div className="flex-1 space-y-1.5">
+                    <div className="flex items-center gap-2.5">
+                      <h4 className="font-semibold text-xs text-[var(--text-primary)]">{mirror.name || 'Unnamed Mirror'}</h4>
+                      <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded ${
+                        mirror.enabled ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/20' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border-subtle)]'
+                      }`}>
+                        {mirror.enabled ? 'Enabled' : 'Disabled'}
+                      </span>
+                      {mirror.lastSyncStatus && getStatusBadge(mirror.lastSyncStatus)}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-[var(--text-secondary)]">
+                      <div className="flex items-center gap-1 font-mono truncate">
+                        <LinkIcon className="w-3 h-3 text-[var(--text-muted)]" />
+                        <span className="truncate">{mirror.url}</span>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-slate-400">
-                        <div className="flex items-center gap-1">
-                          <Link className="w-3.5 h-3.5" />
-                          <span className="truncate">{mirror.url}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Database className="w-3.5 h-3.5" />
-                          <span>Calendar: {mirror.calendarId}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          <span>Schedule: {cronDescriptions[mirror.scheduleCron] || mirror.scheduleCron}</span>
-                        </div>
-                        <div className="flex items-center gap-1 md:col-span-3">
-                          <Clock className="w-3.5 h-3.5" />
-                          <span>Last sync: {formatDate(mirror.lastSyncedAt)}</span>
-                          {mirror.lastSyncError && (
-                            <span className="ml-4 text-red-400">Error: {mirror.lastSyncError}</span>
-                          )}
-                        </div>
+                      <div className="flex items-center gap-1">
+                        <Database className="w-3 h-3 text-[var(--text-muted)]" />
+                        <span>Calendar: {mirror.calendarId}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-[var(--text-muted)]" />
+                        <span>{cronDescriptions[mirror.scheduleCron] || mirror.scheduleCron}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={mirror.enabled}
-                          onChange={(e) => handleMirrorToggle(mirror.id, e.target.checked)}
-                          className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
-                        />
-                        <span className="text-xs text-slate-300">Active</span>
-                      </label>
-                      <button
-                        onClick={() => handleMirrorSync(mirror.id)}
-                        disabled={loading}
-                        className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 disabled:opacity-50 rounded-lg text-slate-100 flex items-center gap-1"
-                      >
-                        <RefreshCw className="w-3.5 h-3.5" /> Sync
-                      </button>
-                      <button
-                        onClick={() => handleMirrorEdit(mirror)}
-                        className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-100 flex items-center gap-1"
-                      >
-                        <Settings className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleMirrorDelete(mirror.id)}
-                        className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-red-600 rounded-lg text-slate-100 flex items-center gap-1"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <label className="flex items-center gap-1.5 cursor-pointer mr-1">
+                      <input
+                        type="checkbox"
+                        checked={mirror.enabled}
+                        onChange={(e) => handleMirrorToggle(mirror.id, e.target.checked)}
+                        className="w-3.5 h-3.5 rounded border-[var(--border-default)] text-[var(--accent)] focus:ring-0 bg-[var(--bg-elevated)] accent-[var(--accent)] cursor-pointer"
+                      />
+                      <span className="text-xs text-[var(--text-secondary)]">Active</span>
+                    </label>
+                    <button
+                      onClick={() => handleMirrorSync(mirror.id)}
+                      disabled={loading}
+                      className="py-1.5 px-2.5 text-xs font-semibold rounded-[var(--radius-md)] bg-[var(--accent)] text-[var(--accent-text)] border border-[var(--accent)] flex items-center gap-1 hover:opacity-90 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <RefreshCw className="w-3 h-3" /> Sync
+                    </button>
+                    <button
+                      onClick={() => handleMirrorEdit(mirror)}
+                      className="p-1.5 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border-subtle)] hover:text-[var(--text-primary)] hover:border-[var(--border-default)] transition-colors cursor-pointer"
+                      title="Edit Configuration"
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleMirrorDelete(mirror.id)}
+                      className="p-1.5 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] text-red-500 border border-[var(--border-subtle)] hover:bg-red-500/10 hover:border-red-500/30 transition-colors cursor-pointer"
+                      title="Delete Mirror"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
 
             {mirrors.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-slate-700">
+              <div className="pt-3 border-t border-[var(--border-subtle)]">
                 <button
                   onClick={handleSyncAll}
                   disabled={loading}
-                  className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 rounded-lg text-sm font-medium text-slate-100 flex items-center justify-center gap-2"
+                  className="w-full py-2 px-3 text-xs font-semibold rounded-[var(--radius-md)] bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)] hover:bg-[var(--bg-hover)] hover:border-[var(--border-default)] transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  <RefreshCw className="w-4 h-4" /> Sync All Mirrors
+                  <RefreshCw className="w-3.5 h-3.5" /> Sync All Configured Mirrors Now
                 </button>
               </div>
             )}
@@ -573,184 +581,183 @@ export const WorkspaceBackup: React.FC = () => {
       {activeSection === 'bundles' && (
         <div className="space-y-6">
           {/* Export Section */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-            <h3 className="text-lg font-medium text-slate-100 flex items-center gap-2 mb-4">
-              <Download className="w-5 h-5 text-emerald-400" />
-              Export Workspace Bundle
-            </h3>
-            <p className="text-sm text-slate-400 mb-4">
-              Create an encrypted .chronodesk backup file containing all calendars, events, timetables, themes, and settings.
-              Uses AES-256-GCM encryption with PBKDF2 key derivation (100,000 iterations).
-            </p>
+          <div className="p-6 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] space-y-4 shadow-xs">
+            <div className="pb-3 border-b border-[var(--border-subtle)]">
+              <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <Download className="w-4 h-4 text-[var(--accent)]" />
+                Export Encrypted Workspace Bundle
+              </h3>
+              <p className="text-xs text-[var(--text-secondary)] mt-1">
+                Creates an AES-256-GCM encrypted <code className="font-mono text-[var(--text-primary)]">.chronodesk</code> backup containing calendars, events, timetables, and settings.
+              </p>
+            </div>
 
-            <form onSubmit={(e) => { e.preventDefault(); handleExport(); }} className="space-y-3 max-w-md">
+            <form onSubmit={(e) => { e.preventDefault(); handleExport(); }} className="space-y-3 max-w-lg">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Backup Name</label>
+                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Backup Name</label>
                 <input
                   type="text"
                   value={exportName}
                   onChange={(e) => setExportName(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  placeholder="My ChronoDesk Backup"
+                  className="w-full px-3 py-2 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                  placeholder="e.g. Master Schedule Q4 2026"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Description (optional)</label>
+                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Description (optional)</label>
                 <textarea
                   value={exportDescription}
                   onChange={(e) => setExportDescription(e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  placeholder="Description of this backup..."
+                  className="w-full px-3 py-2 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                  placeholder="Notes about this archive..."
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Encryption Password *</label>
+                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Encryption Password (min 8 characters) *</label>
                 <input
                   type="password"
                   value={exportPassword}
                   onChange={(e) => setExportPassword(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  placeholder="Min 8 characters"
+                  className="w-full px-3 py-2 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                  placeholder="••••••••"
                   required
                 />
               </div>
               <button
                 type="submit"
                 disabled={exporting || !exportPassword || exportPassword.length < 8}
-                className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-lg text-sm font-medium text-slate-100 flex items-center justify-center gap-2"
+                className="py-2 px-4 bg-[var(--accent)] text-[var(--accent-text)] border border-[var(--accent)] text-xs font-semibold rounded-[var(--radius-md)] flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
               >
-                {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                {exporting ? 'Creating Backup...' : 'Create & Save Encrypted Backup'}
+                {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                {exporting ? 'Encrypting & Archiving...' : 'Create Encrypted Backup File'}
               </button>
             </form>
           </div>
 
           {/* Import Section */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-            <h3 className="text-lg font-medium text-slate-100 flex items-center gap-2 mb-4">
-              <Upload className="w-5 h-5 text-blue-400" />
-              Import Workspace Bundle
-            </h3>
-            <p className="text-sm text-slate-400 mb-4">
-              Restore a previously exported .chronodesk backup. Requires the same password used during export.
-              <strong className="text-slate-300"> Warning:</strong> This will overwrite existing data if "Overwrite existing" is checked.
-            </p>
+          <div className="p-6 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] space-y-4 shadow-xs">
+            <div className="pb-3 border-b border-[var(--border-subtle)]">
+              <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <Upload className="w-4 h-4 text-[var(--accent)]" />
+                Restore from Workspace Bundle
+              </h3>
+              <p className="text-xs text-[var(--text-secondary)] mt-1">
+                Restore data from a previously created <code className="font-mono text-[var(--text-primary)]">.chronodesk</code> file. Requires the original password.
+              </p>
+            </div>
 
-            <form onSubmit={(e) => { e.preventDefault(); handleImport(); }} className="space-y-3 max-w-md">
+            <form onSubmit={(e) => { e.preventDefault(); handleImport(); }} className="space-y-3 max-w-lg">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Bundle File (.chronodesk) *</label>
+                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Select .chronodesk File *</label>
                 <input
                   type="file"
                   accept=".chronodesk"
                   onChange={(e) => setImportFile(e.target.files?.[0] as ElectronFile || null)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-600 file:text-slate-100 hover:file:bg-emerald-500"
+                  className="w-full px-3 py-1.5 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] text-xs text-[var(--text-primary)] file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:bg-[var(--accent)] file:text-[var(--accent-text)] file:text-xs file:font-semibold cursor-pointer"
                   required
                 />
                 {importFile && (
-                  <p className="text-xs text-slate-400 mt-1">Selected: {importFile.name} ({(importFile.size / 1024).toFixed(1)} KB)</p>
+                  <p className="text-[11px] text-[var(--text-muted)] mt-1 font-mono">
+                    Selected: {importFile.name} ({(importFile.size / 1024).toFixed(1)} KB)
+                  </p>
                 )}
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Decryption Password *</label>
+                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Decryption Password *</label>
                 <input
                   type="password"
                   value={importPassword}
                   onChange={(e) => setImportPassword(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  placeholder="Min 8 characters"
+                  className="w-full px-3 py-2 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] text-xs text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+                  placeholder="••••••••"
                   required
                 />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 pt-1">
                 <input
                   type="checkbox"
                   id="import-overwrite"
                   checked={importOverwrite}
                   onChange={(e) => setImportOverwrite(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500"
+                  className="w-3.5 h-3.5 rounded border-[var(--border-default)] text-[var(--accent)] focus:ring-0 bg-[var(--bg-subtle)] accent-[var(--accent)] cursor-pointer"
                 />
-                <label htmlFor="import-overwrite" className="text-sm text-slate-300">Overwrite existing data (destructive)</label>
+                <label htmlFor="import-overwrite" className="text-xs text-[var(--text-secondary)] cursor-pointer">
+                  Overwrite existing records with matching IDs
+                </label>
               </div>
               <button
                 type="submit"
                 disabled={importing || !importFile || !importPassword || importPassword.length < 8}
-                className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 rounded-lg text-sm font-medium text-slate-100 flex items-center justify-center gap-2"
+                className="py-2 px-4 bg-[var(--accent)] text-[var(--accent-text)] border border-[var(--accent)] text-xs font-semibold rounded-[var(--radius-md)] flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
               >
                 {importing ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <div className="w-24 h-2 bg-slate-700 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-blue-500 transition-all duration-300"
-                        style={{ width: `${importProgress}%` }}
-                      />
-                    </div>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Restoring Workspace ({importProgress}%)...</span>
                   </>
                 ) : (
                   <>
-                    <Upload className="w-4 h-4" />
-                    Import & Restore
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Decrypt & Restore Workspace</span>
                   </>
                 )}
               </button>
-              {importing && <p className="text-xs text-slate-400 text-center">Progress: {importProgress}%</p>}
             </form>
           </div>
 
           {/* Existing Bundles List */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-            <h3 className="text-lg font-medium text-slate-100 flex items-center gap-2 mb-4">
-              <FileText className="w-5 h-5 text-slate-400" />
-              Previous Backups
+          <div className="p-6 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-elevated)] space-y-4 shadow-xs">
+            <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2 pb-3 border-b border-[var(--border-subtle)]">
+              <FileText className="w-4 h-4 text-[var(--text-muted)]" />
+              Logged Backup Records
             </h3>
 
             {bundles.length === 0 ? (
-              <div className="text-center py-8 text-slate-500">
-                <FileText className="w-12 h-12 mx-auto mb-4 text-slate-700" />
-                <p className="text-sm">No backup records found</p>
-                <p className="text-xs mt-1">Create your first backup using the export section above</p>
+              <div className="text-center py-8 text-[var(--text-muted)] space-y-1">
+                <FileText className="w-8 h-8 mx-auto opacity-40" />
+                <p className="text-xs font-medium text-[var(--text-secondary)]">No backup records logged</p>
+                <p className="text-[11px] text-[var(--text-muted)]">Use the export section above to generate your first backup</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {bundles.map((bundle) => (
-                  <div key={bundle.id} className="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 mr-4">
-                        <div className="flex items-center gap-3 mb-1">
-                          <h4 className="font-medium text-slate-100">{bundle.name || 'Unnamed Backup'}</h4>
-                          <span className="px-2 py-0.5 text-xs bg-slate-700 text-slate-300 rounded">v{bundle.version}</span>
-                        </div>
-                        {bundle.description && (
-                          <p className="text-xs text-slate-400 mb-1">{bundle.description}</p>
-                        )}
-                        <div className="flex flex-wrap gap-4 text-xs text-slate-500">
-                          <span className="flex items-center gap-1">
-                            <Shield className="w-3 h-3" />
-                            AES-256-GCM
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Database className="w-3 h-3" />
-                            {bundle.fileSize ? `${(bundle.fileSize / 1024 / 1024).toFixed(2)} MB` : 'Unknown size'}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {formatDate(bundle.createdAt)}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <FileText className="w-3 h-3" />
-                            {bundle.tablesIncluded?.length || 0} tables
-                          </span>
-                        </div>
+                  <div
+                    key={bundle.id}
+                    className="p-4 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-subtle)] flex items-center justify-between gap-3 hover:border-[var(--border-default)] transition-colors"
+                  >
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-2.5">
+                        <h4 className="font-semibold text-xs text-[var(--text-primary)]">{bundle.name || 'Unnamed Backup'}</h4>
+                        <span className="px-1.5 py-0.2 text-[10px] font-mono bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border-subtle)] rounded">
+                          v{bundle.version}
+                        </span>
                       </div>
-                      <button
-                        onClick={() => handleBundleDelete(bundle.id)}
-                        className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-red-600 rounded-lg text-slate-100 flex items-center gap-1"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Remove Record
-                      </button>
+                      {bundle.description && (
+                        <p className="text-xs text-[var(--text-secondary)]">{bundle.description}</p>
+                      )}
+                      <div className="flex flex-wrap gap-4 text-xs text-[var(--text-muted)] font-mono pt-1">
+                        <span className="flex items-center gap-1">
+                          <Shield className="w-3 h-3" />
+                          AES-256-GCM
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Database className="w-3 h-3" />
+                          {bundle.fileSize ? `${(bundle.fileSize / 1024 / 1024).toFixed(2)} MB` : 'Unknown size'}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {formatDate(bundle.createdAt)}
+                        </span>
+                      </div>
                     </div>
+                    <button
+                      onClick={() => handleBundleDelete(bundle.id)}
+                      className="py-1.5 px-2.5 text-xs font-semibold rounded-[var(--radius-md)] bg-[var(--bg-elevated)] text-red-500 border border-[var(--border-subtle)] hover:bg-red-500/10 hover:border-red-500/30 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Remove Record
+                    </button>
                   </div>
                 ))}
               </div>
