@@ -4,62 +4,62 @@
 
 :root,
 [data-theme="dark"] {
-  /* Surfaces - Obsidian/Slate depth hierarchy */
-  --bg-app:        #0D0F17;
-  --bg-sidebar:    #090A0F;
-  --bg-elevated:   #161926;
-  --bg-subtle:     #1C2032;
-  --bg-hover:      #242940;
-  --bg-active:     #2E3452;
+  /* Surfaces - Pure Black, White & Grayscale Hierarchy */
+  --bg-app:        #0E0E0E;
+  --bg-sidebar:    #080808;
+  --bg-elevated:   #181818;
+  --bg-subtle:     #222222;
+  --bg-hover:      #2C2C2C;
+  --bg-active:     #383838;
 
-  /* Text - Crisp, readable typography */
-  --text-primary:   #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-muted:     #64748B;
-  --text-inverse:   #0D0F17;
+  /* Text - Crisp White & Balanced Grays */
+  --text-primary:   #F9F9F9;
+  --text-secondary: #A6A6A6;
+  --text-muted:     #737373;
+  --text-inverse:   #0E0E0E;
 
-  /* Borders - Architectural framing */
-  --border-subtle:  #1E2335;
-  --border-default: #2A3048;
-  --border-strong:  #3D4668;
+  /* Borders - Architectural Framing */
+  --border-subtle:  #202020;
+  --border-default: #2E2E2E;
+  --border-strong:  #505050;
 
-  /* Primary action - Executive Sapphire Blue */
-  --accent:         #3B82F6;
-  --accent-hover:   #2563EB;
-  --accent-active:  #1D4ED8;
-  --accent-text:    #FFFFFF;
+  /* Primary action - Clean Monochromatic Accent */
+  --accent:         #F9F9F9;
+  --accent-hover:   #E0E0E0;
+  --accent-active:  #C8C8C8;
+  --accent-text:    #0E0E0E;
 
-  /* Focus ring */
-  --focus-ring: 0 0 0 2px #0D0F17, 0 0 0 4px rgba(59, 130, 246, 0.45);
+  /* Focus ring - Neutral Monochromatic Ring (Zero Color) */
+  --focus-ring: 0 0 0 2px #0E0E0E, 0 0 0 4px rgba(255, 255, 255, 0.35);
 
   /* Calendar specifics */
-  --cal-grid-line:     #1A1E2E;
-  --cal-hour-line:     #242A40;
-  --cal-today-bg:      rgba(59, 130, 246, 0.05);
-  --cal-weekend-bg:    #090B12;
+  --cal-grid-line:     #1E1E1E;
+  --cal-hour-line:     #2A2A2A;
+  --cal-today-bg:      rgba(255, 255, 255, 0.03);
+  --cal-weekend-bg:    #0A0A0A;
   --cal-now-line:      #EF4444;
-  --cal-selected-bg:   #3B82F6;
-  --cal-selected-text: #FFFFFF;
+  --cal-selected-bg:   #F9F9F9;
+  --cal-selected-text: #0E0E0E;
 
-  /* Event block shades (Vibrant & crisp category stops) */
-  --event-1-bg: #3B82F6; --event-1-text: #FFFFFF;
-  --event-2-bg: #10B981; --event-2-text: #FFFFFF;
-  --event-3-bg: #8B5CF6; --event-3-text: #FFFFFF;
-  --event-4-bg: #F59E0B; --event-4-text: #000000;
-  --event-5-bg: #EF4444; --event-5-text: #FFFFFF;
-  --event-6-bg: #06B6D4; --event-6-text: #FFFFFF;
+  /* Event block shades - 6-tier Clean Grayscale Ramp */
+  --event-1-bg: #F9F9F9; --event-1-text: #0E0E0E;
+  --event-2-bg: #D4D4D4; --event-2-text: #0E0E0E;
+  --event-3-bg: #A3A3A3; --event-3-text: #0E0E0E;
+  --event-4-bg: #737373; --event-4-text: #FFFFFF;
+  --event-5-bg: #4A4A4A; --event-5-text: #FFFFFF;
+  --event-6-bg: #282828; --event-6-text: #FFFFFF;
 
   /* Status */
-  --status-confirmed: #3B82F6;
-  --status-tentative: #F59E0B;
-  --status-cancelled: #64748B;
+  --status-confirmed: #F9F9F9;
+  --status-tentative: #A3A3A3;
+  --status-cancelled: #737373;
   --conflict-pattern: repeating-linear-gradient(
-      45deg, rgba(239, 68, 68, 0.35) 0 2px, transparent 2px 6px);
+      45deg, rgba(255, 255, 255, 0.25) 0 2px, transparent 2px 6px);
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
-  --shadow-md: 0 4px 16px -2px rgba(0,0,0,0.6), 0 2px 6px rgba(0,0,0,0.4);
-  --shadow-lg: 0 20px 40px -10px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.08);
+  /* Shadows - Deep, Rich, Grounded */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px -2px rgba(0,0,0,0.7), 0 2px 6px rgba(0,0,0,0.5);
+  --shadow-lg: 0 20px 40px -10px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.08);
 
   /* Shape and type */
   --radius-sm: 6px;
@@ -160,12 +160,12 @@ html, body, #root {
 .btn-primary {
   background: var(--accent);
   color: var(--accent-text);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: var(--radius-md);
   padding: 6px 14px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 0 14px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.4);
   transition: all .15s ease;
   display: inline-flex;
   align-items: center;
@@ -173,7 +173,7 @@ html, body, #root {
 }
 .btn-primary:hover  {
   background: var(--accent-hover);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.6);
   transform: translateY(-0.5px);
 }
 .btn-primary:active {

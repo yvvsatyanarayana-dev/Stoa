@@ -114,21 +114,21 @@ export const DEFAULT_BW_PALETTE: ThemePalette = {
 };
 
 export const DEFAULT_DARK_PALETTE: ThemePalette = {
-  background: { l: 0.17, c: 0.015, h: 268 },         // #0D0F17 Deep Obsidian Midnight
-  surface: { l: 0.13, c: 0.012, h: 272 },            // #090A0F Grounded Navigation Surface
-  surfaceElevated: { l: 0.22, c: 0.022, h: 272 },    // #161926 Elevated Glassmorphic Card/Modal
-  primary: { l: 0.62, c: 0.19, h: 260 },            // #3B82F6 Refined Electric Blue Accent
-  primaryHover: { l: 0.54, c: 0.20, h: 260 },       // #2563EB
-  text: { l: 0.98, c: 0.005, h: 265 },              // #F8FAFC Crisp Snow White
-  textMuted: { l: 0.55, c: 0.025, h: 260 },         // #64748B Slate Muted Text
-  border: { l: 0.28, c: 0.028, h: 272 },            // #242837 Visible, Elegant Architectural Borders
+  background: { l: 0.16, c: 0, h: 0 },         // #0E0E0E Deep Matte Canvas
+  surface: { l: 0.11, c: 0, h: 0 },            // #080808 Grounded Sidebar
+  surfaceElevated: { l: 0.21, c: 0, h: 0 },    // #181818 Elevated Card / Modal
+  primary: { l: 0.98, c: 0, h: 0 },            // #F9F9F9 Crisp White Monochromatic Accent
+  primaryHover: { l: 0.88, c: 0, h: 0 },       // #E0E0E0
+  text: { l: 0.98, c: 0, h: 0 },              // #F9F9F9 Primary White Text
+  textMuted: { l: 0.55, c: 0, h: 0 },         // #737373 Neutral Gray Muted
+  border: { l: 0.28, c: 0, h: 0 },            // #2E2E2E Visible Grid & Container Borders
   eventStops: [
-    { l: 0.62, c: 0.19, h: 260 }, // Electric Blue (#3B82F6)
-    { l: 0.65, c: 0.18, h: 160 }, // Vivid Emerald (#10B981)
-    { l: 0.62, c: 0.20, h: 295 }, // Modern Purple (#8B5CF6)
-    { l: 0.72, c: 0.16, h: 75 },  // Warm Amber (#F59E0B)
-    { l: 0.62, c: 0.22, h: 25 },  // Coral Crimson (#EF4444)
-    { l: 0.68, c: 0.14, h: 200 }, // Cyan Teal (#06B6D4)
+    { l: 0.98, c: 0, h: 0 }, // #F9F9F9 Crisp White
+    { l: 0.83, c: 0, h: 0 }, // #D4D4D4 Light Gray
+    { l: 0.65, c: 0, h: 0 }, // #A3A3A3 Mid Gray
+    { l: 0.48, c: 0, h: 0 }, // #737373 Neutral Slate Gray
+    { l: 0.35, c: 0, h: 0 }, // #4A4A4A Dark Slate Gray
+    { l: 0.22, c: 0, h: 0 }, // #282828 Charcoal Gray
   ],
 };
 

@@ -188,7 +188,7 @@ export const Header: React.FC = () => {
           className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
           title="Smart Free Slot Finder"
         >
-          <Zap className="w-3.5 h-3.5 text-amber-500" />
+          <Zap className="w-3.5 h-3.5" />
         </button>
 
         {/* World Clock & Timezone Planner */}
@@ -206,7 +206,7 @@ export const Header: React.FC = () => {
           className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
           title="Export, Sharing & Public Integration Hub (Ctrl+E)"
         >
-          <Share2 className="w-3.5 h-3.5 text-blue-400" />
+          <Share2 className="w-3.5 h-3.5" />
         </button>
 
         {/* Distraction-Free Presentation Mode */}
@@ -215,7 +215,7 @@ export const Header: React.FC = () => {
           className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
           title="Wallboard Presentation Mode (Ctrl+P)"
         >
-          <Tv className="w-3.5 h-3.5 text-purple-400" />
+          <Tv className="w-3.5 h-3.5" />
         </button>
 
         {/* Multi-Window Detach Current View */}

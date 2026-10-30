@@ -695,7 +695,7 @@ export const CalendarView: React.FC = () => {
             className="px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium flex items-center gap-1.5 transition-colors"
             title="Open Export, Reports & Share Hub"
           >
-            <Share2 className="w-3.5 h-3.5 text-blue-400" />
+            <Share2 className="w-3.5 h-3.5" />
             <span>Export & Share</span>
           </button>
 
@@ -708,7 +708,7 @@ export const CalendarView: React.FC = () => {
             className="px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium flex items-center gap-1.5 transition-colors"
             title="Generate Smart QR Event Pass"
           >
-            <QrCode className="w-3.5 h-3.5 text-emerald-400" />
+            <QrCode className="w-3.5 h-3.5" />
             <span>QR Pass</span>
           </button>
         </div>

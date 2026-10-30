@@ -194,23 +194,23 @@ export function paletteToCssVariables(palette: ThemePalette, isDark: boolean): R
     [`--accent`]: oklchToHex(palette.primary),
     [`--accent-hover`]: oklchToHex(palette.primaryHover),
     [`--accent-active`]: oklchToHex({ ...palette.primary, l: clampL(isDark ? palette.primary.l - 0.08 : palette.primary.l + 0.08) }),
-    [`--accent-text`]: palette.primary.l > 0.78 ? '#000000' : '#FFFFFF',
+    [`--accent-text`]: palette.primary.l > 0.6 ? '#0E0E0E' : '#FFFFFF',
 
-    [`--focus-ring`]: `0 0 0 2px ${oklchToHex(isDark ? palette.background : { l: 1, c: 0, h: 0 })}, 0 0 0 4px ${oklchToHex(palette.primary)}66`,
+    [`--focus-ring`]: `0 0 0 2px ${oklchToHex(isDark ? palette.background : { l: 1, c: 0, h: 0 })}, 0 0 0 4px ${isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.35)'}`,
 
     // Calendar specifics
     [`--cal-grid-line`]: oklchToHex({ ...palette.border, l: clampL(isDark ? palette.border.l - 0.08 : palette.border.l + 0.08) }),
     [`--cal-hour-line`]: oklchToHex(palette.border),
-    [`--cal-today-bg`]: isDark ? 'rgba(59, 130, 246, 0.05)' : 'rgba(59, 130, 246, 0.08)',
+    [`--cal-today-bg`]: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)',
     [`--cal-weekend-bg`]: oklchToHex({ ...palette.background, l: clampL(isDark ? palette.background.l - 0.03 : palette.background.l + 0.02) }),
     [`--cal-now-line`]: '#EF4444',
     [`--cal-selected-bg`]: oklchToHex(palette.primary),
-    [`--cal-selected-text`]: palette.primary.l > 0.78 ? '#000000' : '#FFFFFF',
+    [`--cal-selected-text`]: palette.primary.l > 0.6 ? '#0E0E0E' : '#FFFFFF',
 
     // Status
     [`--status-confirmed`]: oklchToHex(palette.primary),
-    [`--status-tentative`]: '#F59E0B',
-    [`--status-cancelled`]: '#64748B',
+    [`--status-tentative`]: '#A3A3A3',
+    [`--status-cancelled`]: '#737373',
 
     // Shadows
     [`--shadow-sm`]: `0 1px 3px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,.06)'}`,

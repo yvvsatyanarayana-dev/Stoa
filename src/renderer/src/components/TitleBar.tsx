@@ -18,10 +18,10 @@ export const TitleBar: React.FC = () => {
   const [isMaximized, setIsMaximized] = useState(false)
 
   const getProfileIcon = (profileId: string) => {
-    if (profileId.includes('medical')) return <Stethoscope className="w-3 h-3 text-emerald-400" />
-    if (profileId.includes('academic')) return <GraduationCap className="w-3 h-3 text-purple-400" />
-    if (profileId.includes('executive')) return <Briefcase className="w-3 h-3 text-amber-400" />
-    return <Building2 className="w-3 h-3 text-[var(--accent)]" />
+    if (profileId.includes('medical')) return <Stethoscope className="w-3 h-3 text-[var(--text-secondary)]" />
+    if (profileId.includes('academic')) return <GraduationCap className="w-3 h-3 text-[var(--text-secondary)]" />
+    if (profileId.includes('executive')) return <Briefcase className="w-3 h-3 text-[var(--text-secondary)]" />
+    return <Building2 className="w-3 h-3 text-[var(--text-secondary)]" />
   }
 
   useEffect(() => {
