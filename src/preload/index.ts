@@ -25,7 +25,8 @@ export const api = {
     minimize: (): Promise<void> => ipcRenderer.invoke('window:minimize'),
     maximize: (): Promise<void> => ipcRenderer.invoke('window:maximize'),
     close: (): Promise<void> => ipcRenderer.invoke('window:close'),
-    isMaximized: (): Promise<boolean> => ipcRenderer.invoke('window:is-maximized')
+    isMaximized: (): Promise<boolean> => ipcRenderer.invoke('window:is-maximized'),
+    openSecondary: (viewType: string): Promise<void> => ipcRenderer.invoke('window:open-secondary', viewType)
   },
   data: {
     getInitial: (): Promise<{

@@ -12,7 +12,10 @@ import {
   Globe,
   Share2,
   Sparkles,
-  ShieldAlert
+  ShieldAlert,
+  Tv,
+  AppWindow,
+  Keyboard
 } from 'lucide-react'
 import { useAppStore, CalendarViewType } from '../store/useAppStore'
 import { format, addWeeks, subWeeks, addDays, subDays, addMonths, subMonths } from 'date-fns'
@@ -37,6 +40,8 @@ export const Header: React.FC = () => {
     isConflictPredictorOpen,
     setIsConflictPredictorOpen,
     setIsNlpQuickAddOpen,
+    setIsPresentationModeOpen,
+    setIsShortcutsModalOpen,
     themeMode,
     toggleThemeMode
   } = useAppStore()
@@ -199,9 +204,36 @@ export const Header: React.FC = () => {
         <button
           onClick={() => setIsExportHubOpen(true)}
           className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
-          title="Export, Sharing & Public Integration Hub"
+          title="Export, Sharing & Public Integration Hub (Ctrl+E)"
         >
           <Share2 className="w-3.5 h-3.5 text-blue-400" />
+        </button>
+
+        {/* Distraction-Free Presentation Mode */}
+        <button
+          onClick={() => setIsPresentationModeOpen(true)}
+          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
+          title="Wallboard Presentation Mode (Ctrl+P)"
+        >
+          <Tv className="w-3.5 h-3.5 text-purple-400" />
+        </button>
+
+        {/* Multi-Window Detach Current View */}
+        <button
+          onClick={() => window.api?.window?.openSecondary(currentView)}
+          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
+          title={`Open ${currentView.toUpperCase()} in Independent Window`}
+        >
+          <AppWindow className="w-3.5 h-3.5" />
+        </button>
+
+        {/* Keyboard Shortcuts Reference */}
+        <button
+          onClick={() => setIsShortcutsModalOpen(true)}
+          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
+          title="Keyboard Shortcuts Reference (?)"
+        >
+          <Keyboard className="w-3.5 h-3.5" />
         </button>
 
         {/* Theme Switcher Toggle (Light <-> Dark) */}

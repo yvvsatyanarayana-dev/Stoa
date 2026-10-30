@@ -459,6 +459,185 @@ function createDefaultCommands(
         appStore.setIsFeedSubscriptionModalOpen(true);
       },
     },
+    // Category D Actions
+    {
+      id: 'action:team-availability',
+      title: 'Team Availability Overlay',
+      description: 'Side-by-side multi-member heatmaps and overlap matrix',
+      category: 'actions',
+      keywords: ['team', 'availability', 'overlay', 'heatmap', 'matrix', 'staff', 'members'],
+      action: () => {
+        appStore.setCurrentView('resources');
+        appStore.setResourceActiveTab('availability');
+      },
+    },
+    {
+      id: 'action:room-suggester',
+      title: 'Smart Room Suggester',
+      description: 'Auto-match venue based on headcount, equipment and audio/video',
+      category: 'actions',
+      keywords: ['room', 'suggester', 'smart', 'venue', 'capacity', 'equipment'],
+      action: () => {
+        appStore.setCurrentView('resources');
+        appStore.setResourceActiveTab('suggester');
+      },
+    },
+    {
+      id: 'action:conflict-dashboard',
+      title: 'Resource Conflict Dashboard',
+      description: 'Enterprise double-booking audit and instant one-click reassign',
+      category: 'actions',
+      keywords: ['resource', 'conflict', 'dashboard', 'double', 'booking', 'audit', 'reassign'],
+      action: () => {
+        appStore.setCurrentView('resources');
+        appStore.setResourceActiveTab('conflicts');
+      },
+    },
+    {
+      id: 'action:shift-roster',
+      title: 'Shift Roster Builder',
+      description: 'Weekly team coverage planner with rotation templates',
+      category: 'actions',
+      keywords: ['shift', 'roster', 'builder', 'coverage', 'rotation', 'shifts'],
+      action: () => {
+        appStore.setCurrentView('resources');
+        appStore.setResourceActiveTab('roster');
+      },
+    },
+    {
+      id: 'action:attendance-tracker',
+      title: 'Attendance Tracker',
+      description: 'Live RSVP verification and check-in headcount',
+      category: 'actions',
+      keywords: ['attendance', 'tracker', 'rsvp', 'checkin', 'headcount', 'present'],
+      action: () => {
+        appStore.setCurrentView('resources');
+        appStore.setResourceActiveTab('attendance');
+      },
+    },
+
+    // Category E Actions (Export, Sharing & Feeds)
+    {
+      id: 'action:export-hub',
+      title: 'Export & Sharing Hub',
+      description: 'Export PDF, Excel rosters, public share links, iCal & QR cards',
+      category: 'actions',
+      shortcut: 'Ctrl+E',
+      keywords: ['export', 'share', 'pdf', 'excel', 'ical', 'feed', 'qr', 'cards'],
+      action: () => {
+        appStore.setIsExportHubOpen(true);
+      },
+    },
+    {
+      id: 'action:export-pdf',
+      title: 'Export Branded PDF Report',
+      description: 'Generate high-resolution printable agenda and executive schedule',
+      category: 'actions',
+      keywords: ['pdf', 'report', 'print', 'branded', 'agenda', 'export'],
+      action: () => {
+        appStore.setExportHubInitialTab('pdf');
+        appStore.setIsExportHubOpen(true);
+      },
+    },
+    {
+      id: 'action:export-share-link',
+      title: 'Generate Public Share Link',
+      description: 'Create read-only tokenized link with expiration and passcode protection',
+      category: 'actions',
+      keywords: ['share', 'public', 'link', 'token', 'passcode', 'web'],
+      action: () => {
+        appStore.setExportHubInitialTab('share');
+        appStore.setIsExportHubOpen(true);
+      },
+    },
+    {
+      id: 'action:export-excel',
+      title: 'Export Excel & CSV Roster',
+      description: 'Formatted multi-column table export with duration and attendance statistics',
+      category: 'actions',
+      keywords: ['excel', 'csv', 'spreadsheet', 'roster', 'export', 'download'],
+      action: () => {
+        appStore.setExportHubInitialTab('excel');
+        appStore.setIsExportHubOpen(true);
+      },
+    },
+    {
+      id: 'action:export-ical-feed',
+      title: 'Subscribe to iCal / .ics Live Feed',
+      description: 'RFC-5545 live calendar subscription endpoint for Apple, Google and Outlook',
+      category: 'actions',
+      keywords: ['ical', 'ics', 'webcal', 'subscription', 'feed', 'apple', 'google', 'outlook'],
+      action: () => {
+        appStore.setExportHubInitialTab('ical');
+        appStore.setIsExportHubOpen(true);
+      },
+    },
+    {
+      id: 'action:export-qr-cards',
+      title: 'Export QR Code Event Cards',
+      description: 'High-contrast scannable passes and physical signages for attendees',
+      category: 'actions',
+      keywords: ['qr', 'code', 'cards', 'badge', 'signage', 'pass'],
+      action: () => {
+        appStore.setExportHubInitialTab('qr');
+        appStore.setIsExportHubOpen(true);
+      },
+    },
+
+    // Category F Actions (UI/UX Power Features)
+    {
+      id: 'action:presentation-mode',
+      title: 'Wallboard Presentation Mode',
+      description: 'Distraction-free wall-mounted conference display with live clock & progress',
+      category: 'actions',
+      shortcut: 'Ctrl+P',
+      keywords: ['presentation', 'display', 'wallboard', 'kiosk', 'conference', 'full', 'screen'],
+      action: () => {
+        appStore.setIsPresentationModeOpen(true);
+      },
+    },
+    {
+      id: 'action:customize-dashboard',
+      title: 'Customize Dashboard Layout',
+      description: 'Reorder widgets and toggle visibility to personalize operational dashboard',
+      category: 'actions',
+      keywords: ['customize', 'dashboard', 'layout', 'widgets', 'order'],
+      action: () => {
+        appStore.setCurrentView('dashboard');
+        appStore.setIsDashboardCustomizerOpen(true);
+      },
+    },
+    {
+      id: 'action:keyboard-shortcuts',
+      title: 'Keyboard Shortcuts Cheat Sheet',
+      description: 'View full cheat sheet of keyboard hotkeys and productivity shortcuts',
+      category: 'actions',
+      shortcut: '?',
+      keywords: ['shortcuts', 'keyboard', 'hotkeys', 'cheat', 'sheet', 'help'],
+      action: () => {
+        appStore.setIsShortcutsModalOpen(true);
+      },
+    },
+    {
+      id: 'action:open-new-window',
+      title: 'Open Calendar in New Window',
+      description: 'Spawn independent native window for multi-monitor setups',
+      category: 'actions',
+      keywords: ['window', 'secondary', 'multi', 'monitor', 'screen', 'detach'],
+      action: () => {
+        window.api?.window?.openSecondary('calendar');
+      },
+    },
+    {
+      id: 'action:open-presentation-window',
+      title: 'Open Presentation in New Window',
+      description: 'Project presentation wallboard onto external TV or conference monitor',
+      category: 'actions',
+      keywords: ['presentation', 'window', 'projector', 'tv', 'display', 'screen'],
+      action: () => {
+        window.api?.window?.openSecondary('presentation');
+      },
+    },
 
     // Command Commands
     {
@@ -690,15 +869,16 @@ function createDefaultCommands(
 }
 
 export function useCommandPalette() {
-  const [isOpen, setIsOpen] = useState(false);
+  const appStore = useAppStore();
+  const themeStore = useThemeStore();
+
+  const isOpen = appStore.isCommandPaletteOpen;
+  const setIsOpen = appStore.setIsCommandPaletteOpen;
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [recentCommands, setRecentCommands] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-
-  const appStore = useAppStore();
-  const themeStore = useThemeStore();
 
   // Build commands list
   const allCommands = useMemo(
@@ -811,7 +991,7 @@ export function useCommandPalette() {
     setSelectedIndex(0);
     // Focus input after render
     setTimeout(() => inputRef.current?.focus(), 0);
-  }, []);
+  }, [setIsOpen]);
 
   // Close palette
   const close = useCallback(() => {
@@ -820,7 +1000,7 @@ export function useCommandPalette() {
     setSelectedIndex(0);
     // Return focus to main app
     document.body.focus();
-  }, []);
+  }, [setIsOpen]);
 
   // Execute a specific command
   const executeCommand = useCallback((cmd: Command) => {

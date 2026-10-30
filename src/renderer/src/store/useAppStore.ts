@@ -51,6 +51,9 @@ interface AppState {
   activeConferenceId: string | null
   setActiveConferenceId: (id: string | null) => void
 
+  resourceActiveTab: 'directory' | 'availability' | 'suggester' | 'conflicts' | 'roster' | 'attendance'
+  setResourceActiveTab: (tab: 'directory' | 'availability' | 'suggester' | 'conflicts' | 'roster' | 'attendance') => void
+
   searchQuery: string
   setSearchQuery: (q: string) => void
 
@@ -96,6 +99,18 @@ interface AppState {
 
   isConflictPredictorOpen: boolean
   setIsConflictPredictorOpen: (open: boolean) => void
+
+  isPresentationModeOpen: boolean
+  setIsPresentationModeOpen: (open: boolean) => void
+
+  isShortcutsModalOpen: boolean
+  setIsShortcutsModalOpen: (open: boolean) => void
+
+  isDashboardCustomizerOpen: boolean
+  setIsDashboardCustomizerOpen: (open: boolean) => void
+
+  isCommandPaletteOpen: boolean
+  setIsCommandPaletteOpen: (open: boolean) => void
 
   themeMode: 'dark' | 'light'
   setThemeMode: (mode: 'dark' | 'light') => void
@@ -173,6 +188,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   activeConferenceId: null,
   setActiveConferenceId: (activeConferenceId) => set({ activeConferenceId }),
 
+  resourceActiveTab: 'directory',
+  setResourceActiveTab: (resourceActiveTab) => set({ resourceActiveTab }),
+
   searchQuery: '',
   setSearchQuery: (searchQuery) => set({ searchQuery }),
 
@@ -217,6 +235,18 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   isConflictPredictorOpen: false,
   setIsConflictPredictorOpen: (isConflictPredictorOpen) => set({ isConflictPredictorOpen }),
+
+  isPresentationModeOpen: false,
+  setIsPresentationModeOpen: (isPresentationModeOpen) => set({ isPresentationModeOpen }),
+
+  isShortcutsModalOpen: false,
+  setIsShortcutsModalOpen: (isShortcutsModalOpen) => set({ isShortcutsModalOpen }),
+
+  isDashboardCustomizerOpen: false,
+  setIsDashboardCustomizerOpen: (isDashboardCustomizerOpen) => set({ isDashboardCustomizerOpen }),
+
+  isCommandPaletteOpen: false,
+  setIsCommandPaletteOpen: (isCommandPaletteOpen) => set({ isCommandPaletteOpen }),
 
   themeMode: 'dark',
   setThemeMode: (mode) => {

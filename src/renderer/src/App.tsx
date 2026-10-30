@@ -22,14 +22,40 @@ import { ExportSharingHubModal } from './components/modals/ExportSharingHubModal
 import { CommandPalette } from './components/CommandPalette'
 import { ConflictPredictorPanel } from './components/ai/ConflictPredictorPanel'
 import { NaturalLanguageQuickAdd } from './components/ai/NaturalLanguageQuickAdd'
+import { PresentationModeView } from './components/presentation/PresentationModeView'
+import { KeyboardShortcutsModal } from './components/modals/KeyboardShortcutsModal'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { useAppStore } from './store/useAppStore'
+import { useGlobalShortcuts } from './hooks/useGlobalShortcuts'
+import { useAppStore, AppView } from './store/useAppStore'
 
 export const App: React.FC = () => {
-  const { currentView, fetchInitialData, fetchNotifications, isLoading } = useAppStore()
+  const {
+    currentView,
+    setCurrentView,
+    setIsPresentationModeOpen,
+    fetchInitialData,
+    fetchNotifications,
+    isLoading
+  } = useAppStore()
+
+  // F5: Global Keyboard Shortcuts Listener
+  useGlobalShortcuts()
 
   useEffect(() => {
     fetchInitialData()
+
+    // F4: Multi-Window view routing (?view=...)
+    const params = new URLSearchParams(window.location.search)
+    const targetView = params.get('view')
+    if (targetView) {
+      if (targetView === 'presentation') {
+        setIsPresentationModeOpen(true)
+      } else if (
+        ['calendar', 'timetable', 'resources', 'conferences', 'dashboard', 'notifications', 'settings'].includes(targetView)
+      ) {
+        setCurrentView(targetView as AppView)
+      }
+    }
 
     const unsubscribe = window.api.notifications.onReceived((data) => {
       console.log('[Live Notification]', data)
@@ -97,6 +123,10 @@ export const App: React.FC = () => {
 
         {/* Global Command Palette */}
         <CommandPalette />
+
+        {/* Category F: Distraction-Free Presentation Mode & Shortcuts Modal */}
+        <PresentationModeView />
+        <KeyboardShortcutsModal />
       </div>
     </ErrorBoundary>
   )

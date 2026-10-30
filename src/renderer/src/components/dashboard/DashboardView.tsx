@@ -11,7 +11,8 @@ import {
   CheckCircle2,
   Plus,
   LayoutDashboard,
-  BarChart2
+  BarChart2,
+  Sliders
 } from 'lucide-react'
 import { MeetingLoadAnalyzer } from '../ai/MeetingLoadAnalyzer'
 import { TimeUseHeatmap } from '../analytics/TimeUseHeatmap'
@@ -19,11 +20,44 @@ import { MeetingFocusRatio } from '../analytics/MeetingFocusRatio'
 import { ResourceUtilizationReport } from '../analytics/ResourceUtilizationReport'
 import { CalendarHealthScore } from '../analytics/CalendarHealthScore'
 import { TeamBottleneckDetector } from '../analytics/TeamBottleneckDetector'
+import {
+  DashboardCustomizerModal,
+  DashboardWidgetConfig,
+  DEFAULT_DASHBOARD_WIDGETS
+} from './DashboardCustomizerModal'
 
 export const DashboardView: React.FC = () => {
-  const { events, resources, categories, setSelectedEvent, setIsEventModalOpen } = useAppStore()
+  const {
+    events,
+    resources,
+    categories,
+    setSelectedEvent,
+    setIsEventModalOpen,
+    setIsDashboardCustomizerOpen
+  } = useAppStore()
   const [activeTab, setActiveTab] = useState<'overview' | 'analytics'>('overview')
   const [countdown, setCountdown] = useState<string>('')
+
+  // F2: Persistent custom widget order & visibility
+  const [widgets, setWidgets] = useState<DashboardWidgetConfig[]>(() => {
+    try {
+      const saved = localStorage.getItem('chronodesk_dashboard_widgets')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed
+        }
+      }
+    } catch {}
+    return DEFAULT_DASHBOARD_WIDGETS
+  })
+
+  const handleUpdateWidgets = (newWidgets: DashboardWidgetConfig[]) => {
+    setWidgets(newWidgets)
+    try {
+      localStorage.setItem('chronodesk_dashboard_widgets', JSON.stringify(newWidgets))
+    } catch {}
+  }
 
   // Filter today's events
   const todayEvents = events.filter((e) => isToday(new Date(e.start)))
@@ -94,194 +128,233 @@ export const DashboardView: React.FC = () => {
             </button>
           </div>
 
-          <span className="text-[11px] font-mono text-[var(--text-muted)] hidden sm:inline">
-            Real-Time User Intelligence • {events.length} Live Schedules
-          </span>
+          <div className="flex items-center gap-2.5">
+            {activeTab === 'overview' && (
+              <button
+                onClick={() => setIsDashboardCustomizerOpen(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-[var(--radius-md)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors shadow-xs"
+                title="Customize Dashboard Layout & Widget Order"
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                <span>Customize Layout</span>
+              </button>
+            )}
+
+            <span className="text-[11px] font-mono text-[var(--text-muted)] hidden sm:inline">
+              Real-Time User Intelligence • {events.length} Live Schedules
+            </span>
+          </div>
         </div>
 
         {/* TAB 1: OPERATIONS OVERVIEW */}
         {activeTab === 'overview' && (
           <div className="space-y-5">
-            {/* Next Meeting Banner */}
-            <div className="card p-5 relative overflow-hidden shadow-xs">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-                <div>
-                  <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">
-                    <Clock className="w-3.5 h-3.5 opacity-70" />
-                    <span>Next Scheduled Event</span>
-                  </div>
-                  <h2 className="text-base font-semibold tracking-tight text-[var(--text-primary)]">
-                    {nextEvent ? nextEvent.title : 'Schedule is Clear'}
-                  </h2>
-                  {nextEvent ? (
-                    <p className="text-[11px] text-[var(--text-muted)] font-mono mt-0.5">
-                      {format(new Date(nextEvent.start), 'HH:mm')} - {format(new Date(nextEvent.end), 'HH:mm')}
-                      {nextEvent.location ? ` • ${nextEvent.location}` : ''}
-                    </p>
-                  ) : (
-                    <p className="text-xs text-[var(--text-muted)] mt-1">
-                      You have no upcoming events. Click below to schedule your next appointment or session.
-                    </p>
-                  )}
-                </div>
-
-                {nextEvent ? (
-                  <div className="flex items-center gap-2.5">
-                    <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] px-3 py-1.5 rounded-[var(--radius-md)] text-center">
-                      <div className="text-[9px] text-[var(--text-muted)] uppercase font-mono tracking-wider">Starts in</div>
-                      <div className="text-xs font-semibold text-[var(--text-primary)] font-mono mt-0.5">{countdown}</div>
-                    </div>
-
-                    {nextEvent.meeting_url && (
-                      <a
-                        href={nextEvent.meeting_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5"
-                      >
-                        <Video className="w-3.5 h-3.5" />
-                        <span>Join Call</span>
-                      </a>
-                    )}
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setSelectedEvent(null)
-                      setIsEventModalOpen(true)
-                    }}
-                    className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-xs"
-                  >
-                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                    <span>Create Event</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Top Metric Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="card p-3.5 flex items-center gap-3 shadow-xs">
-                <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-primary)]">
-                  <CalendarIcon className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{todayEvents.length}</div>
-                  <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-wider">Today's Events</div>
-                </div>
-              </div>
-
-              <div className="card p-3.5 flex items-center gap-3 shadow-xs">
-                <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-primary)]">
-                  <DoorClosed className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{roomResources.length}</div>
-                  <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-wider">Rooms & Venues</div>
-                </div>
-              </div>
-
-              <div className="card p-3.5 flex items-center gap-3 shadow-xs">
-                <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-primary)]">
-                  <Users className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{personResources.length}</div>
-                  <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-wider">Staff & Trainers</div>
-                </div>
-              </div>
-
-              <div className="card p-3.5 flex items-center gap-3 shadow-xs">
-                <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-primary)]">
-                  <TrendingUp className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{events.length}</div>
-                  <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-wider">Total Schedules</div>
-                </div>
-              </div>
-            </div>
-
-            {/* AI Meeting Load Analyzer */}
-            <MeetingLoadAnalyzer />
-
-            {/* Schedule Timeline & Category Distribution */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {/* Today Timeline */}
-              <div className="lg:col-span-2 card p-4 space-y-3 shadow-xs">
-                <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
-                  <h3 className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
-                    Today's Timeline
-                  </h3>
-                  <span className="text-[10px] text-[var(--text-muted)] font-mono">
-                    {format(new Date(), 'EEEE, MMMM d')}
-                  </span>
-                </div>
-
-                {todayEvents.length === 0 ? (
-                  <div className="py-12 text-center text-xs text-[var(--text-muted)]">
-                    No events scheduled for today.
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {todayEvents.map((evt) => (
-                      <div
-                        key={evt.id}
-                        onClick={() => {
-                          setSelectedEvent(evt)
-                          setIsEventModalOpen(true)
-                        }}
-                        className="p-2.5 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] cursor-pointer transition-colors flex items-center justify-between"
-                      >
-                        <div>
-                          <div className="text-xs font-semibold text-[var(--text-primary)] truncate">
-                            {evt.title || '(Untitled Event)'}
-                          </div>
-                          <div className="text-[10px] text-[var(--text-muted)] font-mono mt-0.5">
-                            {format(new Date(evt.start), 'HH:mm')} - {format(new Date(evt.end), 'HH:mm')}
-                            {evt.location ? ` • ${evt.location}` : ''}
-                          </div>
+            {widgets.filter((w) => w.visible).map((widget) => {
+              if (widget.id === 'next_event') {
+                return (
+                  <div key="next_event" className="card p-5 relative overflow-hidden shadow-xs">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                      <div>
+                        <div className="flex items-center gap-1.5 text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">
+                          <Clock className="w-3.5 h-3.5 opacity-70" />
+                          <span>Next Scheduled Event</span>
                         </div>
-                        {evt.status === 'confirmed' && (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        <h2 className="text-base font-semibold tracking-tight text-[var(--text-primary)]">
+                          {nextEvent ? nextEvent.title : 'Schedule is Clear'}
+                        </h2>
+                        {nextEvent ? (
+                          <p className="text-[11px] text-[var(--text-muted)] font-mono mt-0.5">
+                            {format(new Date(nextEvent.start), 'HH:mm')} - {format(new Date(nextEvent.end), 'HH:mm')}
+                            {nextEvent.location ? ` • ${nextEvent.location}` : ''}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-[var(--text-muted)] mt-1">
+                            You have no upcoming events. Click below to schedule your next appointment or session.
+                          </p>
                         )}
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
 
-              {/* Quick Summary */}
-              <div className="card p-4 space-y-3 shadow-xs">
-                <div className="pb-2 border-b border-[var(--border-subtle)]">
-                  <h3 className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
-                    Categories
-                  </h3>
-                </div>
+                      {nextEvent ? (
+                        <div className="flex items-center gap-2.5">
+                          <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] px-3 py-1.5 rounded-[var(--radius-md)] text-center">
+                            <div className="text-[9px] text-[var(--text-muted)] uppercase font-mono tracking-wider">Starts in</div>
+                            <div className="text-xs font-semibold text-[var(--text-primary)] font-mono mt-0.5">{countdown}</div>
+                          </div>
 
-                {categories.length === 0 ? (
-                  <div className="py-8 text-center text-xs text-[var(--text-muted)]">
-                    No categories defined yet.
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {categories.map((cat) => (
-                      <div key={cat.id} className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: cat.color || 'var(--accent)' }}
-                          />
-                          <span className="text-[var(--text-primary)] font-medium">{cat.name}</span>
+                          {nextEvent.meeting_url && (
+                            <a
+                              href={nextEvent.meeting_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5"
+                            >
+                              <Video className="w-3.5 h-3.5" />
+                              <span>Join Call</span>
+                            </a>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setSelectedEvent(null)
+                            setIsEventModalOpen(true)
+                          }}
+                          className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-xs"
+                        >
+                          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                          <span>Create Event</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
+                )
+              }
+
+              if (widget.id === 'metrics') {
+                return (
+                  <div key="metrics" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="card p-3.5 flex items-center gap-3 shadow-xs">
+                      <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-primary)]">
+                        <CalendarIcon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{todayEvents.length}</div>
+                        <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-wider">Today's Events</div>
+                      </div>
+                    </div>
+
+                    <div className="card p-3.5 flex items-center gap-3 shadow-xs">
+                      <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-primary)]">
+                        <DoorClosed className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{roomResources.length}</div>
+                        <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-wider">Rooms & Venues</div>
+                      </div>
+                    </div>
+
+                    <div className="card p-3.5 flex items-center gap-3 shadow-xs">
+                      <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-primary)]">
+                        <Users className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{personResources.length}</div>
+                        <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-wider">Staff & Trainers</div>
+                      </div>
+                    </div>
+
+                    <div className="card p-3.5 flex items-center gap-3 shadow-xs">
+                      <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-primary)]">
+                        <TrendingUp className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xl font-bold tracking-tight text-[var(--text-primary)]">{events.length}</div>
+                        <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-wider">Total Schedules</div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+
+              if (widget.id === 'load_analyzer') {
+                return <MeetingLoadAnalyzer key="load_analyzer" />
+              }
+
+              if (widget.id === 'today_timeline') {
+                return (
+                  <div key="today_timeline" className="card p-4 space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+                      <h3 className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
+                        Today's Timeline
+                      </h3>
+                      <span className="text-[10px] text-[var(--text-muted)] font-mono">
+                        {format(new Date(), 'EEEE, MMMM d')}
+                      </span>
+                    </div>
+
+                    {todayEvents.length === 0 ? (
+                      <div className="py-12 text-center text-xs text-[var(--text-muted)]">
+                        No events scheduled for today.
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {todayEvents.map((evt) => (
+                          <div
+                            key={evt.id}
+                            onClick={() => {
+                              setSelectedEvent(evt)
+                              setIsEventModalOpen(true)
+                            }}
+                            className="p-2.5 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] cursor-pointer transition-colors flex items-center justify-between"
+                          >
+                            <div>
+                              <div className="text-xs font-semibold text-[var(--text-primary)] truncate">
+                                {evt.title || '(Untitled Event)'}
+                              </div>
+                              <div className="text-[10px] text-[var(--text-muted)] font-mono mt-0.5">
+                                {format(new Date(evt.start), 'HH:mm')} - {format(new Date(evt.end), 'HH:mm')}
+                                {evt.location ? ` • ${evt.location}` : ''}
+                              </div>
+                            </div>
+                            {evt.status === 'confirmed' && (
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+
+              if (widget.id === 'category_distribution') {
+                return (
+                  <div key="category_distribution" className="card p-4 space-y-3 shadow-xs">
+                    <div className="pb-2 border-b border-[var(--border-subtle)]">
+                      <h3 className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
+                        Category Distribution
+                      </h3>
+                    </div>
+
+                    {categories.length === 0 ? (
+                      <div className="py-8 text-center text-xs text-[var(--text-muted)]">
+                        No categories defined yet.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                        {categories.map((cat) => {
+                          const catEvents = events.filter((e) => e.category_id === cat.id)
+                          return (
+                            <div
+                              key={cat.id}
+                              className="p-2.5 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-between text-xs"
+                            >
+                              <div className="flex items-center gap-2 truncate">
+                                <span
+                                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                                  style={{ backgroundColor: cat.color || 'var(--accent)' }}
+                                />
+                                <span className="text-[var(--text-primary)] font-medium truncate">{cat.name}</span>
+                              </div>
+                              <span className="text-[10px] font-mono text-[var(--text-muted)] shrink-0 ml-1.5">
+                                {catEvents.length}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+
+              return null
+            })}
           </div>
         )}
+
+        {/* Global Customizer Modal */}
+        <DashboardCustomizerModal widgets={widgets} onUpdateWidgets={handleUpdateWidgets} />
 
         {/* TAB 2: ADVANCED ANALYTICS */}
         {activeTab === 'analytics' && (

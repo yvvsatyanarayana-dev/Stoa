@@ -1,4 +1,6 @@
 import { ipcMain, BrowserWindow } from 'electron'
+import { join } from 'path'
+import { is } from '@electron-toolkit/utils'
 import {
   calendarDb,
   categoryDb,
@@ -34,25 +36,56 @@ export function setIpcMainWindow(window: BrowserWindow | null): void {
 }
 
 export function registerIpcHandlers(): void {
-  // Window Controls
-  ipcMain.handle('window:minimize', () => {
-    activeMainWindow?.minimize()
+  // Window Controls (Multi-Window Aware)
+  ipcMain.handle('window:minimize', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender) || activeMainWindow
+    win?.minimize()
   })
 
-  ipcMain.handle('window:maximize', () => {
-    if (activeMainWindow?.isMaximized()) {
-      activeMainWindow.unmaximize()
+  ipcMain.handle('window:maximize', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender) || activeMainWindow
+    if (win?.isMaximized()) {
+      win.unmaximize()
     } else {
-      activeMainWindow?.maximize()
+      win?.maximize()
     }
   })
 
-  ipcMain.handle('window:close', () => {
-    activeMainWindow?.close()
+  ipcMain.handle('window:close', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender) || activeMainWindow
+    win?.close()
   })
 
-  ipcMain.handle('window:is-maximized', () => {
-    return activeMainWindow?.isMaximized() ?? false
+  ipcMain.handle('window:is-maximized', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender) || activeMainWindow
+    return win?.isMaximized() ?? false
+  })
+
+  ipcMain.handle('window:open-secondary', (_event, viewType: string) => {
+    const secondaryWindow = new BrowserWindow({
+      width: 1180,
+      height: 780,
+      minWidth: 800,
+      minHeight: 600,
+      frame: false,
+      autoHideMenuBar: true,
+      title: `ChronoDesk Pro - ${viewType.toUpperCase()}`,
+      backgroundColor: '#000000',
+      webPreferences: {
+        preload: join(__dirname, '../preload/index.js'),
+        sandbox: false,
+        contextIsolation: true,
+        nodeIntegration: false
+      }
+    })
+
+    if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+      secondaryWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}?view=${viewType}`)
+    } else {
+      secondaryWindow.loadFile(join(__dirname, '../renderer/index.html'), {
+        query: { view: viewType }
+      })
+    }
   })
 
   // Initial Hydration

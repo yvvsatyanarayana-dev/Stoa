@@ -33,9 +33,18 @@ export type ResourceTab =
   | 'attendance'
 
 export const ResourcesView: React.FC = () => {
-  const { resources, createResource, updateResource, deleteResource, events } = useAppStore()
+  const {
+    resources,
+    createResource,
+    updateResource,
+    deleteResource,
+    events,
+    resourceActiveTab,
+    setResourceActiveTab
+  } = useAppStore()
 
-  const [activeTab, setActiveTab] = useState<ResourceTab>('directory')
+  const activeTab = resourceActiveTab
+  const setActiveTab = setResourceActiveTab
   const [filterType, setFilterType] = useState<string>('all')
   const [editingResource, setEditingResource] = useState<Partial<Resource> | null>(null)
   const [isInitializingSample, setIsInitializingSample] = useState<boolean>(false)
