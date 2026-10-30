@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   startOfWeek,
   endOfWeek,
@@ -11,7 +11,13 @@ import {
 } from 'date-fns'
 import { useAppStore } from '../../store/useAppStore'
 import { CalendarEvent } from '../../../../types'
-import { Clock, MapPin, Video, Plus, Calendar as CalendarIcon } from 'lucide-react'
+import { Clock, MapPin, Video, Plus, Calendar as CalendarIcon, Globe, CalendarOff, Sparkles, Shield, Repeat } from 'lucide-react'
+import { expandRecurringEvents } from '../../utils/recurrenceEngine'
+import { getHolidaysForYear, scanHolidayConflicts } from '../../utils/holidayEngine'
+import { FocusBlockProtector } from './FocusBlockProtector'
+import { WorldClockPanel } from './WorldClockPanel'
+import { HolidayRescheduleModal } from '../modals/HolidayRescheduleModal'
+import { FixMyWeekModal } from '../modals/FixMyWeekModal'
 
 export const CalendarView: React.FC = () => {
   const {
@@ -26,6 +32,11 @@ export const CalendarView: React.FC = () => {
   // Track live current time for the red "now" indicator line
   const [currentTime, setCurrentTime] = useState(new Date())
 
+  // Modal / panel states for Category C features
+  const [isWorldClockPanelOpen, setIsWorldClockPanelOpen] = useState<boolean>(false)
+  const [isHolidayModalOpen, setIsHolidayModalOpen] = useState<boolean>(false)
+  const [isFixMyWeekOpen, setIsFixMyWeekOpen] = useState<boolean>(false)
+
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000)
     return () => clearInterval(timer)
@@ -33,6 +44,43 @@ export const CalendarView: React.FC = () => {
 
   const visibleCalendarIds = new Set(calendars.filter((c) => c.visible).map((c) => c.id))
   const filteredEvents = events.filter((e) => visibleCalendarIds.has(e.calendar_id))
+
+  // Compute view bounds
+  const currentViewRange = useMemo(() => {
+    if (calendarViewType === 'day') {
+      const start = new Date(selectedDate)
+      start.setHours(0, 0, 0, 0)
+      const end = new Date(selectedDate)
+      end.setHours(23, 59, 59, 999)
+      return { start, end }
+    }
+    if (calendarViewType === 'month') {
+      const monthStart = startOfMonth(selectedDate)
+      const monthEnd = endOfMonth(monthStart)
+      const start = startOfWeek(monthStart, { weekStartsOn: 1 })
+      const end = endOfWeek(monthEnd, { weekStartsOn: 1 })
+      return { start, end }
+    }
+    // Week or Agenda
+    const start = startOfWeek(selectedDate, { weekStartsOn: 1 })
+    const end = endOfWeek(selectedDate, { weekStartsOn: 1 })
+    return { start, end }
+  }, [selectedDate, calendarViewType])
+
+  // C1: Flexi-Recurrence expanded events in real time
+  const expandedEvents = useMemo(() => {
+    return expandRecurringEvents(filteredEvents, currentViewRange.start, currentViewRange.end)
+  }, [filteredEvents, currentViewRange])
+
+  // C2: Public holidays for current year
+  const publicHolidays = useMemo(() => {
+    const year = selectedDate.getFullYear()
+    return getHolidaysForYear(year, 'US')
+  }, [selectedDate])
+
+  const holidayConflicts = useMemo(() => {
+    return scanHolidayConflicts(events, 'US')
+  }, [events])
 
   const getCalendarColor = (calId: string): string => {
     const cal = calendars.find((c) => c.id === calId)
@@ -64,7 +112,10 @@ export const CalendarView: React.FC = () => {
 
   const handleEventClick = (event: CalendarEvent, e: React.MouseEvent): void => {
     e.stopPropagation()
-    setSelectedEvent(event)
+    // If it's an expanded occurrence, find original event
+    const origId = event.id.includes('_occ_') ? event.id.split('_occ_')[0] : event.id
+    const origEvent = events.find((ev) => ev.id === origId) || event
+    setSelectedEvent(origEvent)
     setIsEventModalOpen(true)
   }
 
@@ -108,6 +159,15 @@ export const CalendarView: React.FC = () => {
                 >
                   {format(day, 'd')}
                 </div>
+                {/* Holiday Badge (Feature C2) */}
+                {(() => {
+                  const hDay = publicHolidays.find((h) => isSameDay(new Date(`${h.date}T00:00:00`), day))
+                  return hDay ? (
+                    <div className="mt-0.5 px-1 py-0.2 rounded-xs bg-amber-500/10 text-amber-500 text-[8px] font-semibold truncate" title={hDay.name}>
+                      ★ {hDay.name}
+                    </div>
+                  ) : null
+                })()}
               </div>
             )
           })}
@@ -130,7 +190,7 @@ export const CalendarView: React.FC = () => {
 
             {/* Day columns */}
             {days.map((day) => {
-              const dayEvents = filteredEvents.filter((e) => isSameDay(new Date(e.start), day))
+              const dayEvents = expandedEvents.filter((e) => isSameDay(new Date(e.start), day))
               const today = isToday(day)
 
               return (
@@ -171,6 +231,12 @@ export const CalendarView: React.FC = () => {
                     const top = Math.max(0, (startHour - 7) * 56)
                     const height = Math.max(26, (endHour - startHour) * 56)
                     const calColor = getCalendarColor(evt.calendar_id)
+                    const isFocus = Boolean(
+                      evt.title?.toLowerCase().includes('focus') ||
+                      evt.description?.includes('[FOCUS_BLOCK]') ||
+                      evt.description?.includes('[SHIELD]')
+                    )
+                    const isRecur = Boolean(evt.rrule || evt.id.includes('_occ_'))
 
                     return (
                       <div
@@ -179,10 +245,12 @@ export const CalendarView: React.FC = () => {
                         style={{
                           top: `${top}px`,
                           height: `${height}px`,
-                          borderLeftColor: calColor
+                          borderLeftColor: isFocus ? 'var(--accent)' : calColor
                         }}
                         className={`absolute left-1 right-1 rounded-[var(--radius-sm)] p-1.5 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] border-l-[3px] text-[var(--text-primary)] cursor-pointer shadow-xs hover:shadow-md hover:border-[var(--border-strong)] transition-all z-10 overflow-hidden flex flex-col justify-between select-none ${
-                          evt.status === 'tentative'
+                          isFocus
+                            ? 'ring-1 ring-[var(--accent)]/30'
+                            : evt.status === 'tentative'
                             ? 'opacity-75 border-dashed'
                             : evt.status === 'cancelled'
                             ? 'line-through opacity-40'
@@ -191,6 +259,8 @@ export const CalendarView: React.FC = () => {
                       >
                         <div className="min-w-0">
                           <div className="text-[11px] font-semibold truncate flex items-center gap-1 leading-tight">
+                            {isFocus && <Shield className="w-2.5 h-2.5 shrink-0 text-[var(--accent)]" />}
+                            {isRecur && <Repeat className="w-2.5 h-2.5 shrink-0 text-[var(--text-muted)]" />}
                             {evt.meeting_url && <Video className="w-2.5 h-2.5 shrink-0 text-[var(--text-secondary)]" />}
                             <span className="truncate">{evt.title || '(Untitled Event)'}</span>
                           </div>
@@ -223,7 +293,7 @@ export const CalendarView: React.FC = () => {
   // ---------------- Render Day View ----------------
   const renderDayView = (): React.ReactElement => {
     const hours = Array.from({ length: 15 }, (_, i) => i + 7)
-    const dayEvents = filteredEvents.filter((e) => isSameDay(new Date(e.start), selectedDate))
+    const dayEvents = expandedEvents.filter((e) => isSameDay(new Date(e.start), selectedDate))
     const today = isToday(selectedDate)
 
     const currentHour = currentTime.getHours() + currentTime.getMinutes() / 60
@@ -298,6 +368,12 @@ export const CalendarView: React.FC = () => {
                 const top = Math.max(0, (startHour - 7) * 64)
                 const height = Math.max(38, (endHour - startHour) * 64)
                 const calColor = getCalendarColor(evt.calendar_id)
+                const isFocus = Boolean(
+                  evt.title?.toLowerCase().includes('focus') ||
+                  evt.description?.includes('[FOCUS_BLOCK]') ||
+                  evt.description?.includes('[SHIELD]')
+                )
+                const isRecur = Boolean(evt.rrule || evt.id.includes('_occ_'))
 
                 return (
                   <div
@@ -306,10 +382,12 @@ export const CalendarView: React.FC = () => {
                     style={{
                       top: `${top}px`,
                       height: `${height}px`,
-                      borderLeftColor: calColor
+                      borderLeftColor: isFocus ? 'var(--accent)' : calColor
                     }}
                     className={`absolute left-3 right-6 rounded-[var(--radius-md)] p-3 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] border-l-4 text-[var(--text-primary)] cursor-pointer shadow-xs hover:shadow-md hover:border-[var(--border-strong)] transition-all z-10 flex flex-col justify-between ${
-                      evt.status === 'tentative'
+                      isFocus
+                        ? 'ring-1 ring-[var(--accent)]/30'
+                        : evt.status === 'tentative'
                         ? 'opacity-75 border-dashed'
                         : evt.status === 'cancelled'
                         ? 'line-through opacity-40'
@@ -318,7 +396,11 @@ export const CalendarView: React.FC = () => {
                   >
                     <div>
                       <div className="font-semibold text-xs flex items-center justify-between">
-                        <span className="truncate">{evt.title || '(Untitled Event)'}</span>
+                        <div className="flex items-center gap-1.5 truncate">
+                          {isFocus && <Shield className="w-3.5 h-3.5 shrink-0 text-[var(--accent)]" />}
+                          {isRecur && <Repeat className="w-3.5 h-3.5 shrink-0 text-[var(--text-muted)]" />}
+                          <span className="truncate">{evt.title || '(Untitled Event)'}</span>
+                        </div>
                         {evt.priority === 'urgent' && (
                           <span className="text-[9px] uppercase font-mono tracking-wider px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-500 border border-rose-500/20 font-bold">
                             Urgent
@@ -367,9 +449,10 @@ export const CalendarView: React.FC = () => {
         </div>
         <div className="flex-1 grid grid-cols-7 grid-rows-5 overflow-y-auto">
           {days.map((day) => {
-            const dayEvents = filteredEvents.filter((e) => isSameDay(new Date(e.start), day))
+            const dayEvents = expandedEvents.filter((e) => isSameDay(new Date(e.start), day))
             const today = isToday(day)
             const isCurrentMonth = day.getMonth() === selectedDate.getMonth()
+            const hDay = publicHolidays.find((h) => isSameDay(new Date(`${h.date}T00:00:00`), day))
 
             return (
               <div
@@ -389,6 +472,12 @@ export const CalendarView: React.FC = () => {
                   >
                     {format(day, 'd')}
                   </span>
+
+                  {hDay && (
+                    <span className="text-[8px] font-bold text-amber-500 uppercase truncate max-w-[80px]" title={hDay.name}>
+                      ★ {hDay.name}
+                    </span>
+                  )}
                 </div>
                 <div className="space-y-1 overflow-y-auto flex-1">
                   {dayEvents.slice(0, 3).map((evt) => {
@@ -425,7 +514,7 @@ export const CalendarView: React.FC = () => {
 
   // ---------------- Render Agenda View ----------------
   const renderAgendaView = (): React.ReactElement => {
-    const sorted = [...filteredEvents].sort(
+    const sorted = [...expandedEvents].sort(
       (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
     )
 
@@ -478,6 +567,13 @@ export const CalendarView: React.FC = () => {
           ) : (
             sorted.map((evt) => {
               const calColor = getCalendarColor(evt.calendar_id)
+              const isFocus = Boolean(
+                evt.title?.toLowerCase().includes('focus') ||
+                evt.description?.includes('[FOCUS_BLOCK]') ||
+                evt.description?.includes('[SHIELD]')
+              )
+              const isRecur = Boolean(evt.rrule || evt.id.includes('_occ_'))
+
               return (
                 <div
                   key={evt.id}
@@ -487,10 +583,12 @@ export const CalendarView: React.FC = () => {
                   <div className="flex items-start gap-3 min-w-0">
                     <div
                       className="w-1 h-10 rounded-full shrink-0 mt-0.5"
-                      style={{ backgroundColor: calColor }}
+                      style={{ backgroundColor: isFocus ? 'var(--accent)' : calColor }}
                     />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
+                        {isFocus && <Shield className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />}
+                        {isRecur && <Repeat className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />}
                         <h3 className="text-xs font-semibold text-[var(--text-primary)] truncate">
                           {evt.title || '(Untitled Event)'}
                         </h3>
@@ -541,8 +639,80 @@ export const CalendarView: React.FC = () => {
     )
   }
 
-  if (calendarViewType === 'day') return renderDayView()
-  if (calendarViewType === 'month') return renderMonthView()
-  if (calendarViewType === 'agenda') return renderAgendaView()
-  return renderWeekView()
+  return (
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+      {/* Category C Power Toolbar */}
+      <div className="bg-[var(--bg-sidebar)] border-b border-[var(--border-subtle)] px-4 py-1.5 flex items-center justify-between gap-2 shrink-0 select-none text-xs">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setIsFixMyWeekOpen(true)}
+            className="px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] text-[var(--text-primary)] font-medium flex items-center gap-1.5 transition-colors shadow-xs"
+            title="Cluster fragmented meetings and recover deep work"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
+            <span>Fix My Week (C5)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsHolidayModalOpen(true)}
+            className={`px-2.5 py-1 rounded-[var(--radius-sm)] border font-medium flex items-center gap-1.5 transition-colors ${
+              holidayConflicts.length > 0
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                : 'bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
+            }`}
+            title="Scan & shift appointments colliding with public holidays"
+          >
+            <CalendarOff className="w-3.5 h-3.5" />
+            <span>Holiday Reschedule (C2)</span>
+            {holidayConflicts.length > 0 && (
+              <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-amber-500 text-black">
+                {holidayConflicts.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsWorldClockPanelOpen(true)}
+            className="px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium flex items-center gap-1.5 transition-colors"
+            title="Open live ticking multi-city clock drawer"
+          >
+            <Globe className="w-3.5 h-3.5 text-[var(--accent)]" />
+            <span>World Clock Panel (C3)</span>
+          </button>
+        </div>
+
+        <span className="text-[10px] font-mono text-[var(--text-muted)] hidden md:inline">
+          {expandedEvents.length} events active in view
+        </span>
+      </div>
+
+      {/* Focus Block Protector Bar (C4) */}
+      <FocusBlockProtector />
+
+      {/* Main Calendar View Body */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+        {calendarViewType === 'day' && renderDayView()}
+        {calendarViewType === 'month' && renderMonthView()}
+        {calendarViewType === 'agenda' && renderAgendaView()}
+        {calendarViewType === 'week' && renderWeekView()}
+      </div>
+
+      {/* Interactive Panels & Modals */}
+      <WorldClockPanel
+        isOpen={isWorldClockPanelOpen}
+        onClose={() => setIsWorldClockPanelOpen(false)}
+      />
+      <HolidayRescheduleModal
+        isOpen={isHolidayModalOpen}
+        onClose={() => setIsHolidayModalOpen(false)}
+      />
+      <FixMyWeekModal
+        isOpen={isFixMyWeekOpen}
+        onClose={() => setIsFixMyWeekOpen(false)}
+      />
+    </div>
+  )
 }

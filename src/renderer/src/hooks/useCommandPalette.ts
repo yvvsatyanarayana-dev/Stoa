@@ -322,9 +322,56 @@ function createDefaultCommands(
       },
     },
     {
+      id: 'action:fix-my-week',
+      title: 'Fix My Week Optimizer',
+      description: 'Cluster meetings and recover uninterrupted focus blocks',
+      category: 'actions',
+      keywords: ['fix', 'week', 'optimizer', 'cluster', 'focus', 'defrag', 'ai'],
+      action: () => {
+        setCurrentView('calendar');
+      },
+    },
+    {
+      id: 'action:holiday-reschedule',
+      title: 'Holiday-Aware Auto-Reschedule',
+      description: 'Scan and shift appointments colliding with public holidays',
+      category: 'actions',
+      keywords: ['holiday', 'reschedule', 'shift', 'bank', 'vacation'],
+      action: () => {
+        setCurrentView('calendar');
+      },
+    },
+    {
+      id: 'action:focus-shield',
+      title: 'Shield 2h Focus Block',
+      description: 'Block out and protect a 2-hour deep work window today',
+      category: 'actions',
+      keywords: ['focus', 'shield', 'block', 'deep', 'work', 'protect'],
+      action: () => {
+        const now = new Date();
+        const start = new Date(now);
+        start.setMinutes(start.getMinutes() >= 30 ? 60 : 30, 0, 0);
+        const end = new Date(start.getTime() + 2 * 3600000);
+        appStore.createEvent({
+          id: `evt-${Date.now()}`,
+          calendar_id: appStore.calendars[0]?.id || 'cal-primary',
+          title: 'Deep Focus Block (Protected 2h)',
+          description: '[FOCUS_BLOCK] [SHIELD: strict]\nProtected uninterrupted deep work window.',
+          start: start.toISOString(),
+          end: end.toISOString(),
+          all_day: false,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+          priority: 'high',
+          status: 'confirmed',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      },
+    },
+    {
       id: 'action:quick-capture',
-      title: 'Quick Capture',
-      description: 'Quickly capture an idea or note',
+      title: 'Quick Capture Schedule',
+      description: 'Quickly schedule an event note',
       category: 'actions',
       keywords: ['quick', 'capture', 'note', 'idea', 'inbox'],
       shortcut: '⌘⇧C',
