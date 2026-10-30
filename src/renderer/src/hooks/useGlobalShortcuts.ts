@@ -34,7 +34,11 @@ export function useGlobalShortcuts(): void {
     setIsWorldClockOpen,
     isFeedSubscriptionModalOpen,
     setIsFeedSubscriptionModalOpen,
-    isExportHubOpen
+    isExportHubOpen,
+    isDailyDigestOpen,
+    setIsDailyDigestOpen,
+    preMeetingBriefingEvent,
+    setPreMeetingBriefingEvent
   } = useAppStore()
 
   useEffect(() => {
@@ -49,6 +53,14 @@ export function useGlobalShortcuts(): void {
 
       // Escape key handles closing modals in priority order
       if (e.key === 'Escape') {
+        if (preMeetingBriefingEvent) {
+          setPreMeetingBriefingEvent(null)
+          return
+        }
+        if (isDailyDigestOpen) {
+          setIsDailyDigestOpen(false)
+          return
+        }
         if (isPresentationModeOpen) {
           setIsPresentationModeOpen(false)
           return

@@ -112,6 +112,15 @@ interface AppState {
   isCommandPaletteOpen: boolean
   setIsCommandPaletteOpen: (open: boolean) => void
 
+  isDailyDigestOpen: boolean
+  setIsDailyDigestOpen: (open: boolean) => void
+
+  preMeetingBriefingEvent: CalendarEvent | null
+  setPreMeetingBriefingEvent: (event: CalendarEvent | null) => void
+
+  rescheduleEvent: (eventId: string, minutesToAdd: number) => Promise<void>
+  moveEventToTomorrow: (eventId: string) => Promise<void>
+
   themeMode: 'dark' | 'light'
   setThemeMode: (mode: 'dark' | 'light') => void
   toggleThemeMode: () => void
@@ -247,6 +256,12 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   isCommandPaletteOpen: false,
   setIsCommandPaletteOpen: (isCommandPaletteOpen) => set({ isCommandPaletteOpen }),
+
+  isDailyDigestOpen: false,
+  setIsDailyDigestOpen: (isDailyDigestOpen) => set({ isDailyDigestOpen }),
+
+  preMeetingBriefingEvent: null,
+  setPreMeetingBriefingEvent: (preMeetingBriefingEvent) => set({ preMeetingBriefingEvent }),
 
   themeMode: 'dark',
   setThemeMode: (mode) => {
@@ -408,6 +423,48 @@ export const useAppStore = create<AppState>((set, get) => ({
       await get().fetchEvents()
     } catch (err) {
       console.error('Error deleting event:', err)
+    }
+  },
+
+  rescheduleEvent: async (eventId: string, minutesToAdd: number) => {
+    try {
+      const evt = get().events.find((e) => e.id === eventId)
+      if (!evt) return
+      const s = new Date(evt.start)
+      const e = new Date(evt.end)
+      const newStart = new Date(s.getTime() + minutesToAdd * 60000).toISOString()
+      const newEnd = new Date(e.getTime() + minutesToAdd * 60000).toISOString()
+
+      const updated: CalendarEvent = {
+        ...evt,
+        start: newStart,
+        end: newEnd,
+        updated_at: new Date().toISOString()
+      }
+      await get().updateEvent(updated)
+    } catch (err) {
+      console.error('Error rescheduling event:', err)
+    }
+  },
+
+  moveEventToTomorrow: async (eventId: string) => {
+    try {
+      const evt = get().events.find((e) => e.id === eventId)
+      if (!evt) return
+      const s = new Date(evt.start)
+      const e = new Date(evt.end)
+      const newStart = new Date(s.getTime() + 24 * 3600000).toISOString()
+      const newEnd = new Date(e.getTime() + 24 * 3600000).toISOString()
+
+      const updated: CalendarEvent = {
+        ...evt,
+        start: newStart,
+        end: newEnd,
+        updated_at: new Date().toISOString()
+      }
+      await get().updateEvent(updated)
+    } catch (err) {
+      console.error('Error moving event to tomorrow:', err)
     }
   },
 

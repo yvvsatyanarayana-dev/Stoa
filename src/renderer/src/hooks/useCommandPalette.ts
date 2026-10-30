@@ -639,6 +639,46 @@ function createDefaultCommands(
       },
     },
 
+    // Category G Actions (Advanced Notifications)
+    {
+      id: 'action:daily-digest',
+      title: 'Daily Morning Digest',
+      description: 'Review day preparation summary, focus ratio, and today\'s schedule run-down',
+      category: 'actions',
+      keywords: ['daily', 'digest', 'morning', 'brief', 'summary', 'today', 'prep'],
+      action: () => {
+        appStore.setIsDailyDigestOpen(true);
+      },
+    },
+    {
+      id: 'action:pre-meeting-briefing',
+      title: 'Pre-Meeting Executive Briefing',
+      description: 'Open immediate briefing with attendees, agenda notes, and video call launcher',
+      category: 'actions',
+      keywords: ['briefing', 'pre-meeting', 'prep', 'meeting', 'agenda', 'call'],
+      action: () => {
+        const nowTs = Date.now();
+        const nextEvt = appStore.events
+          .filter((e) => e.status !== 'cancelled' && new Date(e.start).getTime() >= nowTs - 30 * 60000)
+          .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())[0];
+        if (nextEvt) {
+          appStore.setPreMeetingBriefingEvent(nextEvt);
+        } else if (appStore.events.length > 0) {
+          appStore.setPreMeetingBriefingEvent(appStore.events[0]);
+        }
+      },
+    },
+    {
+      id: 'action:sound-themes',
+      title: 'Custom Sound Themes & Audio Cues',
+      description: 'Configure corporate chime, gentle marimba, urgent pulse, or zen sound synthesizer',
+      category: 'actions',
+      keywords: ['sound', 'audio', 'chime', 'marimba', 'themes', 'synthesizer', 'notifications', 'cues'],
+      action: () => {
+        appStore.setCurrentView('notifications');
+      },
+    },
+
     // Command Commands
     {
       id: 'cmd:toggle-theme',

@@ -24,6 +24,10 @@ import { ConflictPredictorPanel } from './components/ai/ConflictPredictorPanel'
 import { NaturalLanguageQuickAdd } from './components/ai/NaturalLanguageQuickAdd'
 import { PresentationModeView } from './components/presentation/PresentationModeView'
 import { KeyboardShortcutsModal } from './components/modals/KeyboardShortcutsModal'
+import { PreMeetingBriefingModal } from './components/notifications/PreMeetingBriefingModal'
+import { DailyDigestModal } from './components/notifications/DailyDigestModal'
+import { LiveNotificationToast } from './components/notifications/LiveNotificationToast'
+import { soundService } from './services/soundService'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts'
 import { useAppStore, AppView } from './store/useAppStore'
@@ -35,6 +39,9 @@ export const App: React.FC = () => {
     setIsPresentationModeOpen,
     fetchInitialData,
     fetchNotifications,
+    events,
+    preMeetingBriefingEvent,
+    setPreMeetingBriefingEvent,
     isLoading
   } = useAppStore()
 
@@ -66,6 +73,33 @@ export const App: React.FC = () => {
       if (unsubscribe) unsubscribe()
     }
   }, [])
+
+  // G2: Background pre-meeting scanner (checks for meetings starting in <= 5 minutes)
+  useEffect(() => {
+    const checkUpcomingMeetings = () => {
+      const now = Date.now()
+      const fiveMinsMs = 5 * 60 * 1000
+
+      const upcomingSoon = events.find((evt) => {
+        if (evt.status === 'cancelled') return false
+        const startTs = new Date(evt.start).getTime()
+        const diff = startTs - now
+        return diff > 0 && diff <= fiveMinsMs
+      })
+
+      if (upcomingSoon && !preMeetingBriefingEvent) {
+        const lastBriefingKey = `briefing_shown_${upcomingSoon.id}`
+        if (!sessionStorage.getItem(lastBriefingKey)) {
+          sessionStorage.setItem(lastBriefingKey, 'true')
+          setPreMeetingBriefingEvent(upcomingSoon)
+          soundService.play()
+        }
+      }
+    }
+
+    const interval = setInterval(checkUpcomingMeetings, 20000)
+    return () => clearInterval(interval)
+  }, [events, preMeetingBriefingEvent, setPreMeetingBriefingEvent])
 
   return (
     <ErrorBoundary>
@@ -127,6 +161,11 @@ export const App: React.FC = () => {
         {/* Category F: Distraction-Free Presentation Mode & Shortcuts Modal */}
         <PresentationModeView />
         <KeyboardShortcutsModal />
+
+        {/* Category G: Advanced Notifications Suite */}
+        <PreMeetingBriefingModal />
+        <DailyDigestModal />
+        <LiveNotificationToast />
       </div>
     </ErrorBoundary>
   )

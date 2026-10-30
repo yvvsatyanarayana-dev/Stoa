@@ -1,12 +1,10 @@
 import React from 'react'
 import { useAppStore } from '../../store/useAppStore'
-import { Bell, Clock, Trash2, CheckCircle2 } from 'lucide-react'
-import { format } from 'date-fns'
+import { Bell, Trash2, Sun } from 'lucide-react'
+import { NotificationGrouping } from './NotificationGrouping'
 
 export const NotificationsView: React.FC = () => {
-  const { notificationLogs, events, snoozeReminder, dismissReminder, fetchNotifications } = useAppStore()
-
-  const eventsWithReminders = events.filter((e) => e.reminders && e.reminders.length > 0)
+  const { notificationLogs, fetchNotifications, setIsDailyDigestOpen } = useAppStore()
 
   const handleClearHistory = async (): Promise<void> => {
     await window.api.notifications.clear()
@@ -21,109 +19,39 @@ export const NotificationsView: React.FC = () => {
           <div>
             <h2 className="text-sm font-semibold tracking-tight text-[var(--text-primary)] flex items-center gap-2">
               <Bell className="w-4 h-4 text-[var(--text-primary)]" />
-              <span>Notification & Reminder Center</span>
+              <span>Notification & Reminder Intelligence</span>
             </h2>
             <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
-              Active reminders, snooze controls, and background scheduler logs.
+              Smart grouped reminders, pre-meeting briefings, custom audio cues, and instant reschedule.
             </p>
           </div>
 
-          {notificationLogs.length > 0 && (
+          <div className="flex items-center gap-2">
+            {/* Daily Digest Modal Launcher */}
             <button
-              onClick={handleClearHistory}
-              className="btn-secondary flex items-center gap-1.5 py-1 px-2.5 text-xs font-medium"
+              onClick={() => setIsDailyDigestOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-[var(--radius-md)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors shadow-xs"
+              title="Open Today's Morning Executive Digest"
             >
-              <Trash2 className="w-3 h-3" />
-              <span>Clear Log</span>
+              <Sun className="w-3.5 h-3.5 text-amber-400" />
+              <span>Daily Digest</span>
             </button>
-          )}
+
+            {notificationLogs.length > 0 && (
+              <button
+                onClick={handleClearHistory}
+                className="btn-secondary flex items-center gap-1.5 py-1 px-2.5 text-xs font-medium"
+                title="Clear notification audit log"
+              >
+                <Trash2 className="w-3 h-3" />
+                <span>Clear History</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Scheduled Reminders */}
-        <div className="card p-4 space-y-3 shadow-xs">
-          <h3 className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
-            <span>Active Event Reminders</span>
-          </h3>
-
-          {eventsWithReminders.length === 0 ? (
-            <div className="text-center py-6 text-[var(--text-muted)] text-xs">
-              No active event reminders set. Reminders trigger automatically based on event offsets.
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {eventsWithReminders.map((evt) => {
-                const rem = evt.reminders![0]
-                const start = new Date(evt.start)
-
-                return (
-                  <div
-                    key={evt.id}
-                    className="p-3 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] flex items-center justify-between gap-4"
-                  >
-                    <div>
-                      <div className="text-xs font-semibold text-[var(--text-primary)]">{evt.title}</div>
-                      <div className="text-[10px] text-[var(--text-muted)] font-mono mt-0.5">
-                        Scheduled: {format(start, 'PPp')} • Alerts {rem.offset_minutes}m prior
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => snoozeReminder(rem.id, 10)}
-                        className="btn-secondary text-[10px] font-mono py-1 px-2.5"
-                      >
-                        Snooze 10m
-                      </button>
-                      <button
-                        onClick={() => dismissReminder(rem.id)}
-                        className="btn-primary text-[10px] py-1 px-2.5"
-                      >
-                        Dismiss
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Historical Notification Log */}
-        <div className="card p-4 space-y-3 shadow-xs">
-          <h3 className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-2">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Dispatched Alert History</span>
-          </h3>
-
-          {notificationLogs.length === 0 ? (
-            <div className="text-center py-8 text-[var(--text-muted)] text-xs">
-              No past notifications recorded. Alerts will appear here when fired.
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {notificationLogs.map((log) => (
-                <div
-                  key={log.id}
-                  className="p-3 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-subtle)] flex items-center justify-between"
-                >
-                  <div className="space-y-0.5">
-                    <div className="text-xs font-semibold text-[var(--text-primary)]">{log.title}</div>
-                    <div className="text-[11px] text-[var(--text-secondary)]">{log.body}</div>
-                    <div className="text-[9px] text-[var(--text-muted)] font-mono mt-1">
-                      {format(new Date(log.shown_at), 'yyyy-MM-dd HH:mm:ss')}
-                    </div>
-                  </div>
-                  {log.action_taken && (
-                    <span className="text-[9px] font-mono uppercase px-2 py-0.5 rounded bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--text-muted)]">
-                      {log.action_taken}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Smart Grouping & Sound Synthesizer Engine */}
+        <NotificationGrouping />
       </div>
     </div>
   )
