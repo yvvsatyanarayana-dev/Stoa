@@ -140,7 +140,7 @@ export const ThemeStudio: React.FC = () => {
   const customThemesList = themes.filter(t => t.id.startsWith('custom-'))
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-[var(--bg-app)] text-[var(--text-primary)] transition-colors">
+    <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-[var(--bg-app)] text-[var(--text-primary)] transition-colors w-full">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border-subtle)]">
         <div>
@@ -245,7 +245,7 @@ export const ThemeStudio: React.FC = () => {
             </div>
 
             {/* Presets Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
               {presetsList.map((preset) => {
                 const isActive = activeThemeId === preset.id
                 const isPreview = previewThemeId === preset.id
@@ -326,7 +326,7 @@ export const ThemeStudio: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
                   {customThemesList.map(theme => {
                     const isActive = activeThemeId === theme.id
                     const isPreview = previewThemeId === theme.id

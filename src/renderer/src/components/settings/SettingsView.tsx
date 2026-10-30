@@ -145,7 +145,7 @@ export const SettingsView: React.FC = () => {
 
       {/* TAB 1: GENERAL */}
       {activeTab === 'general' && (
-        <form onSubmit={handleSave} className="max-w-2xl mx-auto space-y-5">
+        <form onSubmit={handleSave} className="w-full space-y-5">
           <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
             <div>
               <h2 className="text-sm font-semibold tracking-tight text-[var(--text-primary)] flex items-center gap-2">
@@ -173,111 +173,113 @@ export const SettingsView: React.FC = () => {
             </div>
           )}
 
-          {/* Theme & Appearance */}
-          <div className="card p-4 space-y-3 shadow-xs">
-            <h3 className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
-              Theme Mode
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => handleThemeChange('dark')}
-                className={`p-3 rounded-[var(--radius-sm)] border text-left flex items-center justify-between transition-colors ${
-                  formState.theme === 'dark'
-                    ? 'border-[var(--accent)] bg-[var(--bg-subtle)]'
-                    : 'border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]'
-                }`}
-              >
-                <div>
-                  <div className="text-xs font-semibold text-[var(--text-primary)]">Dark Mode</div>
-                  <div className="text-[10px] text-[var(--text-muted)]">OLED-grade high contrast</div>
-                </div>
-                <div className="w-3 h-3 rounded-full bg-neutral-900 border border-neutral-700" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleThemeChange('light')}
-                className={`p-3 rounded-[var(--radius-sm)] border text-left flex items-center justify-between transition-colors ${
-                  formState.theme === 'light'
-                    ? 'border-[var(--accent)] bg-[var(--bg-subtle)]'
-                    : 'border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]'
-                }`}
-              >
-                <div>
-                  <div className="text-xs font-semibold text-[var(--text-primary)]">Light Mode</div>
-                  <div className="text-[10px] text-[var(--text-muted)]">Pure crisp high-key contrast</div>
-                </div>
-                <div className="w-3 h-3 rounded-full bg-neutral-100 border border-neutral-300" />
-              </button>
-            </div>
-          </div>
-
-          {/* Regional Standards */}
-          <div className="card p-4 space-y-3 shadow-xs">
-            <h3 className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
-              Regional & Time Standards
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider block mb-1">
-                  Start Day of Week
-                </label>
-                <select
-                  value={formState.start_day_of_week}
-                  onChange={(e) => setFormState({ ...formState, start_day_of_week: Number(e.target.value) })}
-                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-hidden"
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* Theme & Appearance */}
+            <div className="card p-4 space-y-3 shadow-xs">
+              <h3 className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
+                Theme Mode
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleThemeChange('dark')}
+                  className={`p-3 rounded-[var(--radius-sm)] border text-left flex items-center justify-between transition-colors ${
+                    formState.theme === 'dark'
+                      ? 'border-[var(--accent)] bg-[var(--bg-subtle)]'
+                      : 'border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]'
+                  }`}
                 >
-                  <option value={1}>Monday (ISO Standard)</option>
-                  <option value={0}>Sunday (US / Standard)</option>
-                  <option value={6}>Saturday</option>
-                </select>
-              </div>
+                  <div>
+                    <div className="text-xs font-semibold text-[var(--text-primary)]">Dark Mode</div>
+                    <div className="text-[10px] text-[var(--text-muted)]">OLED-grade high contrast</div>
+                  </div>
+                  <div className="w-3 h-3 rounded-full bg-neutral-900 border border-neutral-700" />
+                </button>
 
-              <div>
-                <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider block mb-1">
-                  Time Display Format
-                </label>
-                <select
-                  value={formState.time_format}
-                  onChange={(e) => setFormState({ ...formState, time_format: e.target.value as '12h' | '24h' })}
-                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-hidden"
+                <button
+                  type="button"
+                  onClick={() => handleThemeChange('light')}
+                  className={`p-3 rounded-[var(--radius-sm)] border text-left flex items-center justify-between transition-colors ${
+                    formState.theme === 'light'
+                      ? 'border-[var(--accent)] bg-[var(--bg-subtle)]'
+                      : 'border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]'
+                  }`}
                 >
-                  <option value="24h">24-Hour (14:30)</option>
-                  <option value="12h">12-Hour (2:30 PM)</option>
-                </select>
+                  <div>
+                    <div className="text-xs font-semibold text-[var(--text-primary)]">Light Mode</div>
+                    <div className="text-[10px] text-[var(--text-muted)]">Pure crisp high-key contrast</div>
+                  </div>
+                  <div className="w-3 h-3 rounded-full bg-neutral-100 border border-neutral-300" />
+                </button>
               </div>
             </div>
-          </div>
 
-          {/* Export & Document Branding */}
-          <div className="card p-4 space-y-3 shadow-xs">
-            <h3 className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
-              Export & Document Header Branding
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider block mb-1">
-                  Organization / Author Header
-                </label>
-                <input
-                  type="text"
-                  value={formState.company_name}
-                  onChange={(e) => setFormState({ ...formState, company_name: e.target.value })}
-                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-hidden"
-                />
+            {/* Regional Standards */}
+            <div className="card p-4 space-y-3 shadow-xs">
+              <h3 className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
+                Regional & Time Standards
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider block mb-1">
+                    Start Day of Week
+                  </label>
+                  <select
+                    value={formState.start_day_of_week}
+                    onChange={(e) => setFormState({ ...formState, start_day_of_week: Number(e.target.value) })}
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-hidden"
+                  >
+                    <option value={1}>Monday (ISO Standard)</option>
+                    <option value={0}>Sunday (US / Standard)</option>
+                    <option value={6}>Saturday</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider block mb-1">
+                    Time Display Format
+                  </label>
+                  <select
+                    value={formState.time_format}
+                    onChange={(e) => setFormState({ ...formState, time_format: e.target.value as '12h' | '24h' })}
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-hidden"
+                  >
+                    <option value="24h">24-Hour (14:30)</option>
+                    <option value="12h">12-Hour (2:30 PM)</option>
+                  </select>
+                </div>
               </div>
+            </div>
 
-              <div>
-                <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider block mb-1">
-                  Footer Notice
-                </label>
-                <input
-                  type="text"
-                  value={formState.company_footer}
-                  onChange={(e) => setFormState({ ...formState, company_footer: e.target.value })}
-                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-hidden"
-                />
+            {/* Export & Document Branding */}
+            <div className="card p-4 space-y-3 shadow-xs">
+              <h3 className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
+                Export & Document Header Branding
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider block mb-1">
+                    Organization / Author Header
+                  </label>
+                  <input
+                    type="text"
+                    value={formState.company_name}
+                    onChange={(e) => setFormState({ ...formState, company_name: e.target.value })}
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider block mb-1">
+                    Footer Notice
+                  </label>
+                  <input
+                    type="text"
+                    value={formState.company_footer}
+                    onChange={(e) => setFormState({ ...formState, company_footer: e.target.value })}
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-hidden"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -286,7 +288,7 @@ export const SettingsView: React.FC = () => {
 
       {/* TAB: SECURITY & PIN LOCK */}
       {activeTab === 'security' && (
-        <div className="max-w-xl mx-auto space-y-5">
+        <div className="w-full space-y-5">
           <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
             <div>
               <h2 className="text-sm font-semibold tracking-tight text-[var(--text-primary)] flex items-center gap-2">
@@ -307,7 +309,7 @@ export const SettingsView: React.FC = () => {
             </button>
           </div>
 
-          <div className="card p-5 space-y-4 shadow-xs">
+          <div className="card p-5 space-y-4 shadow-xs w-full max-w-2xl">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
               <div>
                 <div className="text-xs font-bold text-[var(--text-primary)]">Enable Workspace PIN Protection</div>
@@ -377,7 +379,7 @@ export const SettingsView: React.FC = () => {
 
       {/* TAB: DATA PORTABILITY */}
       {activeTab === 'portability' && (
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full">
           <DataPortabilityTab />
         </div>
       )}

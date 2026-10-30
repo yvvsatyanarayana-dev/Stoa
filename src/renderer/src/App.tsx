@@ -138,42 +138,14 @@ export const App: React.FC = () => {
                   {currentView === 'dashboard' && <DashboardView />}
                   {currentView === 'notifications' && <NotificationsView />}
                   {currentView === 'profiles' && (
-                    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 text-[var(--text-primary)]">
-                      <div className="max-w-5xl mx-auto space-y-6">
-                        <div className="border-b border-[var(--border-subtle)] pb-4">
-                          <h1 className="text-base font-bold text-[var(--text-primary)]">Workspace Profiles</h1>
-                          <p className="text-xs text-[var(--text-muted)] mt-1">
-                            Switch between isolated institutional environments or configure custom operating domains.
-                          </p>
-                        </div>
-                        <WorkspaceProfilesManager />
-                      </div>
+                    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 text-[var(--text-primary)] w-full">
+                      <WorkspaceProfilesManager />
                     </div>
                   )}
-                  {currentView === 'theme-studio' && (
-                    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 text-[var(--text-primary)]">
-                      <div className="max-w-5xl mx-auto space-y-6">
-                        <div className="border-b border-[var(--border-subtle)] pb-4">
-                          <h1 className="text-base font-bold text-[var(--text-primary)]">Theme Studio</h1>
-                          <p className="text-xs text-[var(--text-muted)] mt-1">
-                            Customize circadian timing, seasonal palettes, and visual appearance.
-                          </p>
-                        </div>
-                        <ThemeStudio />
-                      </div>
-                    </div>
-                  )}
+                  {currentView === 'theme-studio' && <ThemeStudio />}
                   {currentView === 'audit-log' && (
-                    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 text-[var(--text-primary)]">
-                      <div className="max-w-5xl mx-auto space-y-6">
-                        <div className="border-b border-[var(--border-subtle)] pb-4">
-                          <h1 className="text-base font-bold text-[var(--text-primary)]">Security & Audit Log</h1>
-                          <p className="text-xs text-[var(--text-muted)] mt-1">
-                            Immutable ledger of system events with rollback capabilities and security tracking.
-                          </p>
-                        </div>
-                        <AuditLogViewer />
-                      </div>
+                    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 text-[var(--text-primary)] w-full">
+                      <AuditLogViewer />
                     </div>
                   )}
                   {currentView === 'settings' && <SettingsView />}

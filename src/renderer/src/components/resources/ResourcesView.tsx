@@ -190,7 +190,7 @@ export const ResourcesView: React.FC = () => {
 
       {/* Main Sub-view Content Body */}
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-5xl w-full mx-auto">
+        <div className="w-full">
           {/* TAB 1: DIRECTORY */}
           {activeTab === 'directory' && (
             <div className="space-y-4">

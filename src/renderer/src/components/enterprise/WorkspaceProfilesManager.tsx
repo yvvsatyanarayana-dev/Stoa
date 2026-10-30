@@ -157,9 +157,9 @@ export const WorkspaceProfilesManager: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       {/* Active Profile Banner */}
-      <div className="card p-5 border-l-4 shadow-xs" style={{ borderLeftColor: activeProfile.color }}>
+      <div className="card p-5 border-l-4 shadow-xs w-full" style={{ borderLeftColor: activeProfile.color }}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div
@@ -191,7 +191,7 @@ export const WorkspaceProfilesManager: React.FC = () => {
       </div>
 
       {/* Profiles Selection Grid */}
-      <div className="space-y-3">
+      <div className="space-y-3 w-full">
         <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
           <div>
             <h3 className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
@@ -222,7 +222,7 @@ export const WorkspaceProfilesManager: React.FC = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {profiles.map((prof) => {
             const isSelected = prof.id === activeProfile.id
 

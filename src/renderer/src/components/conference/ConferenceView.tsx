@@ -409,7 +409,7 @@ export const ConferenceView: React.FC = () => {
         </div>
       ) : (
         /* Live Run-Sheet Cue Mode */
-        <div className="flex-1 overflow-y-auto p-6 max-w-4xl mx-auto w-full space-y-4">
+        <div className="flex-1 overflow-y-auto p-6 w-full space-y-4">
           <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
             <div>
               <h3 className="text-sm font-semibold text-[var(--text-primary)] tracking-tight">

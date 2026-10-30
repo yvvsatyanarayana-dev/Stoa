@@ -95,8 +95,8 @@ export const DashboardView: React.FC = () => {
   const personResources = resources.filter((r) => r.type === 'person')
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 space-y-5 text-[var(--text-primary)]">
-      <div className="max-w-5xl mx-auto space-y-5">
+    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 space-y-5 text-[var(--text-primary)] w-full">
+      <div className="w-full space-y-5">
         {/* Top Segmented Tab Switcher */}
         <div className="flex items-center justify-between pb-1 border-b border-[var(--border-subtle)]">
           <div className="flex items-center gap-2">

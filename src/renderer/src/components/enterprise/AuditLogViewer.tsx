@@ -133,9 +133,9 @@ export const AuditLogViewer: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="w-full space-y-4">
       {/* Header and Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border-subtle)]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border-subtle)] w-full">
         <div>
           <h3 className="text-sm font-semibold tracking-tight text-[var(--text-primary)] flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-[var(--accent)]" />
