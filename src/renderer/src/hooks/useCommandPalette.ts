@@ -211,11 +211,20 @@ function createDefaultCommands(
     },
     {
       id: 'nav:dashboard-view',
-      title: 'Dashboard',
-      description: 'Open dashboard overview',
+      title: 'Dashboard Overview',
+      description: 'Open operational dashboard and timeline',
       category: 'navigation',
       keywords: ['dashboard', 'overview', 'home', 'summary'],
       shortcut: '6',
+      action: () => setCurrentView('dashboard'),
+    },
+    {
+      id: 'nav:analytics-view',
+      title: 'Analytics & Insights',
+      description: 'Open Time-Use Heatmap, Health Score & Team Bottlenecks',
+      category: 'navigation',
+      keywords: ['analytics', 'insights', 'heatmap', 'health', 'bottlenecks', 'reports', 'metrics'],
+      shortcut: '7',
       action: () => setCurrentView('dashboard'),
     },
     {
