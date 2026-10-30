@@ -164,8 +164,9 @@ export const CalendarView: React.FC = () => {
                 {(() => {
                   const hDay = publicHolidays.find((h) => isSameDay(new Date(`${h.date}T00:00:00`), day))
                   return hDay ? (
-                    <div className="mt-0.5 px-1 py-0.2 rounded-xs bg-amber-500/10 text-amber-500 text-[8px] font-semibold truncate" title={hDay.name}>
-                      ★ {hDay.name}
+                    <div className="mt-0.5 px-1 py-0.2 rounded-xs bg-amber-500/10 text-amber-500 text-[8px] font-semibold truncate flex items-center gap-0.5" title={hDay.name}>
+                      <Sparkles className="w-2.5 h-2.5 shrink-0" />
+                      <span className="truncate">{hDay.name}</span>
                     </div>
                   ) : null
                 })()}
@@ -475,8 +476,9 @@ export const CalendarView: React.FC = () => {
                   </span>
 
                   {hDay && (
-                    <span className="text-[8px] font-bold text-amber-500 uppercase truncate max-w-[80px]" title={hDay.name}>
-                      ★ {hDay.name}
+                    <span className="text-[8px] font-bold text-amber-500 uppercase truncate max-w-[80px] flex items-center gap-0.5" title={hDay.name}>
+                      <Sparkles className="w-2.5 h-2.5 shrink-0" />
+                      <span className="truncate">{hDay.name}</span>
                     </span>
                   )}
                 </div>

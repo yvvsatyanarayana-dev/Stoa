@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useAppStore } from '../../store/useAppStore'
 import { CalendarEvent } from '../../../../types'
 import { parseNaturalLanguage, ParsedEvent } from '../../utils/nlpParser'
-import { Sparkles, X, Calendar, Clock, MapPin, RotateCcw, Plus, ChevronRight } from 'lucide-react'
+import { Sparkles, X, Calendar, Clock, MapPin, RotateCcw, Plus, ChevronRight, AlertTriangle } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 
 const PLACEHOLDER_EXAMPLES = [
@@ -293,7 +293,10 @@ export const NaturalLanguageQuickAdd: React.FC = () => {
               {parsed.ambiguities.length > 0 && (
                 <div className="pt-2 border-t border-[var(--border-subtle)] space-y-0.5">
                   {parsed.ambiguities.map((amb, i) => (
-                    <p key={i} className="text-[10px] text-[var(--text-muted)]">⚠ {amb}</p>
+                    <p key={i} className="text-[10px] text-[var(--text-muted)] flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />
+                      <span>{amb}</span>
+                    </p>
                   ))}
                 </div>
               )}

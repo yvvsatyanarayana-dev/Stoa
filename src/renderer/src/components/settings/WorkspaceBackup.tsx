@@ -14,7 +14,8 @@ import {
   Loader2,
   Settings,
   Link as LinkIcon,
-  Plus
+  Plus,
+  X
 } from 'lucide-react'
 
 export const WorkspaceBackup: React.FC = () => {
@@ -316,7 +317,9 @@ export const WorkspaceBackup: React.FC = () => {
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{error}</span>
           </div>
-          <button onClick={() => setError(null)} className="text-red-500 hover:opacity-75">✕</button>
+          <button onClick={() => setError(null)} className="text-red-500 hover:opacity-75">
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
       {success && (
@@ -325,7 +328,9 @@ export const WorkspaceBackup: React.FC = () => {
             <CheckCircle className="w-4 h-4 flex-shrink-0" />
             <span>{success}</span>
           </div>
-          <button onClick={() => setSuccess(null)} className="text-emerald-500 hover:opacity-75">✕</button>
+          <button onClick={() => setSuccess(null)} className="text-emerald-500 hover:opacity-75">
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 

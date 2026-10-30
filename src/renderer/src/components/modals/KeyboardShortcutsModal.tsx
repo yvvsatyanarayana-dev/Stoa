@@ -77,7 +77,7 @@ export const KeyboardShortcutsModal: React.FC = () => {
                 Keyboard Shortcuts
               </h2>
               <p className="text-[11px] text-[var(--text-muted)]">
-                Every tool and view in ChronoDesk Pro is accessible via hotkey.
+                Every tool and view in ChronoDesk is accessible via hotkey.
               </p>
             </div>
           </div>

@@ -70,7 +70,7 @@ export function registerIpcHandlers(): void {
       minHeight: 600,
       frame: false,
       autoHideMenuBar: true,
-      title: `ChronoDesk Pro - ${viewType.toUpperCase()}`,
+      title: `ChronoDesk - ${viewType.toUpperCase()}`,
       backgroundColor: '#000000',
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),

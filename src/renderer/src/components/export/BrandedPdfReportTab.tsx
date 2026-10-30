@@ -355,7 +355,7 @@ export const BrandedPdfReportTab: React.FC = () => {
           {/* Footer Notice */}
           <div className="pt-6 border-t border-neutral-200 text-[10px] text-neutral-500 flex items-center justify-between font-mono">
             <span>{footerText}</span>
-            <span>ChronoDesk Pro • Page 1 of 1</span>
+            <span>ChronoDesk • Page 1 of 1</span>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { useAppStore } from '../../store/useAppStore'
 import { FreeSlotOption, CalendarEvent } from '../../../../types'
 import { format } from 'date-fns'
-import { Zap, X, ArrowRight, Search, Star } from 'lucide-react'
+import { Zap, X, ArrowRight, Search, Star, CalendarX } from 'lucide-react'
 import { parseSlotQuery } from '../../utils/nlpParser'
 
 function computeQualityScore(slot: FreeSlotOption): number {
@@ -320,7 +320,7 @@ export const FreeSlotFinderModal: React.FC = () => {
 
               {scoredResults.length === 0 ? (
                 <div className="p-6 text-center space-y-2 bg-[var(--bg-subtle)] rounded-[var(--radius-md)] border border-[var(--border-subtle)]">
-                  <div className="text-2xl">📭</div>
+                  <CalendarX className="w-8 h-8 text-[var(--text-muted)] opacity-60 mx-auto" />
                   <p className="text-xs text-[var(--text-muted)]">No common free slots found.</p>
                   <p className="text-[11px] text-[var(--text-muted)] opacity-70">
                     Try: broader search range, shorter duration, or fewer resource filters.

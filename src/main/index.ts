@@ -18,7 +18,7 @@ function createWindow(): void {
     show: false,
     frame: false, // Frameless window with app-themed custom titlebar
     autoHideMenuBar: true,
-    title: 'ChronoDesk Pro',
+    title: 'ChronoDesk',
     backgroundColor: '#000000',
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {

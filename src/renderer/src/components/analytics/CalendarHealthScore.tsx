@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { useAppStore } from '../../store/useAppStore'
 import { startOfWeek, addDays, isSameDay } from 'date-fns'
-import { CheckCircle, AlertTriangle, Lightbulb, HeartPulse } from 'lucide-react'
+import { CheckCircle, AlertTriangle, Lightbulb, HeartPulse, Check } from 'lucide-react'
 
 interface HealthIssue {
   id: string
@@ -216,36 +216,36 @@ export const CalendarHealthScore: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
         <div className="p-2.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-center">
           <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase">Buffer Gaps</div>
-          <div className={`font-bold font-mono text-sm mt-0.5 ${metrics.btbCount === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
-            {metrics.btbCount === 0 ? '✓ Healthy' : `${metrics.btbCount} Back-to-Back`}
+          <div className={`font-bold font-mono text-sm mt-0.5 flex items-center justify-center gap-1 ${metrics.btbCount === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+            {metrics.btbCount === 0 ? <><Check className="w-3.5 h-3.5" />Healthy</> : `${metrics.btbCount} Back-to-Back`}
           </div>
         </div>
 
         <div className="p-2.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-center">
           <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase">Lunch Pause</div>
-          <div className={`font-bold font-mono text-sm mt-0.5 ${metrics.lunchInfringements === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
-            {metrics.lunchInfringements === 0 ? '✓ Protected' : `${metrics.lunchInfringements} Conflict`}
+          <div className={`font-bold font-mono text-sm mt-0.5 flex items-center justify-center gap-1 ${metrics.lunchInfringements === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+            {metrics.lunchInfringements === 0 ? <><Check className="w-3.5 h-3.5" />Protected</> : `${metrics.lunchInfringements} Conflict`}
           </div>
         </div>
 
         <div className="p-2.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-center">
           <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase">Boundaries</div>
-          <div className={`font-bold font-mono text-sm mt-0.5 ${metrics.outOfHoursCount === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
-            {metrics.outOfHoursCount === 0 ? '✓ Respected' : `${metrics.outOfHoursCount} Late/Early`}
+          <div className={`font-bold font-mono text-sm mt-0.5 flex items-center justify-center gap-1 ${metrics.outOfHoursCount === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+            {metrics.outOfHoursCount === 0 ? <><Check className="w-3.5 h-3.5" />Respected</> : `${metrics.outOfHoursCount} Late/Early`}
           </div>
         </div>
 
         <div className="p-2.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-center">
           <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase">Max Load</div>
-          <div className={`font-bold font-mono text-sm mt-0.5 ${metrics.overloadedDaysCount === 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {metrics.overloadedDaysCount === 0 ? '✓ Balanced' : `${metrics.overloadedDaysCount} >6h Days`}
+          <div className={`font-bold font-mono text-sm mt-0.5 flex items-center justify-center gap-1 ${metrics.overloadedDaysCount === 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            {metrics.overloadedDaysCount === 0 ? <><Check className="w-3.5 h-3.5" />Balanced</> : `${metrics.overloadedDaysCount} >6h Days`}
           </div>
         </div>
 
         <div className="p-2.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-center">
           <div className="text-[10px] text-[var(--text-muted)] font-mono uppercase">Fragmentation</div>
-          <div className={`font-bold font-mono text-sm mt-0.5 ${metrics.fragmentedDaysCount === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
-            {metrics.fragmentedDaysCount === 0 ? '✓ Cohesive' : `${metrics.fragmentedDaysCount} Scattered`}
+          <div className={`font-bold font-mono text-sm mt-0.5 flex items-center justify-center gap-1 ${metrics.fragmentedDaysCount === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+            {metrics.fragmentedDaysCount === 0 ? <><Check className="w-3.5 h-3.5" />Cohesive</> : `${metrics.fragmentedDaysCount} Scattered`}
           </div>
         </div>
       </div>

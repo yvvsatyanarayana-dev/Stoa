@@ -52,7 +52,7 @@ export const QrEventCardTab: React.FC = () => {
       `DTSTART:${formatIcsTime(selectedEvent.start)}`,
       `DTEND:${formatIcsTime(selectedEvent.end)}`,
       selectedEvent.location ? `LOCATION:${selectedEvent.location}` : '',
-      selectedEvent.description ? `DESCRIPTION:${selectedEvent.description}` : 'DESCRIPTION:ChronoDesk Pro Event',
+      selectedEvent.description ? `DESCRIPTION:${selectedEvent.description}` : 'DESCRIPTION:ChronoDesk Event',
       'END:VEVENT'
     ]
       .filter(Boolean)
@@ -196,7 +196,7 @@ export const QrEventCardTab: React.FC = () => {
             {/* Organization Tag */}
             <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-neutral-800">
-                {settings?.company_name || 'ChronoDesk Pro'}
+                {settings?.company_name || 'ChronoDesk'}
               </span>
               <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-neutral-100 text-neutral-600 font-bold uppercase">
                 Event Pass

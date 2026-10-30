@@ -39,7 +39,7 @@ export const IcalFeedTab: React.FC = () => {
     const lines: string[] = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//ChronoDesk Pro//Scheduling Engine//EN',
+      'PRODID:-//ChronoDesk//Scheduling Engine//EN',
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH',
       'X-WR-CALNAME:ChronoDesk Master Schedule',

@@ -1,4 +1,4 @@
-// Web Audio API Synthesizer for ChronoDesk Pro Sound Themes
+// Web Audio API Synthesizer for ChronoDesk Sound Themes
 export type SoundTheme = 'executive_chime' | 'gentle_marimba' | 'urgent_pulse' | 'subtle_tick' | 'zen_bowl'
 
 class SoundService {

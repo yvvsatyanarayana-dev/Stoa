@@ -49,7 +49,7 @@ export const DataPortabilityTab: React.FC = () => {
       const lines: string[] = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
-        'PRODID:-//ChronoDesk Pro//Master Schedule//EN',
+        'PRODID:-//ChronoDesk//Master Schedule//EN',
         'CALSCALE:GREGORIAN',
         'METHOD:PUBLISH'
       ]

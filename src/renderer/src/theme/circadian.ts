@@ -141,10 +141,10 @@ export function formatPhaseName(phase: TimeOfDayPhase): string {
  */
 export function getPhaseIcon(phase: TimeOfDayPhase): string {
   const icons: Record<TimeOfDayPhase, string> = {
-    dawn: '🌅',
-    day: '☀️',
-    dusk: '🌇',
-    night: '🌙',
+    dawn: 'sunrise',
+    day: 'sun',
+    dusk: 'sunset',
+    night: 'moon',
   };
   return icons[phase];
 }

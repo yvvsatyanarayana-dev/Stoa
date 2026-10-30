@@ -1,4 +1,4 @@
-// Shared types for ChronoDesk Pro
+// Shared types for ChronoDesk
 
 export type Priority = 'low' | 'medium' | 'high' | 'urgent'
 export type EventStatus = 'tentative' | 'confirmed' | 'cancelled'

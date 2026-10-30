@@ -7,7 +7,8 @@ import {
   Edit2,
   Building2,
   Stethoscope,
-  GraduationCap
+  GraduationCap,
+  X
 } from 'lucide-react'
 
 export interface WorkspaceProfile {
@@ -312,7 +313,7 @@ export const WorkspaceProfilesManager: React.FC = () => {
                 onClick={() => setEditingProfile(null)}
                 className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -341,10 +342,10 @@ export const WorkspaceProfilesManager: React.FC = () => {
                     onChange={(e) => setEditingProfile({ ...editingProfile, icon: e.target.value })}
                     className="w-full px-2.5 py-1.5 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-primary)]"
                   >
-                    <option value="building">Enterprise / Corporate (🏢)</option>
-                    <option value="medical">Medical / Hospital (🩺)</option>
-                    <option value="academic">Academic / University (🎓)</option>
-                    <option value="briefcase">Advisory / Practice (💼)</option>
+                    <option value="building">Enterprise / Corporate</option>
+                    <option value="medical">Medical / Hospital</option>
+                    <option value="academic">Academic / University</option>
+                    <option value="briefcase">Advisory / Practice</option>
                   </select>
                 </div>
 

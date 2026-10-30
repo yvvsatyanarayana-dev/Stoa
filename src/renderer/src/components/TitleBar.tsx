@@ -1,10 +1,28 @@
 import React, { useState, useEffect } from 'react'
-import { Minus, Square, Copy, X, Calendar, Lock } from 'lucide-react'
+import {
+  Minus,
+  Square,
+  Copy,
+  X,
+  Calendar,
+  Lock,
+  Building2,
+  Stethoscope,
+  GraduationCap,
+  Briefcase
+} from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 
 export const TitleBar: React.FC = () => {
   const { setIsWorkspaceLocked, activeProfileId, setCurrentView } = useAppStore()
   const [isMaximized, setIsMaximized] = useState(false)
+
+  const getProfileIcon = (profileId: string) => {
+    if (profileId.includes('medical')) return <Stethoscope className="w-3 h-3 text-emerald-400" />
+    if (profileId.includes('academic')) return <GraduationCap className="w-3 h-3 text-purple-400" />
+    if (profileId.includes('executive')) return <Briefcase className="w-3 h-3 text-amber-400" />
+    return <Building2 className="w-3 h-3 text-[var(--accent)]" />
+  }
 
   useEffect(() => {
     const checkMax = async (): Promise<void> => {
@@ -58,17 +76,17 @@ export const TitleBar: React.FC = () => {
 
         <div className="flex items-center">
           <span className="text-[12px] font-bold tracking-tight text-[var(--text-primary)]">
-            ChronoDesk<span className="font-normal opacity-60 ml-1">Pro</span>
+            ChronoDesk
           </span>
         </div>
 
         {/* Workspace Profile Pill */}
         <button
           onClick={() => setCurrentView('settings')}
-          className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors flex items-center gap-1 ml-1"
+          className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors flex items-center gap-1.5 ml-1"
           title="Switch or Manage Workspace Profiles"
         >
-          <span>🏢</span>
+          {getProfileIcon(activeProfileId)}
           <span className="capitalize">{activeProfileId.replace('prof-', '')}</span>
         </button>
       </div>
