@@ -135,8 +135,8 @@ export const CalendarView: React.FC = () => {
     return (
       <div className="flex-1 flex flex-col overflow-hidden bg-[var(--bg-app)] text-[var(--text-primary)]">
         {/* Days Header */}
-        <div className="grid grid-cols-[56px_repeat(7,1fr)] border-b border-[var(--border-subtle)] bg-[var(--bg-subtle)]/75 shrink-0 select-none backdrop-blur-xs">
-          <div className="p-2 border-r border-[var(--border-subtle)] flex items-center justify-center text-[10px] text-[var(--text-muted)] font-mono font-medium tracking-wider">
+        <div className="grid grid-cols-[56px_repeat(7,1fr)] border-b border-[var(--border-default)] bg-[var(--bg-subtle)]/80 shrink-0 select-none backdrop-blur-xs">
+          <div className="p-2 border-r border-[var(--border-default)] flex items-center justify-center text-[10px] text-[var(--text-muted)] font-mono font-medium tracking-wider">
             GMT
           </div>
           {days.map((day) => {
@@ -144,7 +144,7 @@ export const CalendarView: React.FC = () => {
             return (
               <div
                 key={day.toISOString()}
-                className={`py-2 px-1 text-center border-r border-[var(--border-subtle)] last:border-r-0 transition-colors ${
+                className={`py-2 px-1 text-center border-r border-[var(--border-default)] last:border-r-0 transition-colors ${
                   today ? 'bg-[var(--cal-today-bg)]' : ''
                 }`}
               >
@@ -179,7 +179,7 @@ export const CalendarView: React.FC = () => {
         <div className="flex-1 overflow-y-auto">
           <div className="grid grid-cols-[56px_repeat(7,1fr)] relative min-h-[840px]">
             {/* Time labels column */}
-            <div className="border-r border-[var(--border-subtle)] bg-[var(--bg-sidebar)] select-none">
+            <div className="border-r border-[var(--border-default)] bg-[var(--bg-sidebar)] select-none">
               {hours.map((h) => (
                 <div
                   key={h}
@@ -329,7 +329,7 @@ export const CalendarView: React.FC = () => {
         <div className="flex-1 overflow-y-auto">
           <div className="grid grid-cols-[64px_1fr] relative min-h-[960px]">
             {/* Time labels column */}
-            <div className="border-r border-[var(--border-subtle)] bg-[var(--bg-sidebar)] select-none">
+            <div className="border-r border-[var(--border-default)] bg-[var(--bg-sidebar)] select-none">
               {hours.map((h) => (
                 <div
                   key={h}

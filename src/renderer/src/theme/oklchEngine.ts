@@ -199,9 +199,9 @@ export function paletteToCssVariables(palette: ThemePalette, isDark: boolean): R
     [`--focus-ring`]: `0 0 0 2px ${oklchToHex(isDark ? palette.background : { l: 1, c: 0, h: 0 })}, 0 0 0 4px ${isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.35)'}`,
 
     // Calendar specifics
-    [`--cal-grid-line`]: oklchToHex({ ...palette.border, l: clampL(isDark ? palette.border.l - 0.08 : palette.border.l + 0.08) }),
-    [`--cal-hour-line`]: oklchToHex(palette.border),
-    [`--cal-today-bg`]: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)',
+    [`--cal-grid-line`]: oklchToHex(palette.border),
+    [`--cal-hour-line`]: oklchToHex({ ...palette.border, l: clampL(isDark ? palette.border.l + 0.08 : palette.border.l - 0.08) }),
+    [`--cal-today-bg`]: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.04)',
     [`--cal-weekend-bg`]: oklchToHex({ ...palette.background, l: clampL(isDark ? palette.background.l - 0.03 : palette.background.l + 0.02) }),
     [`--cal-now-line`]: '#EF4444',
     [`--cal-selected-bg`]: oklchToHex(palette.primary),

@@ -121,7 +121,7 @@ export const DEFAULT_DARK_PALETTE: ThemePalette = {
   primaryHover: { l: 0.88, c: 0, h: 0 },       // #E0E0E0
   text: { l: 0.98, c: 0, h: 0 },              // #F9F9F9 Primary White Text
   textMuted: { l: 0.55, c: 0, h: 0 },         // #737373 Neutral Gray Muted
-  border: { l: 0.28, c: 0, h: 0 },            // #2E2E2E Visible Grid & Container Borders
+  border: { l: 0.35, c: 0, h: 0 },            // #383838 Crisp, Visible Borders & Grid Lines
   eventStops: [
     { l: 0.98, c: 0, h: 0 }, // #F9F9F9 Crisp White
     { l: 0.83, c: 0, h: 0 }, // #D4D4D4 Light Gray

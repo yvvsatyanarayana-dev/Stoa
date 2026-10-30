@@ -328,15 +328,15 @@ export const TimetableBuilderView: React.FC = () => {
 
       {/* Timetable Weekly Grid */}
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="grid grid-cols-[64px_repeat(5,1fr)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-lg)] overflow-hidden shadow-md">
+        <div className="grid grid-cols-[64px_repeat(5,1fr)] bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-[var(--radius-lg)] overflow-hidden shadow-md">
           {/* Header Row */}
-          <div className="p-2.5 bg-[var(--bg-subtle)] border-b border-r border-[var(--border-subtle)] text-center text-[10px] font-mono font-semibold text-[var(--text-muted)] tracking-wider">
+          <div className="p-2.5 bg-[var(--bg-subtle)] border-b border-r border-[var(--border-default)] text-center text-[10px] font-mono font-semibold text-[var(--text-muted)] tracking-wider">
             TIME
           </div>
           {days.map((day) => (
             <div
               key={day.num}
-              className="p-2.5 bg-[var(--bg-subtle)] border-b border-r border-[var(--border-subtle)] last:border-r-0 text-center font-bold text-xs text-[var(--text-primary)]"
+              className="p-2.5 bg-[var(--bg-subtle)] border-b border-r border-[var(--border-default)] last:border-r-0 text-center font-bold text-xs text-[var(--text-primary)]"
             >
               {day.name}
             </div>

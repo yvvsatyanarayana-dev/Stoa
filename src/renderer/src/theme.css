@@ -18,10 +18,10 @@
   --text-muted:     #737373;
   --text-inverse:   #0E0E0E;
 
-  /* Borders - Architectural Framing */
-  --border-subtle:  #202020;
-  --border-default: #2E2E2E;
-  --border-strong:  #505050;
+  /* Borders - Architectural Framing & Visible Grids */
+  --border-subtle:  #2C2C2C;
+  --border-default: #383838;
+  --border-strong:  #606060;
 
   /* Primary action - Clean Monochromatic Accent */
   --accent:         #F9F9F9;
@@ -32,11 +32,11 @@
   /* Focus ring - Neutral Monochromatic Ring (Zero Color) */
   --focus-ring: 0 0 0 2px #0E0E0E, 0 0 0 4px rgba(255, 255, 255, 0.35);
 
-  /* Calendar specifics */
-  --cal-grid-line:     #1E1E1E;
-  --cal-hour-line:     #2A2A2A;
-  --cal-today-bg:      rgba(255, 255, 255, 0.03);
-  --cal-weekend-bg:    #0A0A0A;
+  /* Calendar specifics - Clearly Visible Structural Grid */
+  --cal-grid-line:     #383838;
+  --cal-hour-line:     #484848;
+  --cal-today-bg:      rgba(255, 255, 255, 0.04);
+  --cal-weekend-bg:    #080808;
   --cal-now-line:      #EF4444;
   --cal-selected-bg:   #F9F9F9;
   --cal-selected-text: #0E0E0E;
