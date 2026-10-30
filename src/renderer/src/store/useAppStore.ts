@@ -11,6 +11,8 @@ import type {
   NotificationLog,
   Conference
 } from '../../../types'
+import { DEFAULT_DARK_PALETTE, DEFAULT_BW_PALETTE } from '../../../types'
+import { useThemeStore } from './useThemeStore'
 
 export type AppView =
   | 'calendar'
@@ -197,12 +199,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   themeMode: 'dark',
   setThemeMode: (mode) => {
     document.documentElement.setAttribute('data-theme', mode)
+    const isDark = mode === 'dark'
+    useThemeStore.getState().applyTheme(isDark ? DEFAULT_DARK_PALETTE : DEFAULT_BW_PALETTE, isDark)
     set({ themeMode: mode })
   },
   toggleThemeMode: () => {
     const next = get().themeMode === 'dark' ? 'light' : 'dark'
-    document.documentElement.setAttribute('data-theme', next)
-    set({ themeMode: next })
+    get().setThemeMode(next)
   },
 
   isLoading: false,

@@ -15,6 +15,7 @@ import type {
   ChronoDeskSettings,
   Conference
 } from '../../types'
+import type { ICSMirrorConfig, MirrorEvent, BundleMetadata } from '../../types/sync'
 
 let db: DatabaseSync
 
@@ -210,6 +211,106 @@ function createSchema(): void {
       updated_at TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS themes (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      mode TEXT NOT NULL DEFAULT 'manual',
+      base_palette_json TEXT NOT NULL,
+      circadian_offset_minutes INTEGER DEFAULT 0,
+      seasonal_enabled INTEGER NOT NULL DEFAULT 0,
+      custom_phase_palettes_json TEXT,
+      custom_seasonal_palettes_json TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS crdt_documents (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      data_json TEXT NOT NULL,
+      version INTEGER NOT NULL DEFAULT 0,
+      last_modified TEXT NOT NULL,
+      modified_by TEXT NOT NULL,
+      synced INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS sync_queue (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL CHECK(type IN ('create', 'update', 'delete')),
+      table_name TEXT NOT NULL,
+      entity_id TEXT NOT NULL,
+      payload_json TEXT NOT NULL,
+      timestamp TEXT NOT NULL,
+      retry_count INTEGER NOT NULL DEFAULT 0,
+      synced INTEGER NOT NULL DEFAULT 0,
+      last_error TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS cache_entries (
+      key TEXT PRIMARY KEY,
+      data_json TEXT NOT NULL,
+      expires_at INTEGER NOT NULL,
+      hits INTEGER NOT NULL DEFAULT 0,
+      last_accessed INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS sync_metadata (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS ics_mirrors (
+      id TEXT PRIMARY KEY,
+      calendar_id TEXT NOT NULL,
+      url TEXT NOT NULL,
+      name TEXT,
+      etag TEXT,
+      last_modified TEXT,
+      schedule_cron TEXT DEFAULT '0 */6 * * *',
+      enabled INTEGER NOT NULL DEFAULT 1,
+      last_synced_at TEXT,
+      last_sync_status TEXT,
+      last_sync_error TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY(calendar_id) REFERENCES calendars(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS mirror_events (
+      id TEXT PRIMARY KEY,
+      mirror_id TEXT NOT NULL,
+      ics_uid TEXT NOT NULL,
+      content_hash TEXT NOT NULL,
+      action TEXT NOT NULL CHECK(action IN ('created', 'updated', 'deleted')),
+      event_data_json TEXT,
+      synced_at TEXT NOT NULL,
+      FOREIGN KEY(mirror_id) REFERENCES ics_mirrors(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS bundle_metadata (
+      id TEXT PRIMARY KEY,
+      version TEXT NOT NULL DEFAULT 'v1',
+      name TEXT,
+      description TEXT,
+      file_path TEXT,
+      file_size INTEGER,
+      checksum_sha256 TEXT,
+      encryption_params_json TEXT,
+      tables_included_json TEXT NOT NULL DEFAULT '[]',
+      created_at TEXT NOT NULL,
+      created_by TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_crdt_type ON crdt_documents(type);
+    CREATE INDEX IF NOT EXISTS idx_sync_queue_synced ON sync_queue(synced);
+    CREATE INDEX IF NOT EXISTS idx_sync_queue_timestamp ON sync_queue(timestamp);
+    CREATE INDEX IF NOT EXISTS idx_cache_expires ON cache_entries(expires_at);
+    CREATE INDEX IF NOT EXISTS idx_ics_mirrors_calendar ON ics_mirrors(calendar_id);
+    CREATE INDEX IF NOT EXISTS idx_ics_mirrors_enabled ON ics_mirrors(enabled);
+    CREATE INDEX IF NOT EXISTS idx_mirror_events_mirror ON mirror_events(mirror_id);
+    CREATE INDEX IF NOT EXISTS idx_mirror_events_ics_uid ON mirror_events(ics_uid);
+    CREATE INDEX IF NOT EXISTS idx_bundle_metadata_created ON bundle_metadata(created_at);
+
     CREATE INDEX IF NOT EXISTS idx_events_start ON events(start);
     CREATE INDEX IF NOT EXISTS idx_events_end ON events(end);
     CREATE INDEX IF NOT EXISTS idx_events_calendar ON events(calendar_id);
@@ -257,6 +358,18 @@ function seedInitialData(): void {
     for (const [key, value] of Object.entries(defaultSettings)) {
       insertSetting.run(key, typeof value === 'object' ? JSON.stringify(value) : String(value))
     }
+
+    // Theme settings
+    insertSetting.run('activeThemeId', 'preset-0')
+    insertSetting.run('themeMode', 'manual')
+    insertSetting.run('highContrast', 'false')
+    insertSetting.run('circadianSettings', JSON.stringify({
+      latitude: 0,
+      longitude: 0,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+      dawnOffsetMinutes: -30,
+      duskOffsetMinutes: 30,
+    }))
   }
 }
 
@@ -733,5 +846,397 @@ export const conferenceDb = {
   },
   delete(id: string): void {
     getDb().prepare('DELETE FROM conferences WHERE id = ?').run(id)
+  }
+}
+
+export const themeDb = {
+  list(): any[] {
+    const rows = getDb().prepare('SELECT * FROM themes ORDER BY created_at DESC').all() as any[]
+    return rows.map((r) => ({
+      ...r,
+      basePalette: JSON.parse(r.base_palette_json),
+      customPhasePalettes: r.custom_phase_palettes_json ? JSON.parse(r.custom_phase_palettes_json) : undefined,
+      customSeasonalPalettes: r.custom_seasonal_palettes_json ? JSON.parse(r.custom_seasonal_palettes_json) : undefined,
+      seasonalEnabled: Boolean(r.seasonal_enabled),
+    }))
+  },
+  get(id: string): any | null {
+    const r = getDb().prepare('SELECT * FROM themes WHERE id = ?').get(id) as any
+    if (!r) return null
+    return {
+      ...r,
+      basePalette: JSON.parse(r.base_palette_json),
+      customPhasePalettes: r.custom_phase_palettes_json ? JSON.parse(r.custom_phase_palettes_json) : undefined,
+      customSeasonalPalettes: r.custom_seasonal_palettes_json ? JSON.parse(r.custom_seasonal_palettes_json) : undefined,
+      seasonalEnabled: Boolean(r.seasonal_enabled),
+    }
+  },
+  create(theme: any): any[] {
+    const now = new Date().toISOString()
+    getDb().prepare(`
+      INSERT INTO themes (id, name, mode, base_palette_json, circadian_offset_minutes, seasonal_enabled, custom_phase_palettes_json, custom_seasonal_palettes_json, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      theme.id,
+      theme.name,
+      theme.mode,
+      JSON.stringify(theme.basePalette),
+      theme.circadianOffsetMinutes || 0,
+      theme.seasonalEnabled ? 1 : 0,
+      theme.customPhasePalettes ? JSON.stringify(theme.customPhasePalettes) : null,
+      theme.customSeasonalPalettes ? JSON.stringify(theme.customSeasonalPalettes) : null,
+      now,
+      now
+    )
+    return themeDb.list()
+  },
+  update(theme: any): any[] {
+    const now = new Date().toISOString()
+    getDb().prepare(`
+      UPDATE themes SET
+        name = ?, mode = ?, base_palette_json = ?, circadian_offset_minutes = ?, seasonal_enabled = ?,
+        custom_phase_palettes_json = ?, custom_seasonal_palettes_json = ?, updated_at = ?
+      WHERE id = ?
+    `).run(
+      theme.name,
+      theme.mode,
+      JSON.stringify(theme.basePalette),
+      theme.circadianOffsetMinutes || 0,
+      theme.seasonalEnabled ? 1 : 0,
+      theme.customPhasePalettes ? JSON.stringify(theme.customPhasePalettes) : null,
+      theme.customSeasonalPalettes ? JSON.stringify(theme.customSeasonalPalettes) : null,
+      now,
+      theme.id
+    )
+    return themeDb.list()
+  },
+  delete(id: string): any[] {
+    getDb().prepare('DELETE FROM themes WHERE id = ?').run(id)
+    return themeDb.list()
+  }
+}
+
+// CRDT Document Repository
+export const crdtDocDb = {
+  list(type?: string): any[] {
+    let sql = 'SELECT * FROM crdt_documents'
+    const params: any[] = []
+    if (type) {
+      sql += ' WHERE type = ?'
+      params.push(type)
+    }
+    sql += ' ORDER BY last_modified DESC'
+    return getDb().prepare(sql).all(...params) as any[]
+  },
+  get(id: string): any | null {
+    const r = getDb().prepare('SELECT * FROM crdt_documents WHERE id = ?').get(id) as any
+    if (!r) return null
+    return {
+      ...r,
+      data: JSON.parse(r.data_json),
+    }
+  },
+  upsert(doc: { id: string; type: string; data: any; version: number; lastModified: string; modifiedBy: string; synced?: boolean }): void {
+    getDb().prepare(`
+      INSERT INTO crdt_documents (id, type, data_json, version, last_modified, modified_by, synced)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        data_json = excluded.data_json,
+        version = excluded.version,
+        last_modified = excluded.last_modified,
+        modified_by = excluded.modified_by,
+        synced = excluded.synced
+    `).run(doc.id, doc.type, JSON.stringify(doc.data), doc.version, doc.lastModified, doc.modifiedBy, doc.synced ? 1 : 0)
+  },
+  markSynced(id: string): void {
+    getDb().prepare('UPDATE crdt_documents SET synced = 1 WHERE id = ?').run(id)
+  },
+  delete(id: string): void {
+    getDb().prepare('DELETE FROM crdt_documents WHERE id = ?').run(id)
+  },
+  deleteByType(type: string): void {
+    getDb().prepare('DELETE FROM crdt_documents WHERE type = ?').run(type)
+  }
+}
+
+// Sync Queue Repository
+export const syncQueueDb = {
+  list(onlyPending = false): any[] {
+    let sql = 'SELECT * FROM sync_queue ORDER BY timestamp ASC'
+    if (onlyPending) {
+      sql = 'SELECT * FROM sync_queue WHERE synced = 0 ORDER BY timestamp ASC'
+    }
+    return getDb().prepare(sql).all() as any[]
+  },
+  add(item: { id: string; type: 'create' | 'update' | 'delete'; tableName: string; entityId: string; payload: any }): void {
+    getDb().prepare(`
+      INSERT INTO sync_queue (id, type, table_name, entity_id, payload_json, timestamp, retry_count, synced)
+      VALUES (?, ?, ?, ?, ?, ?, 0, 0)
+    `).run(item.id, item.type, item.tableName, item.entityId, JSON.stringify(item.payload), new Date().toISOString())
+  },
+  markSynced(id: string): void {
+    getDb().prepare('UPDATE sync_queue SET synced = 1 WHERE id = ?').run(id)
+  },
+  incrementRetry(id: string, error?: string): void {
+    if (error) {
+      getDb().prepare('UPDATE sync_queue SET retry_count = retry_count + 1, last_error = ? WHERE id = ?').run(error, id)
+    } else {
+      getDb().prepare('UPDATE sync_queue SET retry_count = retry_count + 1 WHERE id = ?').run(id)
+    }
+  },
+  remove(id: string): void {
+    getDb().prepare('DELETE FROM sync_queue WHERE id = ?').run(id)
+  },
+  clearSynced(): number {
+    const result = getDb().prepare('DELETE FROM sync_queue WHERE synced = 1').run()
+    return Number(result.changes)
+  },
+  getPendingCount(): number {
+    const row = getDb().prepare('SELECT COUNT(*) as count FROM sync_queue WHERE synced = 0').get() as { count: number }
+    return row.count
+  }
+}
+
+// Cache Repository
+export const cacheDb = {
+  get(key: string): any | null {
+    const row = getDb().prepare('SELECT * FROM cache_entries WHERE key = ? AND expires_at > ?').get(key, Date.now()) as any
+    if (!row) return null
+    // Update access stats
+    getDb().prepare('UPDATE cache_entries SET hits = hits + 1, last_accessed = ? WHERE key = ?').run(Date.now(), key)
+    return JSON.parse(row.data_json)
+  },
+  set(key: string, data: any, ttlMs: number): void {
+    const expiresAt = Date.now() + ttlMs
+    getDb().prepare(`
+      INSERT INTO cache_entries (key, data_json, expires_at, hits, last_accessed)
+      VALUES (?, ?, ?, 0, ?)
+      ON CONFLICT(key) DO UPDATE SET
+        data_json = excluded.data_json,
+        expires_at = excluded.expires_at,
+        last_accessed = excluded.last_accessed
+    `).run(key, JSON.stringify(data), expiresAt, Date.now())
+  },
+  delete(key: string): void {
+    getDb().prepare('DELETE FROM cache_entries WHERE key = ?').run(key)
+  },
+  clearExpired(): number {
+    const result = getDb().prepare('DELETE FROM cache_entries WHERE expires_at <= ?').run(Date.now())
+    return Number(result.changes)
+  },
+  clearAll(): void {
+    getDb().prepare('DELETE FROM cache_entries').run()
+  },
+  getStats(): { count: number; oldestEntry: number | null; newestEntry: number | null } {
+    const row = getDb().prepare(`
+      SELECT COUNT(*) as count, MIN(last_accessed) as oldest, MAX(last_accessed) as newest
+      FROM cache_entries
+    `).get() as any
+    return {
+      count: row.count,
+      oldestEntry: row.oldest,
+      newestEntry: row.newest
+    }
+  }
+}
+
+// Sync Metadata Repository
+export const syncMetadataDb = {
+  get(key: string): string | null {
+    const row = getDb().prepare('SELECT value FROM sync_metadata WHERE key = ?').get(key) as any
+    return row?.value ?? null
+  },
+  set(key: string, value: string): void {
+    getDb().prepare('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)').run(key, value)
+  },
+  getAll(): Record<string, string> {
+    const rows = getDb().prepare('SELECT key, value FROM sync_metadata').all() as any[]
+    const result: Record<string, string> = {}
+    for (const r of rows) {
+      result[r.key] = r.value
+    }
+    return result
+  }
+}
+
+// Initialize default sync metadata
+export function initSyncMetadata(deviceId: string): void {
+  const existing = syncMetadataDb.get('deviceId')
+  if (!existing) {
+    syncMetadataDb.set('deviceId', deviceId)
+  }
+  syncMetadataDb.set('lastSyncCheck', new Date().toISOString())
+}
+
+// ICS Mirror Repository
+export const icsMirrorDb = {
+  list(enabledOnly = false): ICSMirrorConfig[] {
+    let sql = 'SELECT * FROM ics_mirrors ORDER BY created_at DESC'
+    if (enabledOnly) {
+      sql = 'SELECT * FROM ics_mirrors WHERE enabled = 1 ORDER BY created_at DESC'
+    }
+    const rows = getDb().prepare(sql).all() as any[]
+    return rows.map((r) => ({
+      ...r,
+      enabled: Boolean(r.enabled)
+    }))
+  },
+  get(id: string): ICSMirrorConfig | null {
+    const r = getDb().prepare('SELECT * FROM ics_mirrors WHERE id = ?').get(id) as any
+    if (!r) return null
+    return { ...r, enabled: Boolean(r.enabled) }
+  },
+  getByCalendarId(calendarId: string): ICSMirrorConfig[] {
+    const rows = getDb().prepare('SELECT * FROM ics_mirrors WHERE calendar_id = ? ORDER BY created_at DESC').all(calendarId) as any[]
+    return rows.map((r) => ({ ...r, enabled: Boolean(r.enabled) }))
+  },
+  create(mirror: Omit<ICSMirrorConfig, 'createdAt' | 'updatedAt'> & { createdAt?: string; updatedAt?: string }): ICSMirrorConfig {
+    const now = new Date().toISOString()
+    const id = mirror.id || `mirror-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+    getDb().prepare(`
+      INSERT INTO ics_mirrors (id, calendar_id, url, name, etag, last_modified, schedule_cron, enabled, last_synced_at, last_sync_status, last_sync_error, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      id,
+      mirror.calendarId,
+      mirror.url,
+      mirror.name || null,
+      mirror.etag || null,
+      mirror.lastModified || null,
+      mirror.scheduleCron || '0 */6 * * *',
+      mirror.enabled ? 1 : 0,
+      mirror.lastSyncedAt || null,
+      mirror.lastSyncStatus || null,
+      mirror.lastSyncError || null,
+      mirror.createdAt || now,
+      mirror.updatedAt || now
+    )
+    return icsMirrorDb.get(id)!
+  },
+  update(mirror: ICSMirrorConfig): ICSMirrorConfig {
+    const now = new Date().toISOString()
+    getDb().prepare(`
+      UPDATE ics_mirrors SET
+        calendar_id = ?, url = ?, name = ?, etag = ?, last_modified = ?, schedule_cron = ?, enabled = ?,
+        last_synced_at = ?, last_sync_status = ?, last_sync_error = ?, updated_at = ?
+      WHERE id = ?
+    `).run(
+      mirror.calendarId,
+      mirror.url,
+      mirror.name || null,
+      mirror.etag || null,
+      mirror.lastModified || null,
+      mirror.scheduleCron || '0 */6 * * *',
+      mirror.enabled ? 1 : 0,
+      mirror.lastSyncedAt || null,
+      mirror.lastSyncStatus || null,
+      mirror.lastSyncError || null,
+      now,
+      mirror.id
+    )
+    return icsMirrorDb.get(mirror.id)!
+  },
+  delete(id: string): void {
+    getDb().prepare('DELETE FROM ics_mirrors WHERE id = ?').run(id)
+  },
+  setEnabled(id: string, enabled: boolean): void {
+    getDb().prepare('UPDATE ics_mirrors SET enabled = ?, updated_at = ? WHERE id = ?').run(enabled ? 1 : 0, new Date().toISOString(), id)
+  },
+  updateSyncResult(id: string, result: { status: string; error?: string; etag?: string; lastModified?: string }): void {
+    const now = new Date().toISOString()
+    getDb().prepare(`
+      UPDATE ics_mirrors SET
+        last_synced_at = ?, last_sync_status = ?, last_sync_error = ?, etag = COALESCE(?, etag), last_modified = COALESCE(?, last_modified), updated_at = ?
+      WHERE id = ?
+    `).run(now, result.status, result.error || null, result.etag || null, result.lastModified || null, now, id)
+  }
+}
+
+// Mirror Events Repository
+export const mirrorEventsDb = {
+  list(mirrorId: string, limit = 100): MirrorEvent[] {
+    const rows = getDb().prepare('SELECT * FROM mirror_events WHERE mirror_id = ? ORDER BY synced_at DESC LIMIT ?').all(mirrorId, limit) as any[]
+    return rows.map((r) => ({
+      ...r,
+      eventData: r.event_data_json ? JSON.parse(r.event_data_json) : undefined
+    }))
+  },
+  getByMirrorAndUID(mirrorId: string, icsUid: string): MirrorEvent | null {
+    const r = getDb().prepare('SELECT * FROM mirror_events WHERE mirror_id = ? AND ics_uid = ? ORDER BY synced_at DESC LIMIT 1').get(mirrorId, icsUid) as any
+    if (!r) return null
+    return { ...r, eventData: r.event_data_json ? JSON.parse(r.event_data_json) : undefined }
+  },
+  add(event: Omit<MirrorEvent, 'id'> & { id?: string }): MirrorEvent {
+    const id = event.id || `mevt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+    getDb().prepare(`
+      INSERT INTO mirror_events (id, mirror_id, ics_uid, content_hash, action, event_data_json, synced_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      id,
+      event.mirrorId,
+      event.icsUid,
+      event.contentHash,
+      event.action,
+      event.eventData ? JSON.stringify(event.eventData) : null,
+      event.syncedAt
+    )
+    return mirrorEventsDb.getByMirrorAndUID(event.mirrorId, event.icsUid)!
+  },
+  delete(mirrorId: string, icsUid?: string): number {
+    if (icsUid) {
+      const result = getDb().prepare('DELETE FROM mirror_events WHERE mirror_id = ? AND ics_uid = ?').run(mirrorId, icsUid)
+      return Number(result.changes)
+    }
+    const result = getDb().prepare('DELETE FROM mirror_events WHERE mirror_id = ?').run(mirrorId)
+    return Number(result.changes)
+  },
+  getLatestHash(mirrorId: string, icsUid: string): string | null {
+    const r = getDb().prepare('SELECT content_hash FROM mirror_events WHERE mirror_id = ? AND ics_uid = ? ORDER BY synced_at DESC LIMIT 1').get(mirrorId, icsUid) as any
+    return r?.content_hash ?? null
+  }
+}
+
+// Bundle Metadata Repository
+export const bundleMetadataDb = {
+  list(): BundleMetadata[] {
+    const rows = getDb().prepare('SELECT * FROM bundle_metadata ORDER BY created_at DESC').all() as any[]
+    return rows.map((r) => ({
+      ...r,
+      encryptionParams: r.encryption_params_json ? JSON.parse(r.encryption_params_json) : undefined,
+      tablesIncluded: JSON.parse(r.tables_included_json || '[]')
+    }))
+  },
+  get(id: string): BundleMetadata | null {
+    const r = getDb().prepare('SELECT * FROM bundle_metadata WHERE id = ?').get(id) as any
+    if (!r) return null
+    return {
+      ...r,
+      encryptionParams: r.encryption_params_json ? JSON.parse(r.encryption_params_json) : undefined,
+      tablesIncluded: JSON.parse(r.tables_included_json || '[]')
+    }
+  },
+  create(bundle: Omit<BundleMetadata, 'id' | 'createdAt'> & { id?: string; createdAt?: string }): BundleMetadata {
+    const id = bundle.id || `bundle-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+    const now = new Date().toISOString()
+    getDb().prepare(`
+      INSERT INTO bundle_metadata (id, version, name, description, file_path, file_size, checksum_sha256, encryption_params_json, tables_included_json, created_at, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      id,
+      bundle.version || 'v1',
+      bundle.name || null,
+      bundle.description || null,
+      bundle.filePath || null,
+      bundle.fileSize || null,
+      bundle.checksumSha256 || null,
+      bundle.encryptionParams ? JSON.stringify(bundle.encryptionParams) : null,
+      JSON.stringify(bundle.tablesIncluded || []),
+      bundle.createdAt || now,
+      bundle.createdBy || null
+    )
+    return bundleMetadataDb.get(id)!
+  },
+  delete(id: string): void {
+    getDb().prepare('DELETE FROM bundle_metadata WHERE id = ?').run(id)
   }
 }

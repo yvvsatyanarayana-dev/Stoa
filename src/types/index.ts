@@ -139,6 +139,16 @@ export interface ConflictCheckResult {
 
 export interface ChronoDeskSettings {
   theme: 'dark' | 'light' | 'system'
+  themeMode?: 'manual' | 'time-of-day' | 'circadian' | 'seasonal'
+  activeThemeId?: string
+  highContrast?: boolean
+  circadianSettings?: {
+    latitude: number
+    longitude: number
+    timezone: string
+    dawnOffsetMinutes: number
+    duskOffsetMinutes: number
+  }
   start_day_of_week: number // 0 = Sunday, 1 = Monday
   time_format: '12h' | '24h'
   default_timezone: string
@@ -241,4 +251,6 @@ export interface SolverResult {
   unscheduledCount: number
   message: string
 }
+
+export * from './theme'
 

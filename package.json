@@ -21,14 +21,27 @@
     "build:linux": "electron-vite build && electron-builder --linux"
   },
   "dependencies": {
+    "@automerge/automerge": "^3.5.0",
+    "@automerge/automerge-repo": "^2.6.0-alpha.3",
+    "@automerge/automerge-repo-network-broadcastchannel": "^2.6.0-alpha.3",
+    "@automerge/automerge-repo-network-websocket": "^2.6.0-alpha.3",
+    "@automerge/automerge-repo-storage-indexeddb": "^2.6.0-alpha.3",
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
+    "@types/adm-zip": "^0.5.8",
+    "@types/archiver": "^8.0.0",
+    "@types/suncalc": "^1.9.2",
+    "adm-zip": "^0.6.1",
+    "archiver": "^8.0.0",
     "clsx": "^2.1.1",
+    "culori": "^4.0.2",
     "date-fns": "^4.4.0",
     "drizzle-orm": "^0.45.4",
     "lucide-react": "^1.62.0",
     "rrule": "^2.8.1",
+    "suncalc": "^2.1.1",
     "tailwind-merge": "^3.7.0",
+    "ws": "^8.22.0",
     "zustand": "^5.0.16"
   },
   "devDependencies": {
