@@ -327,7 +327,21 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('theme:circadian:set', async (_, settings: any) => {
     settingsDb.set('circadianSettings', settings)
+    // Restart theme scheduler to pick up new settings
+    const { startThemeScheduler } = await import('../theme/ThemeScheduler')
+    startThemeScheduler()
     return settingsDb.get().circadianSettings
+  })
+
+  ipcMain.handle('theme:scheduler:status', async () => {
+    const { getCircadianSettings, getActiveThemeMode } = await import('../theme/ThemeScheduler')
+    const settings = getCircadianSettings()
+    const mode = getActiveThemeMode()
+    return {
+      mode,
+      hasValidLocation: (settings.latitude !== 0 || settings.longitude !== 0),
+      settings
+    }
   })
 
   // Conferences & Run-Sheets
@@ -553,5 +567,39 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('bundle:default-path', async (_, name?: string) => {
     return getDefaultExportPath(name)
+  })
+
+  // Global Shortcuts
+  let registeredShortcuts: Map<string, string> = new Map()
+
+  ipcMain.handle('shortcuts:register', async (_, accelerator: string, action: string) => {
+    const { globalShortcut } = await import('electron')
+    const success = globalShortcut.register(accelerator, () => {
+      if (action === 'command-palette') {
+        activeMainWindow?.webContents.send('shortcuts:command-palette')
+      }
+    })
+    if (success) {
+      registeredShortcuts.set(accelerator, action)
+    }
+    return { success }
+  })
+
+  ipcMain.handle('shortcuts:unregister', async (_, accelerator: string) => {
+    const { globalShortcut } = await import('electron')
+    const success = globalShortcut.unregister(accelerator)
+    registeredShortcuts.delete(accelerator)
+    return { success }
+  })
+
+  ipcMain.handle('shortcuts:unregister-all', async () => {
+    const { globalShortcut } = await import('electron')
+    globalShortcut.unregisterAll()
+    registeredShortcuts.clear()
+    return { success: true }
+  })
+
+  ipcMain.handle('shortcuts:get-registered', async () => {
+    return Array.from(registeredShortcuts.keys())
   })
 }

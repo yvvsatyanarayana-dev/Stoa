@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useAppStore } from '../../store/useAppStore'
 import { format, isToday } from 'date-fns'
 import { Clock, Users, DoorClosed, TrendingUp, Calendar as CalendarIcon, Video, CheckCircle2, Plus } from 'lucide-react'
+import { MeetingLoadAnalyzer } from '../ai/MeetingLoadAnalyzer'
 
 export const DashboardView: React.FC = () => {
   const { events, resources, categories, setSelectedEvent, setIsEventModalOpen } = useAppStore()
@@ -144,6 +145,9 @@ export const DashboardView: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* AI Meeting Load & Focus Analyzer */}
+        <MeetingLoadAnalyzer />
 
         {/* Schedule Timeline & Category Distribution */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

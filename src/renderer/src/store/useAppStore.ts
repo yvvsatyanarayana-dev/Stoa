@@ -86,6 +86,12 @@ interface AppState {
   isFeedSubscriptionModalOpen: boolean
   setIsFeedSubscriptionModalOpen: (open: boolean) => void
 
+  isNlpQuickAddOpen: boolean
+  setIsNlpQuickAddOpen: (open: boolean) => void
+
+  isConflictPredictorOpen: boolean
+  setIsConflictPredictorOpen: (open: boolean) => void
+
   themeMode: 'dark' | 'light'
   setThemeMode: (mode: 'dark' | 'light') => void
   toggleThemeMode: () => void
@@ -195,6 +201,12 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   isFeedSubscriptionModalOpen: false,
   setIsFeedSubscriptionModalOpen: (isFeedSubscriptionModalOpen) => set({ isFeedSubscriptionModalOpen }),
+
+  isNlpQuickAddOpen: false,
+  setIsNlpQuickAddOpen: (isNlpQuickAddOpen) => set({ isNlpQuickAddOpen }),
+
+  isConflictPredictorOpen: false,
+  setIsConflictPredictorOpen: (isConflictPredictorOpen) => set({ isConflictPredictorOpen }),
 
   themeMode: 'dark',
   setThemeMode: (mode) => {

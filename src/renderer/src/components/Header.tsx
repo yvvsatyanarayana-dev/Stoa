@@ -9,7 +9,9 @@ import {
   Sun,
   Moon,
   Zap,
-  Globe
+  Globe,
+  Sparkles,
+  ShieldAlert
 } from 'lucide-react'
 import { useAppStore, CalendarViewType } from '../store/useAppStore'
 import { format, addWeeks, subWeeks, addDays, subDays, addMonths, subMonths } from 'date-fns'
@@ -30,6 +32,9 @@ export const Header: React.FC = () => {
     setSelectedEvent,
     setIsFreeSlotFinderOpen,
     setIsWorldClockOpen,
+    isConflictPredictorOpen,
+    setIsConflictPredictorOpen,
+    setIsNlpQuickAddOpen,
     themeMode,
     toggleThemeMode
   } = useAppStore()
@@ -147,6 +152,28 @@ export const Header: React.FC = () => {
             ↵
           </kbd>
         </div>
+
+        {/* Smart Natural Language Quick Add */}
+        <button
+          onClick={() => setIsNlpQuickAddOpen(true)}
+          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
+          title="Smart Natural Language Quick Add (Ctrl+Shift+N)"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
+        </button>
+
+        {/* Conflict Predictor */}
+        <button
+          onClick={() => setIsConflictPredictorOpen(!isConflictPredictorOpen)}
+          className={`p-1.5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors ${
+            isConflictPredictorOpen
+              ? 'bg-[var(--accent)] text-[var(--accent-text)]'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
+          }`}
+          title="Conflict & Fatigue Predictor"
+        >
+          <ShieldAlert className="w-3.5 h-3.5" />
+        </button>
 
         {/* Smart Free Slot Finder */}
         <button

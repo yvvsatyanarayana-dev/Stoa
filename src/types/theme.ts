@@ -1,6 +1,8 @@
 export type ThemeMode = 'manual' | 'time-of-day' | 'circadian' | 'seasonal';
 export type TimeOfDayPhase = 'dawn' | 'day' | 'dusk' | 'night';
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
+export type DensityMode = 'compact' | 'comfy' | 'spacious';
+export type MotionPreference = 'reduce' | 'normal';
 
 export interface OKLCHColor {
   l: number;  // 0-1
@@ -22,6 +24,44 @@ export interface ThemePalette {
   eventStops: OKLCHColor[];
 }
 
+export interface TypographyScale {
+  fontScale: number;           // Global font size multiplier (default: 1)
+  lineHeightScale: number;     // Global line height multiplier (default: 1)
+  fontFamilyBase: string;      // Base font family
+  fontFamilyMono: string;      // Monospace font family
+  fontFamilyHeading?: string;  // Optional heading font family
+}
+
+export interface SpacingScale {
+  spaceUnit: number;           // Base spacing unit in px (default: 4)
+  radiusBase: number;          // Base border radius in px (default: 8)
+  radiusSm: number;            // Small border radius multiplier (default: 0.5)
+  radiusLg: number;            // Large border radius multiplier (default: 1.5)
+  radiusXl: number;            // Extra large border radius multiplier (default: 2)
+}
+
+export interface MotionScale {
+  motionReduce: boolean;       // Respect prefers-reduced-motion
+  transitionFast: number;      // Fast transition duration in ms (default: 150)
+  transitionNormal: number;    // Normal transition duration in ms (default: 250)
+  transitionSlow: number;      // Slow transition duration in ms (default: 350)
+}
+
+export interface ComponentThemeOverride {
+  componentId: string;
+  palette?: Partial<ThemePalette>;
+  typography?: Partial<TypographyScale>;
+  spacing?: Partial<SpacingScale>;
+  motion?: Partial<MotionScale>;
+  customCss?: string;
+}
+
+export interface ThemedVariants {
+  print?: Partial<ThemePalette>;
+  highContrast?: Partial<ThemePalette>;
+  sepia?: Partial<ThemePalette>;
+}
+
 export interface ThemeConfig {
   id: string;
   name: string;
@@ -31,6 +71,16 @@ export interface ThemeConfig {
   seasonalEnabled: boolean;
   customPhasePalettes?: Partial<Record<TimeOfDayPhase, ThemePalette>>;
   customSeasonalPalettes?: Partial<Record<Season, ThemePalette>>;
+
+  // Optional advanced styling settings
+  density?: DensityMode;
+  typography?: TypographyScale;
+  spacing?: SpacingScale;
+  motion?: MotionScale;
+  componentOverrides?: ComponentThemeOverride[];
+  themedVariants?: ThemedVariants;
+  customCss?: string;
+
   createdAt: string;
   updatedAt: string;
 }
@@ -82,6 +132,41 @@ export const DEFAULT_DARK_PALETTE: ThemePalette = {
   ],
 };
 
+export const DEFAULT_TYPOGRAPHY: TypographyScale = {
+  fontScale: 1,
+  lineHeightScale: 1,
+  fontFamilyBase: '"Inter", "Segoe UI", system-ui, -apple-system, sans-serif',
+  fontFamilyMono: '"JetBrains Mono", "SF Mono", Consolas, monospace',
+};
+
+export const DEFAULT_SPACING: SpacingScale = {
+  spaceUnit: 4,
+  radiusBase: 8,
+  radiusSm: 0.5,
+  radiusLg: 1.5,
+  radiusXl: 2,
+};
+
+export const DEFAULT_MOTION: MotionScale = {
+  motionReduce: false,
+  transitionFast: 150,
+  transitionNormal: 250,
+  transitionSlow: 350,
+};
+
+export const DEFAULT_THEMED_VARIANTS: ThemedVariants = {
+  print: {},
+  highContrast: {},
+  sepia: {},
+};
+
+// Density mode multipliers
+export const DENSITY_MULTIPLIERS: Record<DensityMode, { space: number; radius: number; fontSize: number; lineHeight: number }> = {
+  compact: { space: 0.75, radius: 0.75, fontSize: 0.875, lineHeight: 1.25 },
+  comfy: { space: 1, radius: 1, fontSize: 1, lineHeight: 1.5 },
+  spacious: { space: 1.5, radius: 1.25, fontSize: 1.125, lineHeight: 1.75 },
+};
+
 // Preset theme configurations
 export const PRESET_THEMES: Omit<ThemeConfig, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
@@ -90,6 +175,13 @@ export const PRESET_THEMES: Omit<ThemeConfig, 'id' | 'createdAt' | 'updatedAt'>[
     basePalette: DEFAULT_DARK_PALETTE,
     circadianOffsetMinutes: 0,
     seasonalEnabled: false,
+    density: 'comfy',
+    typography: DEFAULT_TYPOGRAPHY,
+    spacing: DEFAULT_SPACING,
+    motion: DEFAULT_MOTION,
+    componentOverrides: [],
+    themedVariants: DEFAULT_THEMED_VARIANTS,
+    customCss: '',
   },
   {
     name: 'ChronoDesk Light (B&W)',
@@ -97,6 +189,13 @@ export const PRESET_THEMES: Omit<ThemeConfig, 'id' | 'createdAt' | 'updatedAt'>[
     basePalette: DEFAULT_BW_PALETTE,
     circadianOffsetMinutes: 0,
     seasonalEnabled: false,
+    density: 'comfy',
+    typography: DEFAULT_TYPOGRAPHY,
+    spacing: DEFAULT_SPACING,
+    motion: DEFAULT_MOTION,
+    componentOverrides: [],
+    themedVariants: DEFAULT_THEMED_VARIANTS,
+    customCss: '',
   },
   {
     name: 'Warm Sepia',
@@ -122,6 +221,13 @@ export const PRESET_THEMES: Omit<ThemeConfig, 'id' | 'createdAt' | 'updatedAt'>[
     },
     circadianOffsetMinutes: 0,
     seasonalEnabled: false,
+    density: 'comfy',
+    typography: DEFAULT_TYPOGRAPHY,
+    spacing: DEFAULT_SPACING,
+    motion: DEFAULT_MOTION,
+    componentOverrides: [],
+    themedVariants: DEFAULT_THEMED_VARIANTS,
+    customCss: '',
   },
   {
     name: 'Cool Slate',
@@ -147,6 +253,13 @@ export const PRESET_THEMES: Omit<ThemeConfig, 'id' | 'createdAt' | 'updatedAt'>[
     },
     circadianOffsetMinutes: 0,
     seasonalEnabled: false,
+    density: 'comfy',
+    typography: DEFAULT_TYPOGRAPHY,
+    spacing: DEFAULT_SPACING,
+    motion: DEFAULT_MOTION,
+    componentOverrides: [],
+    themedVariants: DEFAULT_THEMED_VARIANTS,
+    customCss: '',
   },
 ];
 

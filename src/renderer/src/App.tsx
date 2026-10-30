@@ -18,6 +18,9 @@ import { AutoGenerateModal } from './components/modals/AutoGenerateModal'
 import { FreeSlotFinderModal } from './components/modals/FreeSlotFinderModal'
 import { WorldClockModal } from './components/modals/WorldClockModal'
 import { FeedSubscriptionModal } from './components/modals/FeedSubscriptionModal'
+import { CommandPalette } from './components/CommandPalette'
+import { ConflictPredictorPanel } from './components/ai/ConflictPredictorPanel'
+import { NaturalLanguageQuickAdd } from './components/ai/NaturalLanguageQuickAdd'
 import { useAppStore } from './store/useAppStore'
 
 export const App: React.FC = () => {
@@ -83,6 +86,13 @@ export const App: React.FC = () => {
       <FreeSlotFinderModal />
       <WorldClockModal />
       <FeedSubscriptionModal />
+
+      {/* AI Panels */}
+      <ConflictPredictorPanel />
+      <NaturalLanguageQuickAdd />
+
+      {/* Global Command Palette */}
+      <CommandPalette />
     </div>
   )
 }

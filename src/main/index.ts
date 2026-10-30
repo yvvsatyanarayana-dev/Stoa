@@ -1,10 +1,11 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, globalShortcut } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { initDatabase } from './db'
 import { registerIpcHandlers, setIpcMainWindow } from './ipc'
 import { initScheduler, stopScheduler } from './scheduler'
+import { startThemeScheduler, stopThemeScheduler, setMainWindow as setThemeSchedulerMainWindow } from './theme/ThemeScheduler'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -30,6 +31,7 @@ function createWindow(): void {
 
   // Provide main window to IPC handlers for minimize, maximize, close
   setIpcMainWindow(mainWindow)
+  setThemeSchedulerMainWindow(mainWindow)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
@@ -42,6 +44,8 @@ function createWindow(): void {
 
   // Start the background reminder scheduler
   initScheduler(mainWindow)
+  // Start the theme scheduler for circadian/seasonal phase transitions
+  startThemeScheduler()
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
@@ -59,6 +63,13 @@ app.whenReady().then(() => {
   // Register all typed IPC handlers
   registerIpcHandlers()
 
+  // Register global shortcut for Command Palette (⌘K / Ctrl+K)
+  globalShortcut.register('CommandOrControl+K', () => {
+    if (mainWindow) {
+      mainWindow.webContents.send('shortcuts:command-palette')
+    }
+  })
+
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
@@ -72,6 +83,7 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   stopScheduler()
+  stopThemeScheduler()
   if (process.platform !== 'darwin') {
     app.quit()
   }

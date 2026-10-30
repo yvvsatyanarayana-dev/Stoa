@@ -126,6 +126,13 @@ export const api = {
     circadian: {
       get: (): Promise<CircadianSettings> => ipcRenderer.invoke('theme:circadian:get'),
       set: (settings: CircadianSettings): Promise<CircadianSettings> => ipcRenderer.invoke('theme:circadian:set', settings)
+    },
+    scheduler: {
+      getStatus: (): Promise<{
+        mode: string
+        hasValidLocation: boolean
+        settings: CircadianSettings
+      }> => ipcRenderer.invoke('theme:scheduler:status')
     }
   },
   conferences: {
@@ -200,6 +207,24 @@ export const api = {
     delete: (id: string): Promise<{ success: boolean }> => ipcRenderer.invoke('bundle:delete', id),
     getExportsDir: (): Promise<string> => ipcRenderer.invoke('bundle:exports-dir'),
     getDefaultPath: (name?: string): Promise<string> => ipcRenderer.invoke('bundle:default-path', name)
+  },
+  shortcuts: {
+    register: (accelerator: string, action: string): Promise<{ success: boolean }> =>
+      ipcRenderer.invoke('shortcuts:register', accelerator, action),
+    unregister: (accelerator: string): Promise<{ success: boolean }> =>
+      ipcRenderer.invoke('shortcuts:unregister', accelerator),
+    unregisterAll: (): Promise<{ success: boolean }> =>
+      ipcRenderer.invoke('shortcuts:unregister-all'),
+    getRegistered: (): Promise<string[]> =>
+      ipcRenderer.invoke('shortcuts:get-registered'),
+    onCommandPalette: (callback: () => void) => {
+      const handler = (_event: any) => callback();
+      ipcRenderer.on('shortcuts:command-palette', handler);
+      return () => ipcRenderer.removeListener('shortcuts:command-palette', handler);
+    },
+    offCommandPalette: (callback: () => void) => {
+      ipcRenderer.removeListener('shortcuts:command-palette', callback);
+    }
   }
 }
 
