@@ -11,7 +11,7 @@ import {
 } from 'date-fns'
 import { useAppStore } from '../../store/useAppStore'
 import { CalendarEvent } from '../../../../types'
-import { Clock, MapPin, Video, Plus, Calendar as CalendarIcon, Globe, CalendarOff, Sparkles, Shield, Repeat } from 'lucide-react'
+import { Clock, MapPin, Video, Plus, Calendar as CalendarIcon, Globe, CalendarOff, Sparkles, Shield, Repeat, Share2, QrCode } from 'lucide-react'
 import { expandRecurringEvents } from '../../utils/recurrenceEngine'
 import { getHolidaysForYear, scanHolidayConflicts } from '../../utils/holidayEngine'
 import { FocusBlockProtector } from './FocusBlockProtector'
@@ -26,7 +26,9 @@ export const CalendarView: React.FC = () => {
     calendars,
     setSelectedEvent,
     setIsEventModalOpen,
-    setIsWorldClockOpen
+    setIsWorldClockOpen,
+    setIsExportHubOpen,
+    setExportHubInitialTab
   } = useAppStore()
 
   // Track live current time for the red "now" indicator line
@@ -680,6 +682,32 @@ export const CalendarView: React.FC = () => {
           >
             <Globe className="w-3.5 h-3.5 text-[var(--accent)]" />
             <span>World Clock</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setExportHubInitialTab('pdf')
+              setIsExportHubOpen(true)
+            }}
+            className="px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium flex items-center gap-1.5 transition-colors"
+            title="Open Export, Reports & Share Hub"
+          >
+            <Share2 className="w-3.5 h-3.5 text-blue-400" />
+            <span>Export & Share</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setExportHubInitialTab('qr')
+              setIsExportHubOpen(true)
+            }}
+            className="px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium flex items-center gap-1.5 transition-colors"
+            title="Generate Smart QR Event Pass"
+          >
+            <QrCode className="w-3.5 h-3.5 text-emerald-400" />
+            <span>QR Pass</span>
           </button>
         </div>
 

@@ -10,6 +10,7 @@ import {
   Moon,
   Zap,
   Globe,
+  Share2,
   Sparkles,
   ShieldAlert
 } from 'lucide-react'
@@ -32,6 +33,7 @@ export const Header: React.FC = () => {
     setSelectedEvent,
     setIsFreeSlotFinderOpen,
     setIsWorldClockOpen,
+    setIsExportHubOpen,
     isConflictPredictorOpen,
     setIsConflictPredictorOpen,
     setIsNlpQuickAddOpen,
@@ -191,6 +193,15 @@ export const Header: React.FC = () => {
           title="World Clock & Cross-Timezone Planner"
         >
           <Globe className="w-3.5 h-3.5" />
+        </button>
+
+        {/* Export, Sharing & Integration Hub */}
+        <button
+          onClick={() => setIsExportHubOpen(true)}
+          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
+          title="Export, Sharing & Public Integration Hub"
+        >
+          <Share2 className="w-3.5 h-3.5 text-blue-400" />
         </button>
 
         {/* Theme Switcher Toggle (Light <-> Dark) */}

@@ -86,6 +86,11 @@ interface AppState {
   isFeedSubscriptionModalOpen: boolean
   setIsFeedSubscriptionModalOpen: (open: boolean) => void
 
+  isExportHubOpen: boolean
+  setIsExportHubOpen: (open: boolean) => void
+  exportHubInitialTab: 'pdf' | 'share' | 'excel' | 'ical' | 'qr'
+  setExportHubInitialTab: (tab: 'pdf' | 'share' | 'excel' | 'ical' | 'qr') => void
+
   isNlpQuickAddOpen: boolean
   setIsNlpQuickAddOpen: (open: boolean) => void
 
@@ -201,6 +206,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   isFeedSubscriptionModalOpen: false,
   setIsFeedSubscriptionModalOpen: (isFeedSubscriptionModalOpen) => set({ isFeedSubscriptionModalOpen }),
+
+  isExportHubOpen: false,
+  setIsExportHubOpen: (isExportHubOpen) => set({ isExportHubOpen }),
+  exportHubInitialTab: 'pdf',
+  setExportHubInitialTab: (exportHubInitialTab) => set({ exportHubInitialTab }),
 
   isNlpQuickAddOpen: false,
   setIsNlpQuickAddOpen: (isNlpQuickAddOpen) => set({ isNlpQuickAddOpen }),

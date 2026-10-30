@@ -18,6 +18,7 @@ import { AutoGenerateModal } from './components/modals/AutoGenerateModal'
 import { FreeSlotFinderModal } from './components/modals/FreeSlotFinderModal'
 import { WorldClockPanel } from './components/calendar/WorldClockPanel'
 import { FeedSubscriptionModal } from './components/modals/FeedSubscriptionModal'
+import { ExportSharingHubModal } from './components/modals/ExportSharingHubModal'
 import { CommandPalette } from './components/CommandPalette'
 import { ConflictPredictorPanel } from './components/ai/ConflictPredictorPanel'
 import { NaturalLanguageQuickAdd } from './components/ai/NaturalLanguageQuickAdd'
@@ -88,6 +89,7 @@ export const App: React.FC = () => {
         <FreeSlotFinderModal />
         <WorldClockPanel />
         <FeedSubscriptionModal />
+        <ExportSharingHubModal />
 
         {/* AI Panels */}
         <ConflictPredictorPanel />
