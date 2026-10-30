@@ -130,7 +130,13 @@ export const NotificationGrouping: React.FC = () => {
           >
             <Layers className="w-3.5 h-3.5" />
             <span>Smart Grouped Alerts</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)]">
+            <span
+              className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full border transition-colors ${
+                activeTab === 'reminders'
+                  ? 'bg-[var(--accent-text)] text-[var(--accent)] border-transparent'
+                  : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-subtle)]'
+              }`}
+            >
               {eventsWithReminders.length}
             </span>
           </button>
@@ -145,7 +151,13 @@ export const NotificationGrouping: React.FC = () => {
           >
             <Clock className="w-3.5 h-3.5" />
             <span>Dispatched History</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)]">
+            <span
+              className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full border transition-colors ${
+                activeTab === 'history'
+                  ? 'bg-[var(--accent-text)] text-[var(--accent)] border-transparent'
+                  : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-subtle)]'
+              }`}
+            >
               {notificationLogs.length}
             </span>
           </button>

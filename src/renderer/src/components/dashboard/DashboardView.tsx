@@ -122,7 +122,13 @@ export const DashboardView: React.FC = () => {
             >
               <BarChart2 className="w-3.5 h-3.5" />
               <span>Analytics & Insights</span>
-              <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border-subtle)]">
+              <span
+                className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full border transition-colors ${
+                  activeTab === 'analytics'
+                    ? 'bg-[var(--accent-text)] text-[var(--accent)] border-transparent'
+                    : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-subtle)]'
+                }`}
+              >
                 Live
               </span>
             </button>
