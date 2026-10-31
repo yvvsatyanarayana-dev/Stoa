@@ -43,6 +43,7 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts'
 import { useAppStore, AppView } from './store/useAppStore'
 import { useAuthStore } from './store/useAuthStore'
+import { useWorkspaceStore } from './store/useWorkspaceStore'
 import { AuthGatewayView } from './components/auth/AuthGatewayView'
 import { CreateWorkspaceModal } from './components/workspace/CreateWorkspaceModal'
 
@@ -65,6 +66,7 @@ export const App: React.FC = () => {
   useGlobalShortcuts()
 
   useEffect(() => {
+    useWorkspaceStore.getState().sanitizeWorkspaces()
     fetchInitialData()
 
     // F4: Multi-Window view routing (?view=...)

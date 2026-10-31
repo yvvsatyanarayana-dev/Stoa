@@ -12,12 +12,13 @@ export interface UserAccount {
 
 export interface AuthState {
   currentUser: UserAccount | null
+  accounts: UserAccount[]
   isAuthenticated: boolean
   isAuthModalOpen: boolean
   setIsAuthModalOpen: (open: boolean) => void
-  loginWithGoogle: (email?: string, name?: string, avatarUrl?: string, workspaceName?: string) => void
-  registerAccount: (name: string, email: string, password?: string, workspaceName?: string, role?: string) => void
-  loginWithCredentials: (email: string, password?: string) => boolean
+  loginWithGoogle: (email?: string, name?: string, avatarUrl?: string, workspaceName?: string) => Promise<void> | void
+  registerAccount: (name: string, email: string, password?: string, workspaceName?: string, role?: string) => Promise<void> | void
+  loginWithCredentials: (email: string, password?: string) => Promise<boolean> | boolean
   updateProfile: (partial: Partial<UserAccount>) => void
   logout: () => void
 }

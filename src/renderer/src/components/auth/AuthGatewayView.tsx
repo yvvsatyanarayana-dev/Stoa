@@ -18,29 +18,29 @@ export const AuthGatewayView: React.FC = () => {
   const [googleEmail, setGoogleEmail] = useState('')
   const [googleWorkspace, setGoogleWorkspace] = useState('')
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim() || !email.trim()) return
     const finalWorkspace = workspaceName.trim() || `${name.trim()}'s Workspace`
-    registerAccount(name.trim(), email.trim(), password, finalWorkspace)
+    await registerAccount(name.trim(), email.trim(), password, finalWorkspace)
   }
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email.trim()) return
-    loginWithCredentials(email.trim(), password)
+    await loginWithCredentials(email.trim(), password)
   }
 
-  const handleGoogleSubmit = (e: React.FormEvent) => {
+  const handleGoogleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const cleanName = googleName.trim() || 'Google User'
     const cleanEmail = googleEmail.trim() || 'user@gmail.com'
     const cleanWs = googleWorkspace.trim() || `${cleanName}'s Workspace`
-    loginWithGoogle(cleanEmail, cleanName, undefined, cleanWs)
+    await loginWithGoogle(cleanEmail, cleanName, undefined, cleanWs)
   }
 
-  const handleDemoAccess = () => {
-    registerAccount('Demo User', 'demo@stoa.local', 'demo123', 'My Workspace')
+  const handleDemoAccess = async () => {
+    await registerAccount('Demo User', 'demo@stoa.local', 'demo123', 'My Workspace')
   }
 
   return (
