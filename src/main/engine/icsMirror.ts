@@ -52,7 +52,7 @@ export async function fetchAndParseMirror(mirror: ICSMirrorConfig): Promise<{
   lastModified?: string
 }> {
   const headers: Record<string, string> = {
-    'User-Agent': 'ChronoDeskPro/1.0'
+    'User-Agent': 'StoaPro/1.0'
   }
 
   if (mirror.etag) {

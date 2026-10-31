@@ -76,11 +76,11 @@ const DEFAULT_FEDERATION_PARTNERS: FederationPartner[] = [
 export const useP2PStore = create<P2PState>()(
   persist(
     (set, get) => ({
-      localNodeId: `CRD-NODE-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+      localNodeId: `STOA-NODE-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
       localNodeName: 'Local Primary Workstation',
-      localOrganization: 'ChronoDesk Enterprise',
+      localOrganization: 'Stoa Enterprise Mesh',
       isP2PActive: true,
-      pairingInviteCode: 'CRD-8F2A-9941-EK02',
+      pairingInviteCode: 'STOA-8F2A-9941-EK02',
 
       peers: [
         {
@@ -129,7 +129,7 @@ export const useP2PStore = create<P2PState>()(
 
       generateNewInviteCode: () => {
         const rand = () => Math.random().toString(36).substring(2, 6).toUpperCase()
-        const code = `CRD-${rand()}-${rand()}-${rand()}`
+        const code = `STOA-${rand()}-${rand()}-${rand()}`
         set({ pairingInviteCode: code })
         return code
       },

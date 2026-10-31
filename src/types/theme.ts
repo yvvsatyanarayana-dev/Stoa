@@ -170,7 +170,7 @@ export const DENSITY_MULTIPLIERS: Record<DensityMode, { space: number; radius: n
 // Preset theme configurations
 export const PRESET_THEMES: Omit<ThemeConfig, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
-    name: 'ChronoDesk Dark (B&W)',
+    name: 'Stoa Dark (Monochrome)',
     mode: 'manual',
     basePalette: DEFAULT_DARK_PALETTE,
     circadianOffsetMinutes: 0,
@@ -184,7 +184,7 @@ export const PRESET_THEMES: Omit<ThemeConfig, 'id' | 'createdAt' | 'updatedAt'>[
     customCss: '',
   },
   {
-    name: 'ChronoDesk Light (B&W)',
+    name: 'Stoa Light (Monochrome)',
     mode: 'manual',
     basePalette: DEFAULT_BW_PALETTE,
     circadianOffsetMinutes: 0,

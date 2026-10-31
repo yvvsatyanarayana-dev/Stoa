@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
+import { useAuthStore } from './useAuthStore'
 import type {
   Collaborator,
   AnnotationThread,
@@ -161,7 +162,7 @@ export const useAnnotationStore = create<AnnotationStore>()(
               id: `rep-seed-${idx}`,
               threadId: `th-seed-${evt.id}-${idx}`,
               authorId: 'collab-me',
-              authorName: 'Alex Mercer (You)',
+              authorName: useAuthStore.getState().currentUser?.name ? `${useAuthStore.getState().currentUser?.name} (You)` : 'You',
               content: 'Confirmed, I will handle the follow up.',
               createdAt: new Date(now.getTime() - idx * 1800000).toISOString()
             }

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { useAnnotationStore } from '../../store/useAnnotationStore'
 import { useAppStore } from '../../store/useAppStore'
+import { useAuthStore } from '../../store/useAuthStore'
 import type { AnnotationType } from '../../types/annotation'
 
 type ActiveViewTab = 'threads' | 'timeline' | 'live'
@@ -37,6 +38,9 @@ export const AnnotationLayerView: React.FC = () => {
   } = useAnnotationStore()
 
   const { events, populateStarterEvents } = useAppStore()
+  const { currentUser } = useAuthStore()
+  const myName = currentUser?.name ? `${currentUser.name} (You)` : 'You'
+  const myRealName = currentUser?.name || 'Administrator'
 
   const [activeTab, setActiveTab] = useState<ActiveViewTab>('threads')
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'resolved'>('all')
@@ -107,7 +111,7 @@ export const AnnotationLayerView: React.FC = () => {
       id: `rep-${Date.now()}`,
       threadId: selectedThread.id,
       authorId: 'collab-me',
-      authorName: 'Alex Mercer (You)',
+      authorName: myName,
       content: replyText.trim(),
       createdAt: new Date().toISOString()
     })
@@ -130,7 +134,7 @@ export const AnnotationLayerView: React.FC = () => {
       type: newThreadType,
       status: 'open',
       authorId: 'collab-me',
-      authorName: 'Alex Mercer (You)',
+      authorName: myName,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       content: newThreadContent.trim(),
@@ -408,7 +412,7 @@ export const AnnotationLayerView: React.FC = () => {
                     <div className="flex items-center gap-2">
                       {selectedThread.status !== 'resolved' ? (
                         <button
-                          onClick={() => resolveThread(selectedThread.id, 'Alex Mercer')}
+                          onClick={() => resolveThread(selectedThread.id, myRealName)}
                           className="h-7 px-3 text-xs border border-[var(--border-subtle)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] flex items-center gap-1.5 transition-colors"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5" />

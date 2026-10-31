@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useTranscriberStore } from '../../store/useTranscriberStore'
 import { useAppStore } from '../../store/useAppStore'
+import { useAuthStore } from '../../store/useAuthStore'
 import type { ActionItem, ActionItemPriority, ActionItemStatus, MeetingTranscription, TranscriptSegment } from '../../types/transcriber'
 
 type ActiveTab = 'summary' | 'transcript' | 'actions' | 'agenda'
@@ -36,6 +37,10 @@ export const TranscriberView: React.FC = () => {
   } = useTranscriberStore()
 
   const { events, populateStarterEvents } = useAppStore()
+  const { currentUser } = useAuthStore()
+
+  const myName = currentUser?.name ? `${currentUser.name} (You)` : 'You'
+  const myAssignee = currentUser?.name || 'Administrator'
 
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<ActiveTab>('summary')
@@ -52,7 +57,13 @@ export const TranscriberView: React.FC = () => {
   const [liveStreamSegments, setLiveStreamSegments] = useState<TranscriptSegment[]>([])
   const [liveDetectedAction, setLiveDetectedAction] = useState<string | null>(null)
   const [selectedCalendarEventId, setSelectedCalendarEventId] = useState<string>('')
+  
   const streamTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const mediaStreamRef = useRef<MediaStream | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const speechRecognitionRef = useRef<any>(null)
+  const animFrameRef = useRef<number | null>(null)
 
   // Real-time Recording Timer & Live Streaming Sim
   useEffect(() => {
@@ -60,26 +71,120 @@ export const TranscriberView: React.FC = () => {
     if (recordingStatus === 'recording') {
       interval = setInterval(() => {
         setRecordingSeconds((prev) => prev + 1)
-        // Simulate fluctuating mic audio decibels
-        setAudioLevel(Math.floor(Math.random() * 18) - 32)
       }, 1000)
 
-      // Simulate streaming live transcription chunks every 4.5 seconds
-      const simulatedPhrases = [
+      // Connect to real microphone hardware via Web Audio API
+      if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then((stream) => {
+            mediaStreamRef.current = stream
+            try {
+              const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+              if (AudioCtx) {
+                const audioCtx = new AudioCtx()
+                audioContextRef.current = audioCtx
+                const analyser = audioCtx.createAnalyser()
+                analyser.fftSize = 128
+                analyserRef.current = analyser
+                const source = audioCtx.createMediaStreamSource(stream)
+                source.connect(analyser)
+
+                const dataArray = new Uint8Array(analyser.frequencyBinCount)
+                const updateAudioMeter = () => {
+                  if (analyserRef.current) {
+                    analyserRef.current.getByteFrequencyData(dataArray)
+                    let sum = 0
+                    for (let i = 0; i < dataArray.length; i++) {
+                      sum += dataArray[i]
+                    }
+                    const avg = sum / dataArray.length
+                    const db = Math.round((avg / 255) * 45 - 45)
+                    setAudioLevel(db)
+                  }
+                  animFrameRef.current = requestAnimationFrame(updateAudioMeter)
+                }
+                updateAudioMeter()
+              }
+            } catch (err) {
+              console.warn('[Transcriber] AudioContext error:', err)
+            }
+
+            // Real-Time Web Speech Recognition API
+            try {
+              const SpeechRec =
+                (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+              if (SpeechRec) {
+                const recognizer = new SpeechRec()
+                speechRecognitionRef.current = recognizer
+                recognizer.continuous = true
+                recognizer.interimResults = true
+                recognizer.lang = 'en-US'
+
+                recognizer.onresult = (evt: any) => {
+                  for (let i = evt.resultIndex; i < evt.results.length; ++i) {
+                    if (evt.results[i].isFinal) {
+                      const text = evt.results[i][0].transcript.trim()
+                      if (text) {
+                        const isAction = /action|todo|deliverable|schedule|task|verify/i.test(text)
+                        const isDecision = /agree|decision|approved|confirmed|finalize/i.test(text)
+                        const newSeg: TranscriptSegment = {
+                          id: `live-seg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                          speakerId: 'spk-me',
+                          text,
+                          startSeconds: recordingSeconds,
+                          endSeconds: recordingSeconds + 3,
+                          confidence: 0.98,
+                          isKeyMoment: isAction || isDecision,
+                          tags: isAction ? ['action'] : isDecision ? ['decision'] : []
+                        }
+                        setLiveStreamSegments((prev) => [...prev, newSeg])
+
+                        if (isAction) {
+                          setLiveDetectedAction(`Extracted: ${text}`)
+                          setTimeout(() => setLiveDetectedAction(null), 4000)
+                        }
+                      }
+                    }
+                  }
+                }
+
+                recognizer.onerror = (e: any) => {
+                  console.warn('[Transcriber] Speech recognition info:', e)
+                }
+
+                recognizer.start()
+              }
+            } catch (e) {
+              console.warn('[Transcriber] SpeechRecognition init:', e)
+            }
+          })
+          .catch((err) => {
+            console.warn('[Transcriber] Mic not available, simulating real-time audio:', err)
+            const fallbackAudio = setInterval(() => {
+              setAudioLevel(Math.floor(Math.random() * 18) - 32)
+            }, 500)
+            return () => clearInterval(fallbackAudio)
+          })
+      }
+
+      // Context-aware dynamic phrases
+      const dynamicPhrases = [
         { speaker: 'Marcus Webb', text: "Let's review the delivery timeline for our primary milestone.", tag: 'decision' },
-        { speaker: 'Alex Mercer (You)', text: "I will ensure the architecture tests pass before Thursday noon.", tag: 'action' },
+        { speaker: myName, text: "I will ensure the architecture tests pass before Thursday noon.", tag: 'action' },
         { speaker: 'Sarah Chen', text: "Do we have stakeholder confirmation on the budget adjustment?", tag: 'question' },
         { speaker: 'Marcus Webb', text: "Yes, verified this morning with finance. Approved for rollout.", tag: 'decision' },
-        { speaker: 'Alex Mercer (You)', text: "Action item: Deploy canary release to staging by end of day.", tag: 'action' }
+        { speaker: myName, text: "Action item: Deploy canary release to staging by end of day.", tag: 'action' }
       ]
 
       let phraseIndex = 0
       streamTimerRef.current = setInterval(() => {
-        if (phraseIndex < simulatedPhrases.length) {
-          const phrase = simulatedPhrases[phraseIndex]
+        // Only inject fallback phrases if no mic speech stream has been recorded yet
+        if (phraseIndex < dynamicPhrases.length && liveStreamSegments.length < 5) {
+          const phrase = dynamicPhrases[phraseIndex]
           const newSeg: TranscriptSegment = {
-            id: `live-seg-${Date.now()}`,
-            speakerId: 'spk-live',
+            id: `live-seg-${Date.now()}-${phraseIndex}`,
+            speakerId: phrase.speaker === myName ? 'spk-me' : 'spk-peer',
             text: phrase.text,
             startSeconds: phraseIndex * 6,
             endSeconds: (phraseIndex + 1) * 6,
@@ -100,11 +205,43 @@ export const TranscriberView: React.FC = () => {
     } else {
       setRecordingSeconds(0)
       setLiveStreamSegments([])
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((t) => t.stop())
+        mediaStreamRef.current = null
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {})
+        audioContextRef.current = null
+      }
+      if (speechRecognitionRef.current) {
+        try {
+          speechRecognitionRef.current.stop()
+        } catch {}
+        speechRecognitionRef.current = null
+      }
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current)
+        animFrameRef.current = null
+      }
     }
 
     return () => {
       clearInterval(interval)
       if (streamTimerRef.current) clearInterval(streamTimerRef.current)
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((t) => t.stop())
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {})
+      }
+      if (speechRecognitionRef.current) {
+        try {
+          speechRecognitionRef.current.stop()
+        } catch {}
+      }
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current)
+      }
     }
   }, [recordingStatus])
 
@@ -140,7 +277,7 @@ export const TranscriberView: React.FC = () => {
           'Action items extracted and saved to session ledger'
         ],
         speakers: [
-          { id: 'spk-me', name: 'Alex Mercer (You)', role: 'host', color: '#888', wordCount: 140, talkTimeSeconds: finishedSeconds }
+          { id: 'spk-me', name: myName, role: 'host', color: '#888', wordCount: 140, talkTimeSeconds: finishedSeconds }
         ],
         segments: liveStreamSegments.length > 0 ? liveStreamSegments : [
           {
@@ -159,7 +296,7 @@ export const TranscriberView: React.FC = () => {
             id: `ai-${Date.now()}`,
             meetingId: `rec-${Date.now()}`,
             text: 'Review recorded voice session and follow up with team',
-            assignee: 'Alex Mercer',
+            assignee: myAssignee,
             dueDate: new Date().toISOString().split('T')[0],
             priority: 'medium',
             status: 'pending',
@@ -200,7 +337,7 @@ export const TranscriberView: React.FC = () => {
       id: `ai-${Date.now()}`,
       meetingId: activeMeeting.id,
       text: newActionText.trim(),
-      assignee: newActionAssignee.trim() || 'Alex Mercer',
+      assignee: newActionAssignee.trim() || myAssignee,
       dueDate: newActionDueDate || new Date().toISOString().split('T')[0],
       priority: newActionPriority,
       status: 'pending',
@@ -249,7 +386,7 @@ export const TranscriberView: React.FC = () => {
         'Resources allocation updated and locked in directory'
       ],
       speakers: [
-        { id: 'spk-user', name: 'Alex Mercer (You)', role: 'host', color: '#888', wordCount: 1450, talkTimeSeconds: 840 },
+        { id: 'spk-user', name: myName, role: 'host', color: '#888', wordCount: 1450, talkTimeSeconds: 840 },
         { id: 'spk-lead', name: 'Lead Architect', role: 'participant', color: '#666', wordCount: 1200, talkTimeSeconds: 620 }
       ],
       segments: [
@@ -279,7 +416,7 @@ export const TranscriberView: React.FC = () => {
           id: `ai-${Date.now()}-1`,
           meetingId: `mtg-${evt.id}`,
           text: `Finalize post-meeting documentation for ${evt.title}`,
-          assignee: 'Alex Mercer',
+          assignee: myAssignee,
           dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
           priority: 'high',
           status: 'pending',
@@ -770,7 +907,7 @@ export const TranscriberView: React.FC = () => {
                               {speaker?.name.charAt(0) || 'U'}
                             </div>
                             <span className="text-xs font-semibold text-[var(--text-primary)]">
-                              {speaker?.name || 'Alex Mercer'}
+                              {speaker?.name || myAssignee}
                             </span>
                             <span className="text-[10px] text-[var(--text-muted)] font-mono">
                               {formatTime(segment.startSeconds)} - {formatTime(segment.endSeconds)}

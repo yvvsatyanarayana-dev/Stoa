@@ -175,7 +175,7 @@ export async function importWorkspaceBundle(filePath: string, options: BundleImp
       checksumSha256: checksum,
       encryptionParams: params,
       tablesIncluded: manifest.tables,
-      createdBy: 'ChronoDeskPro'
+      createdBy: manifest.createdBy || 'StoaPro'
     })
 
     return {
@@ -206,7 +206,7 @@ export async function importWorkspaceBundle(filePath: string, options: BundleImp
     checksumSha256: checksum,
     encryptionParams: params,
     tablesIncluded: manifest.tables,
-    createdBy: 'ChronoDeskPro'
+    createdBy: manifest.createdBy || 'StoaPro'
   })
 
   return {

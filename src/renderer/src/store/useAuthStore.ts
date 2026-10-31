@@ -21,8 +21,8 @@ export const useAuthStore = create<AuthState>()(
       setIsAuthModalOpen: (open) => set({ isAuthModalOpen: open }),
 
       loginWithGoogle: async (
-        email = 'alex.chen@gmail.com',
-        name = 'Alex Chen',
+        email = 'user@gmail.com',
+        name = 'Google User',
         avatarUrl,
         workspaceName
       ) => {

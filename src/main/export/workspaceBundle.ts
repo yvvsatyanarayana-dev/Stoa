@@ -136,7 +136,7 @@ export async function exportWorkspaceBundle(options: BundleExportOptions): Promi
   const manifest: BundleManifest = {
     version: 'v1',
     createdAt: new Date().toISOString(),
-    createdBy: 'ChronoDeskPro',
+    createdBy: 'StoaPro',
     appVersion: '1.0.0',
     tables,
     recordCounts,

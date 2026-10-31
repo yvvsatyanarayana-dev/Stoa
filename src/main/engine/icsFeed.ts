@@ -127,7 +127,7 @@ export async function fetchIcsFeed(url: string): Promise<string> {
 
   return new Promise((resolve, reject) => {
     client
-      .get(normalizedUrl, { headers: { 'User-Agent': 'ChronoDeskPro/1.0' } }, (res) => {
+      .get(normalizedUrl, { headers: { 'User-Agent': 'StoaPro/1.0' } }, (res) => {
         if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
           // Handle redirect
           fetchIcsFeed(res.headers.location).then(resolve).catch(reject)

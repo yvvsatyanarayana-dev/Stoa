@@ -266,7 +266,7 @@ export const P2PRelayView: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. CRD-8A91-4902-EK11"
+                  placeholder="e.g. STOA-8A91-4902-EK11"
                   value={inputPairCode}
                   onChange={(e) => setInputPairCode(e.target.value)}
                   className="w-full px-3 py-2 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] text-xs font-mono text-[var(--text-primary)] focus:outline-none"

@@ -628,7 +628,7 @@ export const ConferenceView: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Dr. Alex Mercer"
+                    placeholder="e.g. Dr. Eleanor Vance"
                     value={editingSession.speaker || ''}
                     onChange={(e) => setEditingSession({ ...editingSession, speaker: e.target.value })}
                     className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
