@@ -371,7 +371,7 @@ export const Sidebar: React.FC = () => {
           <button
             onClick={() => setIsAuthModalOpen(true)}
             className="flex items-center gap-2.5 min-w-0 text-left hover:opacity-85 transition-opacity group cursor-pointer"
-            title="Manage User Account or Sign In with Google"
+            title="Account Profile Settings"
           >
             <div className="relative shrink-0">
               {currentUser?.avatarUrl ? (
