@@ -13,7 +13,12 @@ import {
   Tv,
   Share2,
   CheckCircle2,
-  Sliders
+  Sliders,
+  Mic,
+  Store,
+  DoorClosed,
+  Coffee,
+  Building
 } from 'lucide-react'
 import type { SpatialZone, SpatialZoneType } from '../../types/spatial'
 
@@ -138,8 +143,8 @@ export const SpatialCanvasView: React.FC = () => {
       type: newZoneForm.type,
       x: 100,
       y: 100,
-      width: newZoneForm.type === 'stage' ? 360 : newZoneForm.type === 'booth' ? 180 : 260,
-      height: newZoneForm.type === 'stage' ? 200 : newZoneForm.type === 'booth' ? 160 : 180,
+      width: newZoneForm.type === 'stage' ? 360 : newZoneForm.type === 'booth' ? 200 : 260,
+      height: newZoneForm.type === 'stage' ? 200 : newZoneForm.type === 'booth' ? 170 : 180,
       rotation: 0,
       capacity: Number(newZoneForm.capacity),
       maxPowerKw: Number(newZoneForm.maxPowerKw),
@@ -158,8 +163,8 @@ export const SpatialCanvasView: React.FC = () => {
       type: newNodeForm.type,
       x: 200 + Math.random() * 200,
       y: 150 + Math.random() * 100,
-      width: 220,
-      height: 100,
+      width: 240,
+      height: 110,
       timeStart: newNodeForm.timeStart,
       timeEnd: newNodeForm.timeEnd,
       speaker: newNodeForm.speaker,
@@ -169,23 +174,39 @@ export const SpatialCanvasView: React.FC = () => {
     setIsAddNodeModalOpen(false)
   }
 
+  const renderZoneIcon = (type: SpatialZoneType) => {
+    switch (type) {
+      case 'stage':
+        return <Mic className="w-3.5 h-3.5 text-[var(--text-primary)]" />
+      case 'booth':
+        return <Store className="w-3.5 h-3.5 text-[var(--text-primary)]" />
+      case 'breakout':
+        return <DoorClosed className="w-3.5 h-3.5 text-[var(--text-primary)]" />
+      case 'lounge':
+        return <Coffee className="w-3.5 h-3.5 text-[var(--text-primary)]" />
+      default:
+        return <Building className="w-3.5 h-3.5 text-[var(--text-primary)]" />
+    }
+  }
+
   return (
     <div className="flex-1 flex flex-col h-full bg-[var(--bg-app)] text-[var(--text-primary)] select-none overflow-hidden w-full">
-      {/* Top Spatial Control Toolbar */}
-      <div className="h-12 border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 flex items-center justify-between shrink-0 gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 font-bold text-xs">
+      {/* Top Spatial Control Toolbar (Fixed height, perfectly centered) */}
+      <div className="h-11 border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 flex items-center justify-between shrink-0 gap-3">
+        {/* Left Side: Title & Switchers */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2 font-bold text-xs shrink-0">
             <Box className="w-4 h-4 text-[var(--text-primary)]" />
-            <span>Spatial Canvas & 3D Floor Plan</span>
+            <span className="hidden sm:inline">Spatial Canvas & 3D Floor Plan</span>
           </div>
 
-          <div className="h-4 w-px bg-[var(--border-subtle)] mx-1" />
+          <div className="h-4 w-px bg-[var(--border-subtle)] shrink-0" />
 
           {/* Mode Switcher */}
-          <div className="flex items-center bg-[var(--bg-subtle)] p-0.5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] text-[11px] font-medium">
+          <div className="flex items-center bg-[var(--bg-subtle)] p-0.5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] text-[11px] font-medium shrink-0">
             <button
               onClick={() => setViewMode('2d')}
-              className={`px-2.5 py-1 rounded-[var(--radius-sm)] flex items-center gap-1.5 transition-all ${
+              className={`h-7 px-2.5 rounded-[var(--radius-sm)] flex items-center gap-1.5 transition-all ${
                 viewMode === '2d'
                   ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] font-semibold shadow-xs border border-[var(--border-subtle)]'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -196,7 +217,7 @@ export const SpatialCanvasView: React.FC = () => {
             </button>
             <button
               onClick={() => setViewMode('isometric')}
-              className={`px-2.5 py-1 rounded-[var(--radius-sm)] flex items-center gap-1.5 transition-all ${
+              className={`h-7 px-2.5 rounded-[var(--radius-sm)] flex items-center gap-1.5 transition-all ${
                 viewMode === 'isometric'
                   ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] font-semibold shadow-xs border border-[var(--border-subtle)]'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -207,7 +228,7 @@ export const SpatialCanvasView: React.FC = () => {
             </button>
             <button
               onClick={() => setViewMode('whiteboard')}
-              className={`px-2.5 py-1 rounded-[var(--radius-sm)] flex items-center gap-1.5 transition-all ${
+              className={`h-7 px-2.5 rounded-[var(--radius-sm)] flex items-center gap-1.5 transition-all ${
                 viewMode === 'whiteboard'
                   ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] font-semibold shadow-xs border border-[var(--border-subtle)]'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -218,12 +239,12 @@ export const SpatialCanvasView: React.FC = () => {
             </button>
           </div>
 
-          {/* Floor Plan Picker (when in 2d/isometric) */}
+          {/* Floor Plan Picker */}
           {viewMode !== 'whiteboard' && (
             <select
               value={activeFloorPlanId}
               onChange={(e) => setActiveFloorPlanId(e.target.value)}
-              className="px-2.5 py-1 text-xs bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] text-[var(--text-primary)] font-medium focus:outline-none"
+              className="h-7 px-2 text-xs bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] text-[var(--text-primary)] font-medium focus:outline-none shrink-0 truncate max-w-[220px]"
             >
               {floorPlans.map((fp) => (
                 <option key={fp.id} value={fp.id}>
@@ -234,31 +255,32 @@ export const SpatialCanvasView: React.FC = () => {
           )}
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2">
+        {/* Right Side: Tools & Actions */}
+        <div className="flex items-center gap-2 shrink-0">
           {/* Zoom controls */}
-          <div className="flex items-center bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] p-0.5 text-xs">
+          <div className="flex items-center bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] p-0.5 text-xs h-7">
             <button
               onClick={() => setZoom((z) => Math.max(0.4, z - 0.15))}
-              className="p-1 hover:bg-[var(--bg-hover)] rounded text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              className="h-6 w-6 flex items-center justify-center hover:bg-[var(--bg-hover)] rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
               title="Zoom Out"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
-            <span className="px-2 font-mono text-[10px] text-[var(--text-secondary)] font-semibold">
+            <span className="px-1.5 font-mono text-[10px] text-[var(--text-secondary)] font-semibold min-w-[36px] text-center">
               {Math.round(zoom * 100)}%
             </span>
             <button
               onClick={() => setZoom((z) => Math.min(2.5, z + 0.15))}
-              className="p-1 hover:bg-[var(--bg-hover)] rounded text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              className="h-6 w-6 flex items-center justify-center hover:bg-[var(--bg-hover)] rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
               title="Zoom In"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </button>
+            <div className="h-3.5 w-px bg-[var(--border-subtle)] mx-0.5" />
             <button
               onClick={resetViewport}
-              className="p-1 hover:bg-[var(--bg-hover)] rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] border-l border-[var(--border-subtle)] ml-0.5 pl-1.5"
-              title="Reset View"
+              className="h-6 w-6 flex items-center justify-center hover:bg-[var(--bg-hover)] rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+              title="Reset Viewport"
             >
               <Maximize2 className="w-3 h-3" />
             </button>
@@ -267,7 +289,7 @@ export const SpatialCanvasView: React.FC = () => {
           {/* Grid Snap Toggle */}
           <button
             onClick={() => setGridSnap(!gridSnap)}
-            className={`p-1.5 rounded-[var(--radius-md)] border text-xs flex items-center gap-1.5 transition-colors ${
+            className={`h-7 w-7 flex items-center justify-center rounded-[var(--radius-md)] border text-xs transition-colors ${
               gridSnap
                 ? 'bg-[var(--accent)] text-[var(--accent-text)] border-[var(--accent)]'
                 : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'
@@ -281,7 +303,7 @@ export const SpatialCanvasView: React.FC = () => {
           {viewMode === 'whiteboard' && (
             <button
               onClick={autoAlignNodes}
-              className="btn-secondary text-xs py-1 px-2.5 flex items-center gap-1.5 shadow-xs"
+              className="btn-secondary h-7 text-xs px-2.5 flex items-center gap-1.5 shadow-xs whitespace-nowrap"
               title="Auto-organize nodes sequentially along timeline"
             >
               <Sliders className="w-3.5 h-3.5" />
@@ -293,18 +315,18 @@ export const SpatialCanvasView: React.FC = () => {
           {viewMode === 'whiteboard' ? (
             <button
               onClick={() => setIsAddNodeModalOpen(true)}
-              className="btn-primary text-xs py-1 px-3 flex items-center gap-1.5 shadow-xs"
+              className="btn-primary h-7 text-xs px-3 flex items-center gap-1.5 shadow-xs whitespace-nowrap"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Node / Cue</span>
+              <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
+              <span>Add Node</span>
             </button>
           ) : (
             <button
               onClick={() => setIsAddZoneModalOpen(true)}
-              className="btn-primary text-xs py-1 px-3 flex items-center gap-1.5 shadow-xs"
+              className="btn-primary h-7 text-xs px-3 flex items-center gap-1.5 shadow-xs whitespace-nowrap"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Zone / Booth</span>
+              <Plus className="w-3.5 h-3.5 stroke-[2.2]" />
+              <span>Add Zone</span>
             </button>
           )}
         </div>
@@ -347,20 +369,20 @@ export const SpatialCanvasView: React.FC = () => {
                   height: `${activePlan.gridHeight}px`,
                   transform:
                     viewMode === 'isometric'
-                      ? 'perspective(1200px) rotateX(55deg) rotateZ(-40deg) translateZ(0)'
+                      ? 'perspective(1400px) rotateX(55deg) rotateZ(-40deg) translateZ(0)'
                       : 'none',
                   transformStyle: 'preserve-3d',
                   transition: 'transform 300ms cubic-bezier(0.16, 1, 0.3, 1)'
                 }}
-                className="relative border-2 border-dashed border-[var(--border-default)] rounded-[var(--radius-lg)] bg-[var(--bg-elevated)]/40 shadow-xl m-10"
+                className="relative border border-[var(--border-default)] rounded-[var(--radius-lg)] bg-[var(--bg-elevated)]/30 shadow-xl m-8"
               >
-                {/* Hall Title Overlay */}
+                {/* Architectural Blueprint Header Tag */}
                 <div className="absolute top-3 left-4 pointer-events-none select-none flex items-center gap-2">
-                  <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-[var(--text-muted)]">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
                     {activePlan.name} • {activePlan.level}
                   </span>
-                  <span className="text-[10px] font-mono text-[var(--text-muted)] px-1.5 py-0.2 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
-                    {currentPlanZones.length} Zones Defined
+                  <span className="text-[9px] font-mono font-bold text-[var(--text-secondary)] px-2 py-0.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
+                    {currentPlanZones.length} Zones
                   </span>
                 </div>
 
@@ -368,8 +390,6 @@ export const SpatialCanvasView: React.FC = () => {
                 {currentPlanZones.map((zone) => {
                   const isSelected = selectedZoneId === zone.id
                   const isStage = zone.type === 'stage'
-                  const isBooth = zone.type === 'booth'
-                  const isLounge = zone.type === 'lounge'
 
                   return (
                     <div
@@ -383,59 +403,52 @@ export const SpatialCanvasView: React.FC = () => {
                         height: `${zone.height}px`,
                         transform:
                           viewMode === 'isometric'
-                            ? `translateZ(${isStage ? '24px' : isLounge ? '16px' : '10px'})`
+                            ? `translateZ(${isStage ? '28px' : '14px'})`
                             : 'none',
                         boxShadow:
                           viewMode === 'isometric'
                             ? isSelected
-                              ? '0 20px 30px rgba(0,0,0,0.5), 0 0 0 2px var(--accent)'
-                              : '0 10px 18px rgba(0,0,0,0.3)'
+                              ? '0 24px 32px rgba(0,0,0,0.4), 0 0 0 2px var(--accent)'
+                              : '0 12px 20px rgba(0,0,0,0.25)'
                             : isSelected
                             ? '0 0 0 2px var(--accent)'
                             : 'none'
                       }}
                       className={`rounded-[var(--radius-md)] border p-3 flex flex-col justify-between transition-all cursor-move select-none ${
                         isSelected
-                          ? 'border-[var(--accent)] bg-[var(--bg-elevated)] ring-2 ring-[var(--accent)]/40 z-20'
-                          : 'border-[var(--border-default)] bg-[var(--bg-subtle)] hover:border-[var(--text-muted)] z-10'
+                          ? 'border-[var(--accent)] bg-[var(--bg-elevated)] shadow-md z-20 ring-1 ring-[var(--accent)]'
+                          : 'border-[var(--border-default)] bg-[var(--bg-elevated)] hover:border-[var(--text-muted)] z-10'
                       }`}
                     >
                       {/* Zone Header */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className={`w-2 h-2 rounded-full shrink-0 ${
-                                isStage
-                                  ? 'bg-amber-400'
-                                  : isBooth
-                                  ? 'bg-emerald-400'
-                                  : isLounge
-                                  ? 'bg-purple-400'
-                                  : 'bg-blue-400'
-                              }`}
-                            />
+                      <div>
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <div className="w-5 h-5 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center shrink-0">
+                              {renderZoneIcon(zone.type)}
+                            </div>
                             <span className="font-bold text-xs truncate text-[var(--text-primary)]">
                               {zone.name}
                             </span>
                           </div>
-                          <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider block mt-0.5">
-                            {zone.type}
+
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-primary)] shrink-0">
+                            {zone.capacity} pax
                           </span>
                         </div>
 
-                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--text-secondary)]">
-                          {zone.capacity} pax
+                        <span className="text-[9px] font-mono uppercase tracking-wider text-[var(--text-muted)] block">
+                          {zone.type}
                         </span>
                       </div>
 
                       {/* Zone Content / Exhibitor */}
-                      <div className="my-1 text-[11px] text-[var(--text-secondary)] line-clamp-2">
+                      <div className="my-1.5 text-[11px] text-[var(--text-secondary)] line-clamp-2 leading-relaxed">
                         {zone.assignedExhibitor || zone.notes || 'Unassigned Zone'}
                       </div>
 
                       {/* Zone Footer / Specs */}
-                      <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] pt-1.5 border-t border-[var(--border-subtle)]">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] pt-2 border-t border-[var(--border-subtle)]">
                         <div className="flex items-center gap-1">
                           <Zap className="w-3 h-3 text-[var(--text-muted)]" />
                           <span>{zone.maxPowerKw || 5} kW</span>
@@ -515,7 +528,6 @@ export const SpatialCanvasView: React.FC = () => {
                 {/* Whiteboard Nodes */}
                 {whiteboardNodes.map((node) => {
                   const isSelected = selectedWhiteboardNodeId === node.id
-                  const isSticky = node.type === 'sticky'
 
                   return (
                     <div
@@ -528,19 +540,15 @@ export const SpatialCanvasView: React.FC = () => {
                         width: `${node.width}px`,
                         minHeight: `${node.height}px`
                       }}
-                      className={`rounded-[var(--radius-md)] border p-3.5 shadow-sm transition-all select-none cursor-pointer flex flex-col justify-between ${
-                        isSticky
-                          ? 'bg-[var(--bg-elevated)] border-[var(--border-default)]'
-                          : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)]'
-                      } ${
+                      className={`rounded-[var(--radius-md)] border p-3.5 shadow-xs transition-all select-none cursor-pointer flex flex-col justify-between bg-[var(--bg-elevated)] ${
                         isSelected
                           ? 'border-[var(--accent)] ring-2 ring-[var(--accent)]/40 shadow-md z-20'
-                          : 'hover:border-[var(--text-muted)] z-10'
+                          : 'border-[var(--border-subtle)] hover:border-[var(--text-muted)] z-10'
                       }`}
                     >
                       <div>
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <span className="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.2 rounded bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border-subtle)]">
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <span className="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.2 rounded bg-[var(--bg-subtle)] text-[var(--text-muted)] border border-[var(--border-subtle)]">
                             {node.type}
                           </span>
                           {node.timeStart && (
@@ -565,15 +573,7 @@ export const SpatialCanvasView: React.FC = () => {
                       </div>
 
                       <div className="flex items-center justify-between pt-2 mt-2 border-t border-[var(--border-subtle)] text-[10px] font-mono">
-                        <span
-                          className={`capitalize font-semibold ${
-                            node.status === 'completed'
-                              ? 'text-emerald-400'
-                              : node.status === 'in_progress'
-                              ? 'text-amber-400'
-                              : 'text-[var(--text-muted)]'
-                          }`}
-                        >
+                        <span className="capitalize font-semibold text-[var(--text-secondary)]">
                           ● {node.status || 'pending'}
                         </span>
                         <button
@@ -581,7 +581,7 @@ export const SpatialCanvasView: React.FC = () => {
                             e.stopPropagation()
                             deleteWhiteboardNode(node.id)
                           }}
-                          className="p-1 hover:text-red-400 transition-colors"
+                          className="p-1 text-[var(--text-muted)] hover:text-red-400 transition-colors"
                           title="Delete Node"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -597,7 +597,7 @@ export const SpatialCanvasView: React.FC = () => {
 
         {/* Right Drawer: Spatial Inspector & Conflict Resolver */}
         <div className="w-80 border-l border-[var(--border-subtle)] bg-[var(--bg-elevated)] flex flex-col h-full shrink-0">
-          <div className="p-3.5 border-b border-[var(--border-subtle)] flex items-center justify-between">
+          <div className="h-11 px-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)] flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5" />
               <span>Spatial Inspector</span>
@@ -605,15 +605,16 @@ export const SpatialCanvasView: React.FC = () => {
             {selectedZone && (
               <button
                 onClick={() => deleteZone(selectedZone.id)}
-                className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1"
+                className="text-xs text-[var(--text-muted)] hover:text-red-400 flex items-center gap-1 p-1 rounded transition-colors"
+                title="Delete Zone"
               >
-                <Trash2 className="w-3 h-3" />
+                <Trash2 className="w-3.5 h-3.5" />
                 <span>Delete</span>
               </button>
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-5 text-xs">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
             {selectedZone ? (
               <div className="space-y-4">
                 <div>
@@ -624,7 +625,7 @@ export const SpatialCanvasView: React.FC = () => {
                     type="text"
                     value={selectedZone.name}
                     onChange={(e) => updateZone(selectedZone.id, { name: e.target.value })}
-                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none"
                   />
                 </div>
 
@@ -636,7 +637,7 @@ export const SpatialCanvasView: React.FC = () => {
                     <select
                       value={selectedZone.type}
                       onChange={(e) => updateZone(selectedZone.id, { type: e.target.value as SpatialZoneType })}
-                      className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-2 py-1.5 text-xs text-[var(--text-primary)]"
+                      className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-2 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
                     >
                       <option value="stage">Stage / Plenary</option>
                       <option value="booth">Exhibition Booth</option>
@@ -654,7 +655,7 @@ export const SpatialCanvasView: React.FC = () => {
                       type="number"
                       value={selectedZone.capacity}
                       onChange={(e) => updateZone(selectedZone.id, { capacity: Number(e.target.value) })}
-                      className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-2.5 py-1.5 text-xs text-[var(--text-primary)]"
+                      className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -668,7 +669,7 @@ export const SpatialCanvasView: React.FC = () => {
                     value={selectedZone.assignedExhibitor || ''}
                     onChange={(e) => updateZone(selectedZone.id, { assignedExhibitor: e.target.value })}
                     placeholder="e.g. Apex Global Engineering"
-                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none"
                   />
                 </div>
 
@@ -680,7 +681,7 @@ export const SpatialCanvasView: React.FC = () => {
                     {selectedZone.avSpecs.map((spec, i) => (
                       <div
                         key={i}
-                        className="flex items-center justify-between p-1.5 rounded bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[11px]"
+                        className="flex items-center justify-between p-1.5 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[11px] text-[var(--text-secondary)]"
                       >
                         <span>{spec}</span>
                         <button
@@ -688,7 +689,7 @@ export const SpatialCanvasView: React.FC = () => {
                             const updated = selectedZone.avSpecs.filter((_, idx) => idx !== i)
                             updateZone(selectedZone.id, { avSpecs: updated })
                           }}
-                          className="text-[var(--text-muted)] hover:text-red-400"
+                          className="text-[var(--text-muted)] hover:text-red-400 transition-colors"
                         >
                           ×
                         </button>
@@ -698,13 +699,13 @@ export const SpatialCanvasView: React.FC = () => {
                 </div>
 
                 {/* Spatial Conflict Verification */}
-                <div className="p-3 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] space-y-2">
+                <div className="p-3 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] space-y-1.5">
                   <div className="flex items-center gap-1.5 font-bold text-[11px] text-[var(--text-primary)]">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Spatial Verification Status</span>
                   </div>
                   <p className="text-[10px] text-[var(--text-muted)] leading-relaxed">
-                    No geometric overlap detected. Power footprint ({selectedZone.maxPowerKw || 5} kW) is within hall transformer limits.
+                    No geometric overlap detected. Power footprint ({selectedZone.maxPowerKw || 5} kW) is within hall limits.
                   </p>
                 </div>
               </div>
@@ -718,7 +719,7 @@ export const SpatialCanvasView: React.FC = () => {
                     type="text"
                     value={selectedNode.title}
                     onChange={(e) => updateWhiteboardNode(selectedNode.id, { title: e.target.value })}
-                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none"
                   />
                 </div>
 
@@ -731,7 +732,7 @@ export const SpatialCanvasView: React.FC = () => {
                       type="text"
                       value={selectedNode.timeStart || ''}
                       onChange={(e) => updateWhiteboardNode(selectedNode.id, { timeStart: e.target.value })}
-                      className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-2 py-1.5 text-xs font-mono"
+                      className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-2 py-1.5 text-xs font-mono"
                     />
                   </div>
                   <div>
@@ -742,7 +743,7 @@ export const SpatialCanvasView: React.FC = () => {
                       type="text"
                       value={selectedNode.timeEnd || ''}
                       onChange={(e) => updateWhiteboardNode(selectedNode.id, { timeEnd: e.target.value })}
-                      className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-2 py-1.5 text-xs font-mono"
+                      className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-2 py-1.5 text-xs font-mono"
                     />
                   </div>
                 </div>
@@ -755,12 +756,12 @@ export const SpatialCanvasView: React.FC = () => {
                     rows={4}
                     value={selectedNode.description || ''}
                     onChange={(e) => updateWhiteboardNode(selectedNode.id, { description: e.target.value })}
-                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] p-2.5 text-xs text-[var(--text-primary)] focus:outline-none"
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] p-2.5 text-xs text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none"
                   />
                 </div>
               </div>
             ) : (
-              <div className="py-12 text-center text-xs text-[var(--text-muted)] space-y-2">
+              <div className="py-16 text-center text-xs text-[var(--text-muted)] space-y-2">
                 <Box className="w-8 h-8 mx-auto opacity-30 mb-2" />
                 <div className="font-semibold text-[var(--text-secondary)]">No element selected</div>
                 <p className="text-[11px] leading-relaxed">
@@ -799,7 +800,7 @@ export const SpatialCanvasView: React.FC = () => {
                   required
                   value={newZoneForm.name}
                   onChange={(e) => setNewZoneForm({ ...newZoneForm, name: e.target.value })}
-                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
                 />
               </div>
 
@@ -811,7 +812,7 @@ export const SpatialCanvasView: React.FC = () => {
                   <select
                     value={newZoneForm.type}
                     onChange={(e) => setNewZoneForm({ ...newZoneForm, type: e.target.value as SpatialZoneType })}
-                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
                   >
                     <option value="stage">Stage / Plenary</option>
                     <option value="booth">Exhibition Booth</option>
@@ -828,7 +829,7 @@ export const SpatialCanvasView: React.FC = () => {
                     type="number"
                     value={newZoneForm.capacity}
                     onChange={(e) => setNewZoneForm({ ...newZoneForm, capacity: Number(e.target.value) })}
-                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
                   />
                 </div>
               </div>
@@ -841,7 +842,7 @@ export const SpatialCanvasView: React.FC = () => {
                   type="text"
                   value={newZoneForm.assignedExhibitor}
                   onChange={(e) => setNewZoneForm({ ...newZoneForm, assignedExhibitor: e.target.value })}
-                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
                 />
               </div>
 
@@ -853,7 +854,7 @@ export const SpatialCanvasView: React.FC = () => {
                   type="text"
                   value={newZoneForm.avSpecs}
                   onChange={(e) => setNewZoneForm({ ...newZoneForm, avSpecs: e.target.value })}
-                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
                 />
               </div>
 
@@ -901,7 +902,7 @@ export const SpatialCanvasView: React.FC = () => {
                   required
                   value={newNodeForm.title}
                   onChange={(e) => setNewNodeForm({ ...newNodeForm, title: e.target.value })}
-                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
                 />
               </div>
 
@@ -913,7 +914,7 @@ export const SpatialCanvasView: React.FC = () => {
                   <select
                     value={newNodeForm.type}
                     onChange={(e) => setNewNodeForm({ ...newNodeForm, type: e.target.value as any })}
-                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
                   >
                     <option value="session">Event Session</option>
                     <option value="milestone">Key Milestone</option>
@@ -930,7 +931,7 @@ export const SpatialCanvasView: React.FC = () => {
                     type="text"
                     value={newNodeForm.speaker}
                     onChange={(e) => setNewNodeForm({ ...newNodeForm, speaker: e.target.value })}
-                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)]"
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
                   />
                 </div>
               </div>
@@ -945,7 +946,7 @@ export const SpatialCanvasView: React.FC = () => {
                     placeholder="10:00"
                     value={newNodeForm.timeStart}
                     onChange={(e) => setNewNodeForm({ ...newNodeForm, timeStart: e.target.value })}
-                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)] font-mono"
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-3 py-1.5 text-xs text-[var(--text-primary)] font-mono focus:outline-none"
                   />
                 </div>
                 <div>
@@ -957,7 +958,7 @@ export const SpatialCanvasView: React.FC = () => {
                     placeholder="11:00"
                     value={newNodeForm.timeEnd}
                     onChange={(e) => setNewNodeForm({ ...newNodeForm, timeEnd: e.target.value })}
-                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)] font-mono"
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] px-3 py-1.5 text-xs text-[var(--text-primary)] font-mono focus:outline-none"
                   />
                 </div>
               </div>
@@ -970,7 +971,7 @@ export const SpatialCanvasView: React.FC = () => {
                   rows={3}
                   value={newNodeForm.description}
                   onChange={(e) => setNewNodeForm({ ...newNodeForm, description: e.target.value })}
-                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] p-2 text-xs text-[var(--text-primary)]"
+                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] p-2 text-xs text-[var(--text-primary)] focus:outline-none"
                 />
               </div>
 
