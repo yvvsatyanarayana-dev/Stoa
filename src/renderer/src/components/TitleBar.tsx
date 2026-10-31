@@ -69,7 +69,7 @@ export const TitleBar: React.FC = () => {
 
         <div className="flex items-center">
           <span className="text-[12px] font-bold tracking-tight text-[var(--text-primary)]">
-            ChronoDesk
+            Stoa
           </span>
         </div>
 

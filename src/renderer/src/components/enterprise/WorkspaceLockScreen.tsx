@@ -90,7 +90,7 @@ export const WorkspaceLockScreen: React.FC = () => {
             Workspace Locked
           </h2>
           <p className="text-[11px] text-[var(--text-muted)] font-mono">
-            {settings?.company_name || 'ChronoDesk Enterprise'}
+            {settings?.company_name || 'Stoa Workspace'}
           </p>
         </div>
 

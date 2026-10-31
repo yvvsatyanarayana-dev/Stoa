@@ -401,7 +401,7 @@ export const Sidebar: React.FC = () => {
             <button
               onClick={() => setIsWorkspaceLocked(true)}
               className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] rounded transition-colors"
-              title="Lock ChronoDesk Workspace"
+              title="Lock Stoa Workspace"
             >
               <Lock className="w-3.5 h-3.5" />
             </button>

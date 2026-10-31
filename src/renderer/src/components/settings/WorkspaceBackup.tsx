@@ -189,7 +189,7 @@ export const WorkspaceBackup: React.FC = () => {
     try {
       const result = await window.api.workspaceBundle.export({
         password: exportPassword,
-        name: exportName || 'ChronoDesk Backup',
+        name: exportName || 'Stoa Backup',
         description: exportDescription
       })
       setExportPassword('')
@@ -206,7 +206,7 @@ export const WorkspaceBackup: React.FC = () => {
 
   const handleImport = async () => {
     if (!importFile) {
-      setError('Please select a .chronodesk file')
+      setError('Please select a .stoa or .chronodesk backup file')
       return
     }
     if (!importPassword || importPassword.length < 8) {
@@ -593,7 +593,7 @@ export const WorkspaceBackup: React.FC = () => {
                 Export Encrypted Workspace Bundle
               </h3>
               <p className="text-xs text-[var(--text-secondary)] mt-1">
-                Creates an AES-256-GCM encrypted <code className="font-mono text-[var(--text-primary)]">.chronodesk</code> backup containing calendars, events, timetables, and settings.
+                Creates an encrypted <code className="font-mono text-[var(--text-primary)]">.stoa</code> backup containing calendars, events, timetables, and settings.
               </p>
             </div>
 
@@ -648,16 +648,16 @@ export const WorkspaceBackup: React.FC = () => {
                 Restore from Workspace Bundle
               </h3>
               <p className="text-xs text-[var(--text-secondary)] mt-1">
-                Restore data from a previously created <code className="font-mono text-[var(--text-primary)]">.chronodesk</code> file. Requires the original password.
+                Restore data from a previously created <code className="font-mono text-[var(--text-primary)]">.stoa</code> or <code className="font-mono text-[var(--text-primary)]">.chronodesk</code> file. Requires the original password.
               </p>
             </div>
 
             <form onSubmit={(e) => { e.preventDefault(); handleImport(); }} className="space-y-3 max-w-lg">
               <div>
-                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Select .chronodesk File *</label>
+                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Select Backup File (.stoa / .chronodesk) *</label>
                 <input
                   type="file"
-                  accept=".chronodesk"
+                  accept=".stoa,.chronodesk"
                   onChange={(e) => setImportFile(e.target.files?.[0] as ElectronFile || null)}
                   className="w-full px-3 py-1.5 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-[var(--radius-md)] text-xs text-[var(--text-primary)] file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:bg-[var(--accent)] file:text-[var(--accent-text)] file:text-xs file:font-semibold cursor-pointer"
                   required

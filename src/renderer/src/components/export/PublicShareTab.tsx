@@ -59,11 +59,11 @@ export const PublicShareTab: React.FC = () => {
       exp: expirationDays > 0 ? Date.now() + expirationDays * 24 * 60 * 60 * 1000 : null,
       pin: accessPin ? true : false,
       count: sharedEvents.length,
-      org: settings?.company_name || 'ChronoDesk Enterprise'
+      org: settings?.company_name || 'Stoa'
     }
 
     const token = btoa(unescape(encodeURIComponent(JSON.stringify(payload))))
-    return `https://chronodesk.internal/share?token=${token.substring(0, 48)}...`
+    return `https://stoa.internal/share?token=${token.substring(0, 48)}...`
   }, [selectedCalendarIds, expirationDays, accessPin, sharedEvents, settings])
 
   const handleCopy = () => {
@@ -230,7 +230,7 @@ export const PublicShareTab: React.FC = () => {
             <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
               <div>
                 <h3 className="text-base font-bold text-[var(--text-primary)]">
-                  {settings?.company_name || 'ChronoDesk Enterprise'}
+                  {settings?.company_name || 'Stoa'}
                 </h3>
                 <p className="text-xs text-[var(--text-muted)]">
                   Public Schedule & Availability Portal

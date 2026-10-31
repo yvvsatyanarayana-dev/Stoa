@@ -245,10 +245,10 @@ export const SLATE_LIGHT_PALETTE: ThemePalette = {
 // ----------------------------------------------------
 
 export const ALL_BUILT_IN_THEMES: ThemeConfig[] = [
-  // 1. ChronoDesk Dark (Monochrome B&W)
+  // 1. Stoa Dark (Monochrome B&W)
   {
     id: 'preset-classic-dark',
-    name: 'ChronoDesk Dark (Monochrome)',
+    name: 'Stoa Dark (Monochrome)',
     mode: 'manual',
     basePalette: DEFAULT_DARK_PALETTE,
     circadianOffsetMinutes: 0,
@@ -256,10 +256,10 @@ export const ALL_BUILT_IN_THEMES: ThemeConfig[] = [
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
   },
-  // 2. ChronoDesk Classic B&W (Light)
+  // 2. Stoa Classic B&W (Light)
   {
     id: 'preset-classic-light',
-    name: 'ChronoDesk Classic (Light B&W)',
+    name: 'Stoa Classic (Light B&W)',
     mode: 'manual',
     basePalette: DEFAULT_BW_PALETTE,
     circadianOffsetMinutes: 0,

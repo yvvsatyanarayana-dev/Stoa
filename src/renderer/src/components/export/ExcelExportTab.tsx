@@ -252,7 +252,7 @@ export const ExcelExportTab: React.FC = () => {
 
       const link = document.createElement('a')
       link.href = url
-      link.download = `ChronoDesk_Roster_${scope}_${format(new Date(), 'yyyyMMdd')}.xls`
+      link.download = `Stoa_Roster_${scope}_${format(new Date(), 'yyyyMMdd')}.xls`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)

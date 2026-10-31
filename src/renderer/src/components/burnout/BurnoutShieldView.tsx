@@ -223,7 +223,7 @@ export const BurnoutShieldView: React.FC = () => {
         id: `buf-${Date.now()}`,
         calendar_id: calId,
         title: '🛡️ Focus Recovery & Buffer Window',
-        description: 'Auto-scheduled by ChronoDesk Predictive Burnout Shield to reset cognitive load.',
+        description: 'Auto-scheduled by Stoa Predictive Burnout Shield to reset cognitive load.',
         start: bufferStart.toISOString(),
         end: bufferEnd.toISOString(),
         all_day: false,

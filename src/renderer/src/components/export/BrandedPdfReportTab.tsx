@@ -12,7 +12,7 @@ export const BrandedPdfReportTab: React.FC = () => {
   // Customization Options
   const [reportTitle, setReportTitle] = useState<string>('Master Schedule & Resource Briefing')
   const [companyName, setCompanyName] = useState<string>(
-    settings?.company_name || 'ChronoDesk Enterprise'
+    settings?.company_name || 'Stoa'
   )
   const [footerText, setFooterText] = useState<string>(
     settings?.company_footer || 'Strictly Confidential • Authorized Personnel Only'
@@ -355,7 +355,7 @@ export const BrandedPdfReportTab: React.FC = () => {
           {/* Footer Notice */}
           <div className="pt-6 border-t border-neutral-200 text-[10px] text-neutral-500 flex items-center justify-between font-mono">
             <span>{footerText}</span>
-            <span>ChronoDesk • Page 1 of 1</span>
+            <span>Stoa • Page 1 of 1</span>
           </div>
         </div>
       </div>

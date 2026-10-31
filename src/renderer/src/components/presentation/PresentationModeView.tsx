@@ -107,7 +107,7 @@ export const PresentationModeView: React.FC = () => {
           </div>
           <div>
             <h1 className="text-base font-black tracking-tight uppercase text-neutral-100">
-              {settings?.company_name || 'ChronoDesk Enterprise'}
+              {settings?.company_name || 'Stoa'}
             </h1>
             <p className="text-[11px] font-mono text-neutral-400">
               Live Conference & Session Presentation Display

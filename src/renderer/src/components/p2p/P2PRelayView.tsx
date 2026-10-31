@@ -577,7 +577,7 @@ export const P2PRelayView: React.FC = () => {
                   const blob = new Blob(
                     [
                       JSON.stringify({
-                        header: 'CHRONODESK-ZERO-KNOWLEDGE-VAULT-V2',
+                        header: 'STOA-ZERO-KNOWLEDGE-VAULT-V2',
                         timestamp: new Date().toISOString(),
                         cipher: 'AES-256-GCM',
                         totalRecords: events.length + calendars.length,
@@ -590,7 +590,7 @@ export const P2PRelayView: React.FC = () => {
                   const url = URL.createObjectURL(blob)
                   const a = document.createElement('a')
                   a.href = url
-                  a.download = `chronodesk-events-vault-${new Date().toISOString().split('T')[0]}.czk`
+                  a.download = `stoa-events-vault-${new Date().toISOString().split('T')[0]}.szk`
                   a.click()
                   URL.revokeObjectURL(url)
                 }}

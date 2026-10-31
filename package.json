@@ -1,7 +1,7 @@
 {
-  "name": "chronodesk-pro",
+  "name": "stoa",
   "version": "1.0.0",
-  "description": "ChronoDesk Pro: Electron Professional Scheduling & Event Management Software",
+  "description": "Stoa: Architectural Scheduling & Spatial Workspace Software",
   "main": "./out/main/index.js",
   "author": "example.com",
   "homepage": "https://electron-vite.org",

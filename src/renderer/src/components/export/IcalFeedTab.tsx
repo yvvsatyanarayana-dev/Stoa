@@ -39,16 +39,16 @@ export const IcalFeedTab: React.FC = () => {
     const lines: string[] = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//ChronoDesk//Scheduling Engine//EN',
+      'PRODID:-//Stoa//Scheduling Engine//EN',
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH',
-      'X-WR-CALNAME:ChronoDesk Master Schedule',
+      'X-WR-CALNAME:Stoa Master Schedule',
       `X-WR-TIMEZONE:${Intl.DateTimeFormat().resolvedOptions().timeZone}`
     ]
 
     targetEvents.forEach((evt) => {
       lines.push('BEGIN:VEVENT')
-      lines.push(`UID:${evt.id}@chronodesk.internal`)
+      lines.push(`UID:${evt.id}@stoa.internal`)
       lines.push(`DTSTAMP:${formatDateToIcs(new Date().toISOString())}`)
       lines.push(`DTSTART:${formatDateToIcs(evt.start)}`)
       lines.push(`DTEND:${formatDateToIcs(evt.end)}`)
@@ -66,7 +66,7 @@ export const IcalFeedTab: React.FC = () => {
 
   // Live Subscription URL
   const subscriptionFeedUrl = useMemo(() => {
-    return `webcal://chronodesk.internal/feed/${selectedCalendarId}.ics`
+    return `webcal://stoa.internal/feed/${selectedCalendarId}.ics`
   }, [selectedCalendarId])
 
   const handleCopyFeed = () => {
@@ -86,7 +86,7 @@ export const IcalFeedTab: React.FC = () => {
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `ChronoDesk_Schedule_${format(new Date(), 'yyyyMMdd')}.ics`
+    link.download = `Stoa_Schedule_${format(new Date(), 'yyyyMMdd')}.ics`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)

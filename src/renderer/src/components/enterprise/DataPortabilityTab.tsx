@@ -31,7 +31,7 @@ export const DataPortabilityTab: React.FC = () => {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `chronodesk-workspace-backup-${format(new Date(), 'yyyy-MM-dd-HHmm')}.json`
+      a.download = `stoa-workspace-backup-${format(new Date(), 'yyyy-MM-dd-HHmm')}.json`
       a.click()
       URL.revokeObjectURL(url)
       setStatusMessage('Full workspace JSON backup exported successfully!')
@@ -49,7 +49,7 @@ export const DataPortabilityTab: React.FC = () => {
       const lines: string[] = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
-        'PRODID:-//ChronoDesk//Master Schedule//EN',
+        'PRODID:-//Stoa//Master Schedule//EN',
         'CALSCALE:GREGORIAN',
         'METHOD:PUBLISH'
       ]
@@ -61,7 +61,7 @@ export const DataPortabilityTab: React.FC = () => {
         const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
 
         lines.push('BEGIN:VEVENT')
-        lines.push(`UID:${evt.id}@chronodesk.local`)
+        lines.push(`UID:${evt.id}@stoa.local`)
         lines.push(`DTSTAMP:${fmt(new Date())}`)
         lines.push(`DTSTART:${fmt(s)}`)
         lines.push(`DTEND:${fmt(e)}`)
@@ -295,7 +295,7 @@ export const DataPortabilityTab: React.FC = () => {
               {importing ? 'Processing & Validating...' : 'Click to Upload or Drag File Here'}
             </div>
             <div className="text-[11px] text-[var(--text-muted)] font-mono">
-              Upload ChronoDesk .json backup or external .ics / .ical calendar
+              Upload Stoa .json backup or external .ics / .ical calendar
             </div>
           </div>
           <input

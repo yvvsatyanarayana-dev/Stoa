@@ -18,7 +18,7 @@ function createWindow(): void {
     show: false,
     frame: false, // Frameless window with app-themed custom titlebar
     autoHideMenuBar: true,
-    title: 'ChronoDesk',
+    title: 'Stoa',
     backgroundColor: '#000000',
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
@@ -55,7 +55,7 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId('com.chronodesk.pro')
+  electronApp.setAppUserModelId('com.stoa.app')
 
   // Initialize SQLite database
   initDatabase()

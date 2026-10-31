@@ -42,7 +42,7 @@ export const AuthGatewayView: React.FC = () => {
   }
 
   const handleDemoAccess = () => {
-    registerAccount('Demo User', 'demo@chronodesk.local', 'demo123', 'My Workspace')
+    registerAccount('Demo User', 'demo@stoa.local', 'demo123', 'My Workspace')
   }
 
   return (
@@ -55,7 +55,7 @@ export const AuthGatewayView: React.FC = () => {
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight text-[var(--text-primary)]">
-              ChronoDesk
+              Stoa
             </h1>
             <p className="text-xs text-[var(--text-secondary)] mt-1">
               {mode === 'signin' ? 'Sign in to your account' : 'Create a new account and workspace'}

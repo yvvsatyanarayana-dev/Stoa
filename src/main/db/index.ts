@@ -363,7 +363,7 @@ function seedInitialData(): void {
       quiet_hours_enabled: false,
       quiet_hours_start: '22:00',
       quiet_hours_end: '08:00',
-      company_name: 'ChronoDesk Enterprise',
+      company_name: 'Stoa Workspace',
       company_footer: 'Personal & Confidential'
     }
 

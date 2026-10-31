@@ -1,4 +1,4 @@
-// Shared types for ChronoDesk
+// Shared types for Stoa
 
 export type Priority = 'low' | 'medium' | 'high' | 'urgent'
 export type EventStatus = 'tentative' | 'confirmed' | 'cancelled'

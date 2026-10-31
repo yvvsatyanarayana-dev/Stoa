@@ -194,7 +194,7 @@ export const TeamAvailabilityOverlay: React.FC = () => {
         id: `att-${Date.now()}-${idx}`,
         event_id: `evt-${Date.now()}`,
         name: m!.name,
-        email: `${m!.name.toLowerCase().replace(/\s+/g, '.')}@chronodesk.internal`,
+        email: `${m!.name.toLowerCase().replace(/\s+/g, '.')}@stoa.internal`,
         rsvp_status: 'pending' as const
       }))
 
