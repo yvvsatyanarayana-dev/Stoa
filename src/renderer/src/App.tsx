@@ -13,6 +13,9 @@ import { WorkspaceProfilesManager } from './components/enterprise/WorkspaceProfi
 import { ThemeStudio } from './components/settings/ThemeStudio'
 import { AuditLogViewer } from './components/enterprise/AuditLogViewer'
 import { SpatialCanvasView } from './components/spatial/SpatialCanvasView'
+import { BurnoutShieldView } from './components/burnout/BurnoutShieldView'
+import { TranscriberView } from './components/transcriber/TranscriberView'
+import { AnnotationLayerView } from './components/annotation/AnnotationLayerView'
 import { P2PRelayView } from './components/p2p/P2PRelayView'
 import { EventModal } from './components/modals/EventModal'
 import { SlotModal } from './components/modals/SlotModal'
@@ -138,6 +141,9 @@ export const App: React.FC = () => {
                   {currentView === 'resources' && <ResourcesView />}
                   {currentView === 'conferences' && <ConferenceView />}
                   {currentView === 'spatial-canvas' && <SpatialCanvasView />}
+                  {currentView === 'burnout-shield' && <BurnoutShieldView />}
+                  {currentView === 'transcriber' && <TranscriberView />}
+                  {currentView === 'annotation-layer' && <AnnotationLayerView />}
                   {currentView === 'dashboard' && <DashboardView />}
                   {currentView === 'notifications' && <NotificationsView />}
                   {currentView === 'profiles' && (

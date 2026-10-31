@@ -300,6 +300,30 @@ function createDefaultCommands(
       keywords: ['p2p', 'peer', 'mesh', 'vault', 'encrypted', 'federation', 'webrtc', 'relay'],
       action: () => setCurrentView('p2p-relay'),
     },
+    {
+      id: 'nav:burnout-shield-view',
+      title: 'Predictive Burnout Shield',
+      description: 'Biometric fatigue-aware scheduling, cognitive load protection, and chronotype optimizer',
+      category: 'navigation',
+      keywords: ['burnout', 'fatigue', 'shield', 'biometrics', 'chronotype', 'focus', 'recovery', 'health'],
+      action: () => setCurrentView('burnout-shield'),
+    },
+    {
+      id: 'nav:transcriber-view',
+      title: 'AI NLP Meeting Transcriber',
+      description: 'Audio transcription, executive summaries, speaker talk-time, and action-item extraction',
+      category: 'navigation',
+      keywords: ['transcribe', 'nlp', 'audio', 'meeting', 'minutes', 'summary', 'action items', 'recording'],
+      action: () => setCurrentView('transcriber'),
+    },
+    {
+      id: 'nav:annotation-layer-view',
+      title: 'Live Collaborative Annotation Layer',
+      description: 'Multi-cursor event co-authoring, inline annotation threads, and cryptographic change ledger',
+      category: 'navigation',
+      keywords: ['annotation', 'collaborate', 'comments', 'live', 'cursor', 'attribution', 'timeline', 'peer'],
+      action: () => setCurrentView('annotation-layer'),
+    },
 
     // Action Commands
     {

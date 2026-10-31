@@ -14,7 +14,10 @@ import {
   Palette,
   ShieldCheck,
   Box,
-  Network
+  Network,
+  Shield,
+  Mic,
+  MessageSquare
 } from 'lucide-react'
 import { useAppStore, AppView } from '../store/useAppStore'
 
@@ -38,6 +41,9 @@ export const Sidebar: React.FC = () => {
     { id: 'resources', label: 'Resources & Rooms', icon: <Users className="w-3.5 h-3.5" /> },
     { id: 'conferences', label: 'Conferences & Events', icon: <Presentation className="w-3.5 h-3.5" /> },
     { id: 'spatial-canvas', label: 'Spatial Floor Plan', icon: <Box className="w-3.5 h-3.5" /> },
+    { id: 'burnout-shield', label: 'Burnout Shield', icon: <Shield className="w-3.5 h-3.5" /> },
+    { id: 'transcriber', label: 'AI Transcriber', icon: <Mic className="w-3.5 h-3.5" /> },
+    { id: 'annotation-layer', label: 'Live Annotations', icon: <MessageSquare className="w-3.5 h-3.5" /> },
     { id: 'dashboard', label: 'Dashboard & Reports', icon: <LayoutDashboard className="w-3.5 h-3.5" /> },
     {
       id: 'notifications',
