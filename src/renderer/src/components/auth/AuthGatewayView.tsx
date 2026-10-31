@@ -1,8 +1,6 @@
 import React, { useState } from 'react'
-import {
-  Calendar,
-  X
-} from 'lucide-react'
+import { X } from 'lucide-react'
+import { StoaIcon } from '../common/StoaIcon'
 import { useAuthStore } from '../../store/useAuthStore'
 
 export const AuthGatewayView: React.FC = () => {
@@ -51,7 +49,7 @@ export const AuthGatewayView: React.FC = () => {
         {/* Brand Header */}
         <div className="text-center space-y-2">
           <div className="w-10 h-10 rounded-xl bg-[var(--accent)] text-[var(--accent-text)] flex items-center justify-center mx-auto shadow-xs">
-            <Calendar className="w-5 h-5 stroke-[2.5]" />
+            <StoaIcon className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight text-[var(--text-primary)]">

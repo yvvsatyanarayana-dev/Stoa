@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: temp
+appId: com.stoa.app
+productName: Stoa
 directories:
   buildResources: build
 files:
@@ -12,7 +12,8 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: temp
+  executableName: Stoa
+  icon: build/icon.ico
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

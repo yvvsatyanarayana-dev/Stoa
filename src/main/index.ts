@@ -19,8 +19,8 @@ function createWindow(): void {
     frame: false, // Frameless window with app-themed custom titlebar
     autoHideMenuBar: true,
     title: 'Stoa',
+    icon,
     backgroundColor: '#000000',
-    ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,

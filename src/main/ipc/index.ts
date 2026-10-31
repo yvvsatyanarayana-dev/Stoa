@@ -1,6 +1,7 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
+import icon from '../../../resources/icon.png?asset'
 import {
   calendarDb,
   categoryDb,
@@ -71,6 +72,7 @@ export function registerIpcHandlers(): void {
       frame: false,
       autoHideMenuBar: true,
       title: `Stoa - ${viewType.toUpperCase()}`,
+      icon,
       backgroundColor: '#000000',
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
