@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { useAppStore } from '../../store/useAppStore'
 import {
   Briefcase,
   Plus,
@@ -10,137 +9,59 @@ import {
   GraduationCap,
   X
 } from 'lucide-react'
-
-export interface WorkspaceProfile {
-  id: string
-  name: string
-  icon: string
-  domain: string
-  color: string
-  company_name: string
-  company_footer: string
-  working_hours_start: string
-  working_hours_end: string
-  is_default?: boolean
-}
-
-export const DEFAULT_PROFILES: WorkspaceProfile[] = [
-  {
-    id: 'prof-enterprise',
-    name: 'Enterprise Operations',
-    icon: 'building',
-    domain: 'Operations & Project Management',
-    color: '#3b82f6',
-    company_name: 'Apex Global Enterprise',
-    company_footer: 'Corporate & Confidential • Internal Use Only',
-    working_hours_start: '09:00',
-    working_hours_end: '18:00',
-    is_default: true
-  },
-  {
-    id: 'prof-medical',
-    name: 'Clinical Medical Center',
-    icon: 'medical',
-    domain: 'Healthcare & Shift Coverage',
-    color: '#10b981',
-    company_name: 'Metro Health & Trauma Center',
-    company_footer: 'HIPAA Protected Health Information • Restricted Access',
-    working_hours_start: '07:00',
-    working_hours_end: '19:00',
-    is_default: true
-  },
-  {
-    id: 'prof-academic',
-    name: 'Academic & Research Campus',
-    icon: 'academic',
-    domain: 'Higher Education & Lab Rotations',
-    color: '#8b5cf6',
-    company_name: 'Institute of Science & Technology',
-    company_footer: 'Academic Year 2026-2027 • Faculty & Student Run-sheets',
-    working_hours_start: '08:30',
-    working_hours_end: '17:30',
-    is_default: true
-  },
-  {
-    id: 'prof-executive',
-    name: 'Executive Advisory & Board',
-    icon: 'briefcase',
-    domain: 'Strategic Advisory & Governance',
-    color: '#f59e0b',
-    company_name: 'Vanguard Advisory Partners',
-    company_footer: 'Board of Directors • Strictly Private & Privileged',
-    working_hours_start: '10:00',
-    working_hours_end: '17:00',
-    is_default: true
-  }
-]
+import { useWorkspaceStore, Workspace } from '../../store/useWorkspaceStore'
 
 export const WorkspaceProfilesManager: React.FC = () => {
-  const { activeProfileId, setActiveProfileId, updateSetting } = useAppStore()
+  const {
+    workspaces,
+    activeWorkspaceId,
+    setActiveWorkspaceId,
+    createWorkspace,
+    updateWorkspace,
+    deleteWorkspace
+  } = useWorkspaceStore()
 
-  const [profiles, setProfiles] = useState<WorkspaceProfile[]>(() => {
-    try {
-      const saved = localStorage.getItem('chronodesk_workspace_profiles')
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed
-      }
-    } catch {}
-    return DEFAULT_PROFILES
-  })
+  const [editingProfile, setEditingProfile] = useState<Partial<Workspace> | null>(null)
 
-  const [editingProfile, setEditingProfile] = useState<Partial<WorkspaceProfile> | null>(null)
+  const activeProfile =
+    workspaces.find((p) => p.id === activeWorkspaceId) || workspaces[0] || {
+      id: 'ws-default',
+      name: 'Primary Workspace',
+      domain: 'Operations',
+      color: '#3b82f6',
+      icon: 'building',
+      company_name: 'Primary Workspace',
+      company_footer: 'Confidential Schedule',
+      working_hours_start: '09:00',
+      working_hours_end: '18:00'
+    }
 
-  const activeProfile = profiles.find((p) => p.id === activeProfileId) || profiles[0]
-
-  const handleSelectProfile = async (profile: WorkspaceProfile) => {
-    setActiveProfileId(profile.id)
-    try {
-      localStorage.setItem('chronodesk_active_profile_id', profile.id)
-      await updateSetting('company_name', profile.company_name)
-      await updateSetting('company_footer', profile.company_footer)
-    } catch {}
+  const handleSelectProfile = (profile: Workspace) => {
+    setActiveWorkspaceId(profile.id)
   }
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editingProfile || !editingProfile.name) return
 
-    let updated: WorkspaceProfile[]
     if (editingProfile.id) {
-      updated = profiles.map((p) => (p.id === editingProfile.id ? ({ ...p, ...editingProfile } as WorkspaceProfile) : p))
+      await updateWorkspace(editingProfile.id, editingProfile)
     } else {
-      const newP: WorkspaceProfile = {
-        id: `prof-${Date.now()}`,
+      await createWorkspace({
         name: editingProfile.name,
-        icon: editingProfile.icon || 'building',
-        domain: editingProfile.domain || 'General Workspace',
+        domain: editingProfile.domain || 'General Operations',
         color: editingProfile.color || '#3b82f6',
-        company_name: editingProfile.company_name || editingProfile.name,
         company_footer: editingProfile.company_footer || 'Confidential Schedule',
         working_hours_start: editingProfile.working_hours_start || '09:00',
         working_hours_end: editingProfile.working_hours_end || '18:00'
-      }
-      updated = [...profiles, newP]
+      })
     }
-
-    setProfiles(updated)
-    try {
-      localStorage.setItem('chronodesk_workspace_profiles', JSON.stringify(updated))
-    } catch {}
     setEditingProfile(null)
   }
 
-  const handleDeleteProfile = (id: string) => {
-    if (profiles.length <= 1) return
-    const updated = profiles.filter((p) => p.id !== id)
-    setProfiles(updated)
-    try {
-      localStorage.setItem('chronodesk_workspace_profiles', JSON.stringify(updated))
-      if (activeProfileId === id) {
-        handleSelectProfile(updated[0])
-      }
-    } catch {}
+  const handleDeleteProfile = async (id: string) => {
+    if (workspaces.length <= 1) return
+    await deleteWorkspace(id)
   }
 
   const renderIcon = (iconName: string) => {
@@ -223,7 +144,7 @@ export const WorkspaceProfilesManager: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {profiles.map((prof) => {
+          {workspaces.map((prof) => {
             const isSelected = prof.id === activeProfile.id
 
             return (
@@ -268,7 +189,7 @@ export const WorkspaceProfilesManager: React.FC = () => {
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
-                    {!prof.is_default && profiles.length > 1 && (
+                    {!prof.isDefault && workspaces.length > 1 && (
                       <button
                         onClick={() => handleDeleteProfile(prof.id)}
                         className="p-1 text-[var(--text-muted)] hover:text-red-400 rounded hover:bg-[var(--bg-hover)]"

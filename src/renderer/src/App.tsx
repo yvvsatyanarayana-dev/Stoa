@@ -42,6 +42,9 @@ import { soundService } from './services/soundService'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts'
 import { useAppStore, AppView } from './store/useAppStore'
+import { useAuthStore } from './store/useAuthStore'
+import { AuthGatewayView } from './components/auth/AuthGatewayView'
+import { CreateWorkspaceModal } from './components/workspace/CreateWorkspaceModal'
 
 export const App: React.FC = () => {
   const {
@@ -55,6 +58,8 @@ export const App: React.FC = () => {
     setPreMeetingBriefingEvent,
     isLoading
   } = useAppStore()
+
+  const { isAuthenticated } = useAuthStore()
 
   // F5: Global Keyboard Shortcuts Listener
   useGlobalShortcuts()
@@ -118,53 +123,57 @@ export const App: React.FC = () => {
         {/* 1. App-Themed Frameless Titlebar with Window Controls */}
         <TitleBar />
 
-        {/* 2. Workspace Body: Sidebar + Main Content */}
-        <div className="flex-1 flex min-h-0 overflow-hidden">
-          {/* Sidebar */}
-          <Sidebar />
+        {!isAuthenticated ? (
+          <AuthGatewayView />
+        ) : (
+          /* 2. Workspace Body: Sidebar + Main Content */
+          <div className="flex-1 flex min-h-0 overflow-hidden">
+            {/* Sidebar */}
+            <Sidebar />
 
-          {/* Main View Container */}
-          <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-[var(--bg-app)]">
-            <Header />
+            {/* Main View Container */}
+            <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-[var(--bg-app)]">
+              <Header />
 
-            <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative bg-[var(--bg-app)]">
-              {isLoading ? (
-                <div className="flex-1 flex flex-col items-center justify-center bg-[var(--bg-app)] text-xs text-[var(--text-muted)] gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] animate-ping" />
-                  <span className="font-mono text-[11px] tracking-wider uppercase opacity-80">
-                    Loading Workspace...
-                  </span>
-                </div>
-              ) : (
-                <>
-                  {currentView === 'calendar' && <CalendarView />}
-                  {currentView === 'timetable' && <TimetableBuilderView />}
-                  {currentView === 'resources' && <ResourcesView />}
-                  {currentView === 'conferences' && <ConferenceView />}
-                  {currentView === 'spatial-canvas' && <SpatialCanvasView />}
-                  {currentView === 'burnout-shield' && <BurnoutShieldView />}
-                  {currentView === 'transcriber' && <TranscriberView />}
-                  {currentView === 'annotation-layer' && <AnnotationLayerView />}
-                  {currentView === 'dashboard' && <DashboardView />}
-                  {currentView === 'notifications' && <NotificationsView />}
-                  {currentView === 'profiles' && (
-                    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 text-[var(--text-primary)] w-full">
-                      <WorkspaceProfilesManager />
-                    </div>
-                  )}
-                  {currentView === 'theme-studio' && <ThemeStudio />}
-                  {currentView === 'audit-log' && (
-                    <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 text-[var(--text-primary)] w-full">
-                      <AuditLogViewer />
-                    </div>
-                  )}
-                  {currentView === 'p2p-relay' && <P2PRelayView />}
-                  {currentView === 'settings' && <SettingsView />}
-                </>
-              )}
-            </main>
+              <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative bg-[var(--bg-app)]">
+                {isLoading ? (
+                  <div className="flex-1 flex flex-col items-center justify-center bg-[var(--bg-app)] text-xs text-[var(--text-muted)] gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] animate-ping" />
+                    <span className="font-mono text-[11px] tracking-wider uppercase opacity-80">
+                      Loading Workspace...
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    {currentView === 'calendar' && <CalendarView />}
+                    {currentView === 'timetable' && <TimetableBuilderView />}
+                    {currentView === 'resources' && <ResourcesView />}
+                    {currentView === 'conferences' && <ConferenceView />}
+                    {currentView === 'spatial-canvas' && <SpatialCanvasView />}
+                    {currentView === 'burnout-shield' && <BurnoutShieldView />}
+                    {currentView === 'transcriber' && <TranscriberView />}
+                    {currentView === 'annotation-layer' && <AnnotationLayerView />}
+                    {currentView === 'dashboard' && <DashboardView />}
+                    {currentView === 'notifications' && <NotificationsView />}
+                    {currentView === 'profiles' && (
+                      <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 text-[var(--text-primary)] w-full">
+                        <WorkspaceProfilesManager />
+                      </div>
+                    )}
+                    {currentView === 'theme-studio' && <ThemeStudio />}
+                    {currentView === 'audit-log' && (
+                      <div className="flex-1 overflow-y-auto bg-[var(--bg-app)] p-6 text-[var(--text-primary)] w-full">
+                        <AuditLogViewer />
+                      </div>
+                    )}
+                    {currentView === 'p2p-relay' && <P2PRelayView />}
+                    {currentView === 'settings' && <SettingsView />}
+                  </>
+                )}
+              </main>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Global Interactive Modals */}
         <EventModal />
@@ -197,6 +206,7 @@ export const App: React.FC = () => {
         {/* Category H: Enterprise Suite (Lock Screen & Template Marketplace) */}
         <TemplateMarketplaceModal />
         <WorkspaceLockScreen />
+        <CreateWorkspaceModal />
         <AuthAccountModal />
       </div>
     </ErrorBoundary>

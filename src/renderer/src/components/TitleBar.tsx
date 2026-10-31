@@ -6,23 +6,16 @@ import {
   X,
   Calendar,
   Lock,
-  Building2,
-  Stethoscope,
-  GraduationCap,
-  Briefcase
+  Building2
 } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
+import { useWorkspaceStore } from '../store/useWorkspaceStore'
 
 export const TitleBar: React.FC = () => {
-  const { setIsWorkspaceLocked, activeProfileId, setCurrentView } = useAppStore()
+  const { setIsWorkspaceLocked, setCurrentView } = useAppStore()
+  const { getActiveWorkspace } = useWorkspaceStore()
+  const activeWorkspace = getActiveWorkspace()
   const [isMaximized, setIsMaximized] = useState(false)
-
-  const getProfileIcon = (profileId: string) => {
-    if (profileId.includes('medical')) return <Stethoscope className="w-3 h-3 text-[var(--text-secondary)]" />
-    if (profileId.includes('academic')) return <GraduationCap className="w-3 h-3 text-[var(--text-secondary)]" />
-    if (profileId.includes('executive')) return <Briefcase className="w-3 h-3 text-[var(--text-secondary)]" />
-    return <Building2 className="w-3 h-3 text-[var(--text-secondary)]" />
-  }
 
   useEffect(() => {
     const checkMax = async (): Promise<void> => {
@@ -83,11 +76,11 @@ export const TitleBar: React.FC = () => {
         {/* Workspace Profile Pill */}
         <button
           onClick={() => setCurrentView('profiles')}
-          className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors flex items-center gap-1.5 ml-1"
+          className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--bg-subtle)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors flex items-center gap-1.5 ml-1 max-w-[140px] truncate"
           title="Switch or Manage Workspace Profiles"
         >
-          {getProfileIcon(activeProfileId)}
-          <span className="capitalize">{activeProfileId.replace('prof-', '')}</span>
+          <Building2 className="w-3 h-3 text-[var(--text-secondary)] shrink-0" />
+          <span className="truncate">{activeWorkspace.name}</span>
         </button>
       </div>
 

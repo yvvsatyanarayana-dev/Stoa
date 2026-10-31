@@ -21,13 +21,34 @@ import {
   ChevronDown,
   ChevronRight,
   Sparkles,
-  Lock
+  Lock,
+  LogOut,
+  Check,
+  Building
 } from 'lucide-react'
 import { useAppStore, AppView } from '../store/useAppStore'
 import { useAuthStore } from '../store/useAuthStore'
+import { useWorkspaceStore } from '../store/useWorkspaceStore'
 
 export const Sidebar: React.FC = () => {
-  const { currentUser, setIsAuthModalOpen } = useAuthStore()
+  const { currentUser, setIsAuthModalOpen, logout } = useAuthStore()
+  const {
+    workspaces,
+    activeWorkspaceId,
+    getActiveWorkspace,
+    setActiveWorkspaceId,
+    setIsCreateWorkspaceModalOpen
+  } = useWorkspaceStore()
+
+  const [isWorkspaceDropdownOpen, setIsWorkspaceDropdownOpen] = useState(false)
+  const activeWorkspace = getActiveWorkspace()
+  const wsInitials =
+    activeWorkspace.name
+      .split(/\s+/)
+      .map((p) => p[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() || 'WS'
   const {
     currentView,
     setCurrentView,
@@ -40,7 +61,6 @@ export const Sidebar: React.FC = () => {
     setSelectedEvent,
     setIsCalendarModalOpen,
     setIsFeedSubscriptionModalOpen,
-    settings,
     setIsWorkspaceLocked
   } = useAppStore()
 
@@ -60,11 +80,11 @@ export const Sidebar: React.FC = () => {
   ]
 
   // 2. Intelligence & Advanced Suites
-  const intelligenceNavItems: Array<{ id: AppView; label: string; icon: React.ReactNode; isNew?: boolean }> = [
+  const intelligenceNavItems: Array<{ id: AppView; label: string; icon: React.ReactNode }> = [
     { id: 'spatial-canvas', label: 'Spatial 3D Floor Plan', icon: <Box className="w-3.5 h-3.5" /> },
-    { id: 'burnout-shield', label: 'Predictive Burnout Shield', icon: <Shield className="w-3.5 h-3.5" />, isNew: true },
-    { id: 'transcriber', label: 'AI Meeting Transcriber', icon: <Mic className="w-3.5 h-3.5" />, isNew: true },
-    { id: 'annotation-layer', label: 'Live Collaborative Layer', icon: <MessageSquare className="w-3.5 h-3.5" />, isNew: true }
+    { id: 'burnout-shield', label: 'Predictive Burnout Shield', icon: <Shield className="w-3.5 h-3.5" /> },
+    { id: 'transcriber', label: 'AI Meeting Transcriber', icon: <Mic className="w-3.5 h-3.5" /> },
+    { id: 'annotation-layer', label: 'Live Collaborative Layer', icon: <MessageSquare className="w-3.5 h-3.5" /> }
   ]
 
   // 3. Analytics & Notifications
@@ -96,7 +116,7 @@ export const Sidebar: React.FC = () => {
     title: string,
     isOpen: boolean,
     toggleOpen: () => void,
-    items: Array<{ id: AppView; label: string; icon: React.ReactNode; badge?: number; isNew?: boolean; shortcut?: string }>
+    items: Array<{ id: AppView; label: string; icon: React.ReactNode; badge?: number; shortcut?: string }>
   ) => (
     <div className="space-y-0.5">
       <button
@@ -135,11 +155,6 @@ export const Sidebar: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-1.5 shrink-0">
-                  {item.isNew && (
-                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
-                      PRO
-                    </span>
-                  )}
                   {item.badge !== undefined && (
                     <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-subtle)]">
                       {item.badge}
@@ -162,30 +177,96 @@ export const Sidebar: React.FC = () => {
   return (
     <aside className="w-60 bg-[var(--bg-sidebar)] border-r border-[var(--border-subtle)] flex flex-col h-full select-none shrink-0 text-[var(--text-primary)] transition-colors">
       {/* 1. Sleek Enterprise Workspace Banner */}
-      <div className="p-3 pb-2 border-b border-[var(--border-subtle)]">
-        <div className="flex items-center justify-between p-2 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] shadow-xs">
+      <div className="p-3 pb-2 border-b border-[var(--border-subtle)] relative">
+        <div
+          onClick={() => setIsWorkspaceDropdownOpen(!isWorkspaceDropdownOpen)}
+          className="flex items-center justify-between p-2 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] shadow-xs hover:border-[var(--border-default)] transition-all cursor-pointer group"
+          title="Click to Switch or Create Real-Time Workspaces"
+        >
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-7 h-7 rounded-[var(--radius-sm)] bg-[var(--accent)] text-[var(--accent-text)] flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-              CD
+            <div
+              className="w-7 h-7 rounded-[var(--radius-sm)] flex items-center justify-center font-bold text-xs shrink-0 shadow-xs text-white"
+              style={{ backgroundColor: activeWorkspace.color || 'var(--accent)' }}
+            >
+              {wsInitials}
             </div>
             <div className="min-w-0">
-              <h2 className="text-xs font-bold text-[var(--text-primary)] truncate leading-tight">
-                {settings?.company_name || 'ChronoDesk Enterprise'}
+              <h2 className="text-xs font-bold text-[var(--text-primary)] truncate leading-tight group-hover:underline">
+                {activeWorkspace.name}
               </h2>
               <span className="text-[10px] text-[var(--text-muted)] font-mono flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Mesh Active
+                Live Mesh
               </span>
             </div>
           </div>
-          <button
-            onClick={() => setCurrentView('profiles')}
-            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1 rounded transition-colors"
-            title="Switch Workspace Profile"
-          >
-            <ChevronDown className="w-3.5 h-3.5" />
-          </button>
+          <div className="text-[var(--text-muted)] group-hover:text-[var(--text-primary)] p-1 rounded transition-colors">
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isWorkspaceDropdownOpen ? 'rotate-180' : ''}`} />
+          </div>
         </div>
+
+        {/* Real-time Workspace Popover Dropdown */}
+        {isWorkspaceDropdownOpen && (
+          <div className="absolute top-14 left-3 right-3 z-50 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-xl shadow-2xl p-2 space-y-1.5 animate-in fade-in zoom-in-95">
+            <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-[var(--text-muted)] flex items-center justify-between border-b border-[var(--border-subtle)] pb-1.5">
+              <span>Workspaces ({workspaces.length})</span>
+              <span className="text-emerald-400 font-bold">Real-Time</span>
+            </div>
+
+            <div className="max-h-48 overflow-y-auto space-y-0.5 py-0.5">
+              {workspaces.map((ws) => {
+                const isActive = ws.id === activeWorkspaceId
+                return (
+                  <button
+                    key={ws.id}
+                    onClick={() => {
+                      setActiveWorkspaceId(ws.id)
+                      setIsWorkspaceDropdownOpen(false)
+                    }}
+                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-xs transition-colors ${
+                      isActive
+                        ? 'bg-[var(--bg-subtle)] text-[var(--text-primary)] font-semibold border border-[var(--border-subtle)]'
+                        : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: ws.color }}
+                      />
+                      <span className="truncate text-xs">{ws.name}</span>
+                    </div>
+                    {isActive && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="pt-1.5 border-t border-[var(--border-subtle)] space-y-1">
+              <button
+                onClick={() => {
+                  setIsWorkspaceDropdownOpen(false)
+                  setIsCreateWorkspaceModalOpen(true)
+                }}
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium text-[var(--accent)] hover:bg-[var(--bg-hover)] transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>+ Create Real Workspace</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsWorkspaceDropdownOpen(false)
+                  setCurrentView('profiles')
+                }}
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors"
+              >
+                <Building className="w-3.5 h-3.5" />
+                <span>Manage Workspace Profiles</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Primary Action Button */}
         <div className="pt-2.5">
@@ -294,7 +375,7 @@ export const Sidebar: React.FC = () => {
             title="Manage User Account or Sign In with Google"
           >
             <div className="relative shrink-0">
-              {currentUser.avatarUrl ? (
+              {currentUser?.avatarUrl ? (
                 <img
                   src={currentUser.avatarUrl}
                   alt={currentUser.name}
@@ -302,22 +383,22 @@ export const Sidebar: React.FC = () => {
                 />
               ) : (
                 <div className="w-7 h-7 rounded-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center font-bold text-xs text-[var(--text-primary)]">
-                  {currentUser.initials}
+                  {currentUser?.initials || 'U'}
                 </div>
               )}
               <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-[var(--bg-elevated)]" />
             </div>
             <div className="min-w-0">
               <p className="text-xs font-semibold text-[var(--text-primary)] truncate group-hover:underline">
-                {currentUser.name}
+                {currentUser?.name || 'Account'}
               </p>
               <p className="text-[10px] text-[var(--text-muted)] truncate font-mono">
-                {currentUser.role}
+                {currentUser?.role || 'Guest'}
               </p>
             </div>
           </button>
 
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-0.5 shrink-0">
             <button
               onClick={() => setIsWorkspaceLocked(true)}
               className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] rounded transition-colors"
@@ -331,6 +412,13 @@ export const Sidebar: React.FC = () => {
               title="Open Theme Studio"
             >
               <Sparkles className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={logout}
+              className="p-1.5 text-[var(--text-muted)] hover:text-red-400 hover:bg-[var(--bg-subtle)] rounded transition-colors"
+              title="Sign Out / Switch Account"
+            >
+              <LogOut className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

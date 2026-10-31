@@ -22,10 +22,10 @@ export const AuthAccountModal: React.FC = () => {
   } = useAuthStore()
 
   const [activeTab, setActiveTab] = useState<'profile' | 'create' | 'google'>('profile')
-  const [name, setName] = useState(currentUser.name)
-  const [email, setEmail] = useState(currentUser.email)
-  const [role, setRole] = useState(currentUser.role)
-  const [avatarUrl, setAvatarUrl] = useState(currentUser.avatarUrl || '')
+  const [name, setName] = useState(currentUser?.name || '')
+  const [email, setEmail] = useState(currentUser?.email || '')
+  const [role, setRole] = useState(currentUser?.role || 'Administrator')
+  const [avatarUrl, setAvatarUrl] = useState(currentUser?.avatarUrl || '')
 
   // Google Sign-In state
   const [googleEmailInput, setGoogleEmailInput] = useState('')
@@ -52,7 +52,7 @@ export const AuthAccountModal: React.FC = () => {
   const handleRegisterNew = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim() || !email.trim()) return
-    registerAccount(name.trim(), email.trim(), role.trim() || 'Member')
+    registerAccount(name.trim(), email.trim(), undefined, undefined, role.trim() || 'Member')
     setFeedbackMsg('Account created & active!')
     setTimeout(() => {
       setFeedbackMsg(null)
@@ -79,14 +79,14 @@ export const AuthAccountModal: React.FC = () => {
         <div className="p-4 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-app)]">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center font-bold text-xs text-[var(--text-primary)]">
-              {currentUser.initials}
+              {currentUser?.initials || 'U'}
             </div>
             <div>
               <h3 className="text-sm font-bold text-[var(--text-primary)] leading-tight">
                 User Account & Authentication
               </h3>
               <p className="text-[11px] text-[var(--text-muted)]">
-                {currentUser.provider === 'google' ? 'Google Account Connected' : 'Local User Profile'}
+                {currentUser?.provider === 'google' ? 'Google Account Connected' : 'Local User Profile'}
               </p>
             </div>
           </div>

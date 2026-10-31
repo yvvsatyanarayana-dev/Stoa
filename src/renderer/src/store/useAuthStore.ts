@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { UserAccount, AuthState } from '../types/auth'
+import { useWorkspaceStore } from './useWorkspaceStore'
 
 function extractInitials(name: string): string {
   if (!name.trim()) return 'U'
@@ -9,55 +10,80 @@ function extractInitials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-const DEFAULT_USER: UserAccount = {
-  id: 'usr-primary',
-  name: 'Workspace Admin',
-  email: 'admin@chronodesk.local',
-  role: 'Administrator',
-  provider: 'local',
-  initials: 'WA',
-  createdAt: new Date().toISOString()
-}
-
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      currentUser: DEFAULT_USER,
+      currentUser: null,
+      isAuthenticated: false,
       isAuthModalOpen: false,
 
       setIsAuthModalOpen: (open) => set({ isAuthModalOpen: open }),
 
-      loginWithGoogle: (email = 'user@gmail.com', name = 'Google User', avatarUrl) => {
+      loginWithGoogle: (email = 'alex.chen@gmail.com', name = 'Alex Chen', avatarUrl, workspaceName) => {
         const initials = extractInitials(name)
         const account: UserAccount = {
           id: `goog-${Date.now()}`,
           name,
           email,
           avatarUrl: avatarUrl || undefined,
-          role: 'Workspace Member',
+          role: 'Workspace Owner',
           provider: 'google',
           initials,
           createdAt: new Date().toISOString()
         }
-        set({ currentUser: account, isAuthModalOpen: false })
+
+        // Initialize user-created workspace in real-time
+        useWorkspaceStore.getState().initUserWorkspace(name, workspaceName)
+
+        set({ currentUser: account, isAuthenticated: true, isAuthModalOpen: false })
       },
 
-      registerAccount: (name, email, role = 'Member') => {
+      registerAccount: (name, email, _password, workspaceName, role = 'Administrator') => {
         const initials = extractInitials(name)
         const account: UserAccount = {
           id: `usr-${Date.now()}`,
-          name: name.trim() || 'My User',
-          email: email.trim() || 'user@local.domain',
+          name: name.trim() || 'New User',
+          email: email.trim() || 'user@company.local',
           role,
           provider: 'local',
           initials,
           createdAt: new Date().toISOString()
         }
-        set({ currentUser: account, isAuthModalOpen: false })
+
+        // Initialize user-created workspace in real-time
+        useWorkspaceStore.getState().initUserWorkspace(name, workspaceName)
+
+        set({ currentUser: account, isAuthenticated: true, isAuthModalOpen: false })
+      },
+
+      loginWithCredentials: (email, _password) => {
+        const namePart = email.split('@')[0] || 'User'
+        const cleanName = namePart.charAt(0).toUpperCase() + namePart.slice(1)
+        const initials = extractInitials(cleanName)
+
+        const account: UserAccount = {
+          id: `usr-${Date.now()}`,
+          name: cleanName,
+          email,
+          role: 'Administrator',
+          provider: 'local',
+          initials,
+          createdAt: new Date().toISOString()
+        }
+
+        // Ensure a workspace exists
+        const wsStore = useWorkspaceStore.getState()
+        if (wsStore.workspaces.length === 0 || wsStore.workspaces[0].id === 'ws-default') {
+          wsStore.initUserWorkspace(cleanName)
+        }
+
+        set({ currentUser: account, isAuthenticated: true, isAuthModalOpen: false })
+        return true
       },
 
       updateProfile: (partial) =>
         set((state) => {
+          if (!state.currentUser) return state
           const updatedName = partial.name ?? state.currentUser.name
           const initials = extractInitials(updatedName)
           return {
@@ -69,21 +95,16 @@ export const useAuthStore = create<AuthState>()(
           }
         }),
 
-      logout: () =>
+      logout: () => {
         set({
-          currentUser: {
-            id: `guest-${Date.now()}`,
-            name: 'Guest User',
-            email: 'guest@chronodesk.local',
-            role: 'Guest',
-            provider: 'local',
-            initials: 'GU',
-            createdAt: new Date().toISOString()
-          }
+          currentUser: null,
+          isAuthenticated: false,
+          isAuthModalOpen: false
         })
+      }
     }),
     {
-      name: 'chronodesk-user-auth',
+      name: 'chronodesk-user-auth-session',
       storage: createJSONStorage(() => localStorage)
     }
   )
