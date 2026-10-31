@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import {
   Mic,
   MicOff,
@@ -7,15 +7,17 @@ import {
   CheckCircle2,
   Clock,
   User,
-  Calendar,
+  Calendar as CalendarIcon,
   Sparkles,
   Filter,
   Trash2,
   ListChecks,
-  FileText
+  FileText,
+  Volume2
 } from 'lucide-react'
 import { useTranscriberStore } from '../../store/useTranscriberStore'
-import type { ActionItem, ActionItemPriority, ActionItemStatus } from '../../types/transcriber'
+import { useAppStore } from '../../store/useAppStore'
+import type { ActionItem, ActionItemPriority, ActionItemStatus, MeetingTranscription, TranscriptSegment } from '../../types/transcriber'
 
 type ActiveTab = 'summary' | 'transcript' | 'actions' | 'agenda'
 
@@ -33,6 +35,8 @@ export const TranscriberView: React.FC = () => {
     deleteMeeting
   } = useTranscriberStore()
 
+  const { events } = useAppStore()
+
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<ActiveTab>('summary')
   const [transcriptFilter, setTranscriptFilter] = useState<'all' | 'key' | string>('all')
@@ -41,6 +45,68 @@ export const TranscriberView: React.FC = () => {
   const [newActionAssignee, setNewActionAssignee] = useState('')
   const [newActionPriority, setNewActionPriority] = useState<ActionItemPriority>('medium')
   const [newActionDueDate, setNewActionDueDate] = useState('')
+
+  // Real-time audio waveform and stream simulation states
+  const [recordingSeconds, setRecordingSeconds] = useState(0)
+  const [audioLevel, setAudioLevel] = useState(-24)
+  const [liveStreamSegments, setLiveStreamSegments] = useState<TranscriptSegment[]>([])
+  const [liveDetectedAction, setLiveDetectedAction] = useState<string | null>(null)
+  const [selectedCalendarEventId, setSelectedCalendarEventId] = useState<string>('')
+  const streamTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Real-time Recording Timer & Live Streaming Sim
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (recordingStatus === 'recording') {
+      interval = setInterval(() => {
+        setRecordingSeconds((prev) => prev + 1)
+        // Simulate fluctuating mic audio decibels
+        setAudioLevel(Math.floor(Math.random() * 18) - 32)
+      }, 1000)
+
+      // Simulate streaming live transcription chunks every 4.5 seconds
+      const simulatedPhrases = [
+        { speaker: 'Marcus Webb', text: "Let's review the delivery timeline for our primary milestone.", tag: 'decision' },
+        { speaker: 'Alex Mercer (You)', text: "I will ensure the architecture tests pass before Thursday noon.", tag: 'action' },
+        { speaker: 'Sarah Chen', text: "Do we have stakeholder confirmation on the budget adjustment?", tag: 'question' },
+        { speaker: 'Marcus Webb', text: "Yes, verified this morning with finance. Approved for rollout.", tag: 'decision' },
+        { speaker: 'Alex Mercer (You)', text: "Action item: Deploy canary release to staging by end of day.", tag: 'action' }
+      ]
+
+      let phraseIndex = 0
+      streamTimerRef.current = setInterval(() => {
+        if (phraseIndex < simulatedPhrases.length) {
+          const phrase = simulatedPhrases[phraseIndex]
+          const newSeg: TranscriptSegment = {
+            id: `live-seg-${Date.now()}`,
+            speakerId: 'spk-live',
+            text: phrase.text,
+            startSeconds: phraseIndex * 6,
+            endSeconds: (phraseIndex + 1) * 6,
+            confidence: 0.96,
+            isKeyMoment: phrase.tag === 'action' || phrase.tag === 'decision',
+            tags: [phrase.tag]
+          }
+          setLiveStreamSegments((prev) => [...prev, newSeg])
+
+          if (phrase.tag === 'action') {
+            setLiveDetectedAction(`Extracted: ${phrase.text}`)
+            setTimeout(() => setLiveDetectedAction(null), 4000)
+          }
+
+          phraseIndex++
+        }
+      }, 4500)
+    } else {
+      setRecordingSeconds(0)
+      setLiveStreamSegments([])
+    }
+
+    return () => {
+      clearInterval(interval)
+      if (streamTimerRef.current) clearInterval(streamTimerRef.current)
+    }
+  }, [recordingStatus])
 
   // Filter meetings by search query
   const filteredMeetings = useMemo(() => {
@@ -72,7 +138,7 @@ export const TranscriberView: React.FC = () => {
       id: `ai-${Date.now()}`,
       meetingId: activeMeeting.id,
       text: newActionText.trim(),
-      assignee: newActionAssignee.trim() || 'Unassigned',
+      assignee: newActionAssignee.trim() || 'Alex Mercer',
       dueDate: newActionDueDate || new Date().toISOString().split('T')[0],
       priority: newActionPriority,
       status: 'pending',
@@ -98,16 +164,90 @@ export const TranscriberView: React.FC = () => {
     return activeMeeting.segments
   }, [activeMeeting, transcriptFilter])
 
+  // Create transcription from a real user calendar event
+  const handleTranscribeCalendarEvent = (eventId: string) => {
+    const evt = events.find((e) => e.id === eventId)
+    if (!evt) return
+
+    const newMeeting: MeetingTranscription = {
+      id: `mtg-${evt.id}`,
+      title: evt.title,
+      date: new Date(evt.start).toISOString().split('T')[0],
+      startTime: new Date(evt.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      endTime: new Date(evt.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      duration: Math.max(1800, (new Date(evt.end).getTime() - new Date(evt.start).getTime()) / 1000),
+      status: 'complete',
+      sentiment: 'positive',
+      wordCount: 3420,
+      aiModel: 'Gemini 1.5 Pro (NLP Engine)',
+      summary: `Automated debrief for calendar event "${evt.title}". The session aligned stakeholders on project deliverables and key milestones. Workstream dependencies and upcoming deliverables were reviewed with zero blocking issues identified.`,
+      keyDecisions: [
+        `Deliverables finalized for ${evt.title}`,
+        'Next progress checkpoint confirmed for upcoming sprint',
+        'Resources allocation updated and locked in directory'
+      ],
+      speakers: [
+        { id: 'spk-user', name: 'Alex Mercer (You)', role: 'host', color: '#888', wordCount: 1450, talkTimeSeconds: 840 },
+        { id: 'spk-lead', name: 'Lead Architect', role: 'participant', color: '#666', wordCount: 1200, talkTimeSeconds: 620 }
+      ],
+      segments: [
+        {
+          id: `seg-${Date.now()}-1`,
+          speakerId: 'spk-user',
+          startSeconds: 0,
+          endSeconds: 45,
+          text: `Welcome everyone to "${evt.title}". Let us review the agenda and synchronize on progress.`,
+          confidence: 0.98,
+          isKeyMoment: false,
+          tags: []
+        },
+        {
+          id: `seg-${Date.now()}-2`,
+          speakerId: 'spk-lead',
+          startSeconds: 46,
+          endSeconds: 110,
+          text: "All milestones for this phase are on schedule. We are ready to ship the updates cleanly.",
+          confidence: 0.95,
+          isKeyMoment: true,
+          tags: ['decision']
+        }
+      ],
+      actionItems: [
+        {
+          id: `ai-${Date.now()}-1`,
+          meetingId: `mtg-${evt.id}`,
+          text: `Finalize post-meeting documentation for ${evt.title}`,
+          assignee: 'Alex Mercer',
+          dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+          priority: 'high',
+          status: 'pending',
+          extractedAt: new Date().toISOString(),
+          confidence: 0.95
+        }
+      ],
+      agenda: [
+        { id: 'ag-1', title: 'Context & Goals', durationMinutes: 10, order: 1, status: 'complete', notes: 'Defined baseline' },
+        { id: 'ag-2', title: 'Technical Review', durationMinutes: 20, order: 2, status: 'complete', notes: 'Architectural walkthrough' }
+      ]
+    }
+
+    useTranscriberStore.setState((state) => ({
+      meetings: [newMeeting, ...state.meetings.filter((m) => m.id !== newMeeting.id)],
+      activeMeetingId: newMeeting.id
+    }))
+    setSelectedCalendarEventId('')
+  }
+
   return (
     <div className="flex h-full bg-[var(--bg-app)] w-full overflow-hidden text-[var(--text-primary)]">
-      {/* Left Sidebar - Meetings List */}
-      <div className="w-80 border-r border-[var(--border)] flex flex-col bg-[var(--bg-surface)] shrink-0">
+      {/* Left Sidebar - Meetings & Calendar Sessions */}
+      <div className="w-80 border-r border-[var(--border-subtle)] flex flex-col bg-[var(--bg-sidebar)] shrink-0">
         {/* Panel Header */}
-        <div className="p-4 border-b border-[var(--border)] space-y-3">
+        <div className="p-4 border-b border-[var(--border-subtle)] space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Mic className="w-4 h-4 text-[var(--text-primary)]" />
-              <span className="font-semibold text-sm">Meeting Transcriber</span>
+              <span className="font-semibold text-xs tracking-tight">AI Transcriber</span>
             </div>
             <button
               onClick={() => {
@@ -117,24 +257,53 @@ export const TranscriberView: React.FC = () => {
                   startRecording()
                 }
               }}
-              className={`h-7 px-3 text-xs font-medium rounded flex items-center gap-1.5 transition-colors ${
+              className={`h-7 px-3 text-xs font-semibold rounded-[var(--radius-md)] flex items-center gap-1.5 transition-all shadow-xs ${
                 recordingStatus === 'recording'
-                  ? 'bg-red-500/10 text-red-400 border border-red-500/30 animate-pulse'
-                  : 'bg-[var(--bg-elevated)] hover:bg-[var(--border)] text-[var(--text-primary)] border border-[var(--border)]'
+                  ? 'bg-red-500 text-white animate-pulse'
+                  : 'bg-[var(--accent)] text-[var(--accent-text)] hover:opacity-90 active:scale-95'
               }`}
             >
               {recordingStatus === 'recording' ? (
                 <>
-                  <MicOff className="w-3.5 h-3.5 text-red-400" />
-                  <span>Stop</span>
+                  <MicOff className="w-3.5 h-3.5" />
+                  <span>Stop ({formatTime(recordingSeconds)})</span>
                 </>
               ) : (
                 <>
-                  <Mic className="w-3.5 h-3.5" />
-                  <span>Record</span>
+                  <Mic className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Live Record</span>
                 </>
               )}
             </button>
+          </div>
+
+          {/* Quick link real calendar events */}
+          <div className="space-y-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+              Transcribe User Calendar Event
+            </span>
+            <div className="flex gap-1.5">
+              <select
+                value={selectedCalendarEventId}
+                onChange={(e) => setSelectedCalendarEventId(e.target.value)}
+                className="flex-1 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-2 py-1 text-xs text-[var(--text-primary)] focus:outline-none"
+              >
+                <option value="">Select from your events...</option>
+                {events.map((evt) => (
+                  <option key={evt.id} value={evt.id}>
+                    {evt.title} ({new Date(evt.start).toLocaleDateString([], { month: 'short', day: 'numeric' })})
+                  </option>
+                ))}
+              </select>
+              <button
+                disabled={!selectedCalendarEventId}
+                onClick={() => handleTranscribeCalendarEvent(selectedCalendarEventId)}
+                className="h-7 px-2.5 bg-[var(--bg-elevated)] hover:bg-[var(--bg-hover)] border border-[var(--border-subtle)] disabled:opacity-40 rounded-[var(--radius-md)] text-xs text-[var(--text-primary)] transition-colors flex items-center gap-1"
+                title="Generate AI Transcripts for this event"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
           {/* Search box */}
@@ -145,16 +314,16 @@ export const TranscriberView: React.FC = () => {
               placeholder="Search transcriptions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[var(--bg-app)] border border-[var(--border)] rounded pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--text-primary)]"
+              className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--border-default)]"
             />
           </div>
         </div>
 
         {/* Meeting List */}
-        <div className="flex-1 overflow-y-auto divide-y divide-[var(--border)]">
+        <div className="flex-1 overflow-y-auto divide-y divide-[var(--border-subtle)]">
           {filteredMeetings.length === 0 ? (
             <div className="p-6 text-center text-xs text-[var(--text-muted)]">
-              No meetings found
+              No meeting transcriptions recorded
             </div>
           ) : (
             filteredMeetings.map((mtg) => {
@@ -163,45 +332,39 @@ export const TranscriberView: React.FC = () => {
                 <div
                   key={mtg.id}
                   onClick={() => selectMeeting(mtg.id)}
-                  className={`p-3.5 cursor-pointer transition-colors relative ${
+                  className={`p-3.5 cursor-pointer transition-all ${
                     isSelected
-                      ? 'bg-[var(--bg-elevated)] border-l-2 border-l-[var(--text-primary)]'
-                      : 'hover:bg-[var(--bg-elevated)]/50'
+                      ? 'bg-[var(--bg-elevated)] border-l-2 border-l-[var(--text-primary)] shadow-xs'
+                      : 'hover:bg-[var(--bg-hover)]'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2 mb-1.5">
-                    <h4 className="text-xs font-semibold truncate leading-tight">{mtg.title}</h4>
-                    <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded font-mono uppercase ${
-                        mtg.status === 'complete'
-                          ? 'border border-[var(--border)] text-[var(--text-muted)]'
-                          : mtg.status === 'recording'
-                          ? 'text-red-400 border border-red-500/30'
-                          : 'border border-[var(--border)] text-[var(--text-muted)]'
-                      }`}
-                    >
+                    <h4 className="text-xs font-semibold truncate leading-tight text-[var(--text-primary)]">
+                      {mtg.title}
+                    </h4>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-[var(--radius-sm)] font-mono uppercase border border-[var(--border-subtle)] text-[var(--text-muted)]">
                       {mtg.status}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
+                  <div className="flex items-center gap-3 text-[11px] text-[var(--text-secondary)]">
                     <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
+                      <CalendarIcon className="w-3 h-3 text-[var(--text-muted)]" />
                       {mtg.date}
                     </span>
                     <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
+                      <Clock className="w-3 h-3 text-[var(--text-muted)]" />
                       {Math.round(mtg.duration / 60)}m
                     </span>
                     <span className="flex items-center gap-1">
-                      <User className="w-3 h-3" />
+                      <User className="w-3 h-3 text-[var(--text-muted)]" />
                       {mtg.speakers.length}
                     </span>
                   </div>
 
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="text-[10px] bg-[var(--bg-app)] border border-[var(--border)] px-1.5 py-0.5 rounded text-[var(--text-muted)]">
-                      {mtg.actionItems.length} actions
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-[10px] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] px-1.5 py-0.5 rounded-[var(--radius-sm)] text-[var(--text-secondary)]">
+                      {mtg.actionItems.length} action items
                     </span>
                     <span className="text-[10px] text-[var(--text-muted)] font-mono">
                       {mtg.aiModel}
@@ -218,71 +381,125 @@ export const TranscriberView: React.FC = () => {
       {activeMeeting ? (
         <div className="flex-1 flex flex-col overflow-hidden bg-[var(--bg-app)]">
           {/* Header */}
-          <div className="p-6 border-b border-[var(--border)] shrink-0 space-y-4">
+          <div className="p-5 border-b border-[var(--border-subtle)] shrink-0 space-y-4 bg-[var(--bg-app)]">
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2.5">
-                  <h2 className="text-xl font-bold tracking-tight">{activeMeeting.title}</h2>
-                  <span className="text-xs border border-[var(--border)] text-[var(--text-muted)] px-2 py-0.5 rounded capitalize">
+                  <h2 className="text-lg font-bold tracking-tight text-[var(--text-primary)]">
+                    {activeMeeting.title}
+                  </h2>
+                  <span className="text-[11px] border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-secondary)] px-2 py-0.5 rounded-[var(--radius-sm)] capitalize">
                     {activeMeeting.sentiment} sentiment
                   </span>
                 </div>
-                <div className="flex items-center gap-4 text-xs text-[var(--text-muted)] mt-1.5">
+                <div className="flex items-center gap-4 text-xs text-[var(--text-secondary)] mt-1.5">
                   <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" />
+                    <CalendarIcon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                     {activeMeeting.date} ({activeMeeting.startTime} - {activeMeeting.endTime})
                   </span>
                   <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
+                    <Clock className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                     {Math.round(activeMeeting.duration / 60)} minutes
                   </span>
                   <span className="flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <Sparkles className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                     {activeMeeting.aiModel}
                   </span>
                 </div>
               </div>
 
-              <button
-                onClick={() => deleteMeeting(activeMeeting.id)}
-                className="h-7 px-2.5 text-xs text-red-400 hover:bg-red-500/10 rounded border border-transparent hover:border-red-500/20 flex items-center gap-1 transition-colors"
-                title="Delete recording"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Delete</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => deleteMeeting(activeMeeting.id)}
+                  className="h-7 px-2.5 text-xs text-[var(--text-muted)] hover:text-red-400 rounded-[var(--radius-md)] border border-transparent hover:border-[var(--border-subtle)] flex items-center gap-1 transition-colors"
+                  title="Delete recording"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete</span>
+                </button>
+              </div>
             </div>
 
+            {/* Live Audio Visualizer Banner (When Recording) */}
+            {recordingStatus === 'recording' && (
+              <div className="p-3 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] flex items-center justify-between animate-fade-in shadow-xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-[var(--text-primary)]">
+                        Real-Time Speech Stream Active
+                      </span>
+                      <span className="font-mono text-xs font-bold text-red-400">
+                        {formatTime(recordingSeconds)}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[var(--text-muted)]">
+                      Whisper NLP model streaming chunks & extracting action items in real time.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {/* Dynamic wave equalizer simulation */}
+                  <div className="flex items-end gap-1 h-6">
+                    {[16, 24, 12, 28, 20, 14, 26, 18, 30, 22].map((height, i) => (
+                      <div
+                        key={i}
+                        className="w-1 bg-[var(--text-primary)] rounded-full transition-all duration-150"
+                        style={{
+                          height: `${Math.max(4, (height * (Math.abs(audioLevel) / 20)) % 24)}px`
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-1.5 px-2 py-1 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] text-[10px] font-mono text-[var(--text-secondary)]">
+                    <Volume2 className="w-3 h-3 text-[var(--text-muted)]" />
+                    <span>{audioLevel} dB</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Real-time Toast if Action Item is Detected Live */}
+            {liveDetectedAction && (
+              <div className="p-2.5 bg-[var(--bg-elevated)] border border-emerald-500/40 text-emerald-400 rounded-[var(--radius-md)] flex items-center gap-2 text-xs animate-slide-in">
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                <span className="font-medium">{liveDetectedAction}</span>
+              </div>
+            )}
+
             {/* Navigation Tabs */}
-            <div className="flex items-center gap-1 border-b border-[var(--border)] pb-2">
+            <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] pb-2">
               <button
                 onClick={() => setActiveTab('summary')}
-                className={`h-7 px-3 text-xs font-medium rounded flex items-center gap-1.5 transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all ${
                   activeTab === 'summary'
-                    ? 'bg-[var(--text-primary)] text-[var(--bg-app)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
+                    ? 'bg-[var(--accent)] text-[var(--accent-text)] shadow-xs'
+                    : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
                 }`}
               >
                 <FileText className="w-3.5 h-3.5" />
-                <span>Summary & Insights</span>
+                <span>Executive Summary</span>
               </button>
               <button
                 onClick={() => setActiveTab('transcript')}
-                className={`h-7 px-3 text-xs font-medium rounded flex items-center gap-1.5 transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all ${
                   activeTab === 'transcript'
-                    ? 'bg-[var(--text-primary)] text-[var(--bg-app)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
+                    ? 'bg-[var(--accent)] text-[var(--accent-text)] shadow-xs'
+                    : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
                 }`}
               >
                 <Mic className="w-3.5 h-3.5" />
-                <span>Full Transcript ({activeMeeting.segments.length})</span>
+                <span>Transcript ({activeMeeting.segments.length + liveStreamSegments.length})</span>
               </button>
               <button
                 onClick={() => setActiveTab('actions')}
-                className={`h-7 px-3 text-xs font-medium rounded flex items-center gap-1.5 transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all ${
                   activeTab === 'actions'
-                    ? 'bg-[var(--text-primary)] text-[var(--bg-app)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
+                    ? 'bg-[var(--accent)] text-[var(--accent-text)] shadow-xs'
+                    : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
                 }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -290,14 +507,14 @@ export const TranscriberView: React.FC = () => {
               </button>
               <button
                 onClick={() => setActiveTab('agenda')}
-                className={`h-7 px-3 text-xs font-medium rounded flex items-center gap-1.5 transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all ${
                   activeTab === 'agenda'
-                    ? 'bg-[var(--text-primary)] text-[var(--bg-app)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
+                    ? 'bg-[var(--accent)] text-[var(--accent-text)] shadow-xs'
+                    : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
                 }`}
               >
                 <ListChecks className="w-3.5 h-3.5" />
-                <span>Agenda ({activeMeeting.agenda.length})</span>
+                <span>Agenda Progression</span>
               </button>
             </div>
           </div>
@@ -308,51 +525,53 @@ export const TranscriberView: React.FC = () => {
               <div className="space-y-6">
                 {/* Stats Row */}
                 <div className="grid grid-cols-4 gap-4">
-                  <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg p-3.5">
-                    <span className="text-[11px] text-[var(--text-muted)]">Total Word Count</span>
-                    <p className="text-xl font-bold mt-1 font-mono">
+                  <div className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] p-4 shadow-xs">
+                    <span className="text-[11px] text-[var(--text-muted)] font-medium">Total Word Count</span>
+                    <p className="text-xl font-bold mt-1 font-mono text-[var(--text-primary)]">
                       {activeMeeting.wordCount.toLocaleString()}
                     </p>
                   </div>
-                  <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg p-3.5">
-                    <span className="text-[11px] text-[var(--text-muted)]">Active Speakers</span>
-                    <p className="text-xl font-bold mt-1 font-mono">
+                  <div className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] p-4 shadow-xs">
+                    <span className="text-[11px] text-[var(--text-muted)] font-medium">Active Speakers</span>
+                    <p className="text-xl font-bold mt-1 font-mono text-[var(--text-primary)]">
                       {activeMeeting.speakers.length}
                     </p>
                   </div>
-                  <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg p-3.5">
-                    <span className="text-[11px] text-[var(--text-muted)]">Extracted Actions</span>
-                    <p className="text-xl font-bold mt-1 font-mono">
+                  <div className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] p-4 shadow-xs">
+                    <span className="text-[11px] text-[var(--text-muted)] font-medium">Extracted Actions</span>
+                    <p className="text-xl font-bold mt-1 font-mono text-[var(--text-primary)]">
                       {activeMeeting.actionItems.length}
                     </p>
                   </div>
-                  <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg p-3.5">
-                    <span className="text-[11px] text-[var(--text-muted)]">Key Decisions</span>
-                    <p className="text-xl font-bold mt-1 font-mono">
+                  <div className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] p-4 shadow-xs">
+                    <span className="text-[11px] text-[var(--text-muted)] font-medium">Key Decisions</span>
+                    <p className="text-xl font-bold mt-1 font-mono text-[var(--text-primary)]">
                       {activeMeeting.keyDecisions.length}
                     </p>
                   </div>
                 </div>
 
                 {/* AI Summary Box */}
-                <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg p-5 space-y-2">
+                <div className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] p-5 space-y-2 shadow-xs">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[var(--text-primary)]" />
-                    <h3 className="text-xs font-semibold uppercase tracking-wider">
-                      Executive Summary
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-primary)]">
+                      Executive Summary & Debrief
                     </h3>
                   </div>
-                  <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
+                  <p className="text-xs leading-relaxed text-[var(--text-secondary)]">
                     {activeMeeting.summary}
                   </p>
                 </div>
 
                 {/* Key Decisions */}
-                <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg p-5 space-y-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider">Key Decisions</h3>
+                <div className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] p-5 space-y-3 shadow-xs">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-primary)]">
+                    Recorded Decisions
+                  </h3>
                   <div className="space-y-2">
                     {activeMeeting.keyDecisions.map((decision, index) => (
-                      <div key={index} className="flex items-start gap-2.5 text-xs">
+                      <div key={index} className="flex items-start gap-2.5 text-xs text-[var(--text-secondary)]">
                         <CheckCircle2 className="w-4 h-4 text-[var(--text-primary)] shrink-0 mt-0.5" />
                         <span className="leading-normal">{decision}</span>
                       </div>
@@ -361,11 +580,11 @@ export const TranscriberView: React.FC = () => {
                 </div>
 
                 {/* Speaker Distribution */}
-                <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg p-5 space-y-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider">
+                <div className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] p-5 space-y-3 shadow-xs">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-primary)]">
                     Speaker Talk-Time Distribution
                   </h3>
-                  <div className="space-y-2.5">
+                  <div className="space-y-3">
                     {activeMeeting.speakers.map((spk) => {
                       const percentage = Math.round(
                         (spk.talkTimeSeconds / (activeMeeting.duration || 1)) * 100
@@ -373,12 +592,14 @@ export const TranscriberView: React.FC = () => {
                       return (
                         <div key={spk.id} className="space-y-1">
                           <div className="flex justify-between text-xs">
-                            <span className="font-medium">{spk.name} ({spk.role})</span>
+                            <span className="font-medium text-[var(--text-primary)]">
+                              {spk.name} ({spk.role})
+                            </span>
                             <span className="text-[var(--text-muted)] font-mono">
                               {Math.round(spk.talkTimeSeconds / 60)}m ({percentage}%)
                             </span>
                           </div>
-                          <div className="w-full h-1.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden">
+                          <div className="w-full h-1.5 bg-[var(--bg-subtle)] rounded-full overflow-hidden border border-[var(--border-subtle)]">
                             <div
                               className="h-full bg-[var(--text-primary)] rounded-full transition-all"
                               style={{ width: `${percentage}%` }}
@@ -395,26 +616,26 @@ export const TranscriberView: React.FC = () => {
             {activeTab === 'transcript' && (
               <div className="space-y-4">
                 {/* Transcript Filters */}
-                <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
+                <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
                   <div className="flex items-center gap-2">
                     <Filter className="w-3.5 h-3.5 text-[var(--text-muted)]" />
                     <span className="text-xs text-[var(--text-muted)]">Filter:</span>
                     <button
                       onClick={() => setTranscriptFilter('all')}
-                      className={`h-6 px-2.5 text-xs rounded transition-colors ${
+                      className={`h-6 px-2.5 text-xs rounded-[var(--radius-sm)] transition-colors ${
                         transcriptFilter === 'all'
-                          ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border)] font-medium'
-                          : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                          ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold shadow-xs'
+                          : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border-subtle)]'
                       }`}
                     >
                       All Segments
                     </button>
                     <button
                       onClick={() => setTranscriptFilter('key')}
-                      className={`h-6 px-2.5 text-xs rounded transition-colors ${
+                      className={`h-6 px-2.5 text-xs rounded-[var(--radius-sm)] transition-colors ${
                         transcriptFilter === 'key'
-                          ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border)] font-medium'
-                          : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                          ? 'bg-[var(--accent)] text-[var(--accent-text)] font-semibold shadow-xs'
+                          : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border-subtle)]'
                       }`}
                     >
                       Key Moments Only
@@ -424,7 +645,7 @@ export const TranscriberView: React.FC = () => {
                   <select
                     value={transcriptFilter}
                     onChange={(e) => setTranscriptFilter(e.target.value)}
-                    className="bg-[var(--bg-surface)] border border-[var(--border)] rounded px-2 py-1 text-xs text-[var(--text-primary)] focus:outline-none"
+                    className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-2.5 py-1 text-xs text-[var(--text-primary)] focus:outline-none"
                   >
                     <option value="all">All Speakers</option>
                     {activeMeeting.speakers.map((spk) => (
@@ -435,6 +656,32 @@ export const TranscriberView: React.FC = () => {
                   </select>
                 </div>
 
+                {/* Live incoming segments if recording */}
+                {liveStreamSegments.length > 0 && (
+                  <div className="space-y-2 mb-4">
+                    <span className="text-[10px] font-mono uppercase text-red-400 font-bold tracking-wider flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                      Live Streamed Transcription Chunks
+                    </span>
+                    {liveStreamSegments.map((seg) => (
+                      <div
+                        key={seg.id}
+                        className="p-3 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] border-l-2 border-l-red-500"
+                      >
+                        <div className="flex items-center justify-between text-xs mb-1">
+                          <span className="font-semibold text-[var(--text-primary)]">
+                            Streaming Voice Recognizer
+                          </span>
+                          <span className="text-[10px] font-mono text-[var(--text-muted)]">
+                            {formatTime(seg.startSeconds)} - {formatTime(seg.endSeconds)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[var(--text-secondary)]">{seg.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* Segments Stream */}
                 <div className="space-y-3">
                   {displayedSegments.map((segment) => {
@@ -442,18 +689,20 @@ export const TranscriberView: React.FC = () => {
                     return (
                       <div
                         key={segment.id}
-                        className={`p-3.5 rounded-lg border transition-all ${
+                        className={`p-3.5 rounded-[var(--radius-md)] border transition-all ${
                           segment.isKeyMoment
-                            ? 'bg-[var(--bg-surface)] border-l-4 border-l-[var(--text-primary)] border-[var(--border)]'
-                            : 'bg-[var(--bg-surface)]/60 border-[var(--border)]'
+                            ? 'bg-[var(--bg-elevated)] border-[var(--border-default)] border-l-2 border-l-[var(--text-primary)] shadow-xs'
+                            : 'bg-[var(--bg-elevated)] border-[var(--border-subtle)]'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 rounded-full bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center text-[10px] font-bold">
+                            <div className="w-5 h-5 rounded-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center text-[10px] font-bold text-[var(--text-primary)]">
                               {speaker?.name.charAt(0) || 'U'}
                             </div>
-                            <span className="text-xs font-semibold">{speaker?.name || 'Unknown'}</span>
+                            <span className="text-xs font-semibold text-[var(--text-primary)]">
+                              {speaker?.name || 'Alex Mercer'}
+                            </span>
                             <span className="text-[10px] text-[var(--text-muted)] font-mono">
                               {formatTime(segment.startSeconds)} - {formatTime(segment.endSeconds)}
                             </span>
@@ -463,7 +712,7 @@ export const TranscriberView: React.FC = () => {
                             {segment.tags.map((tag) => (
                               <span
                                 key={tag}
-                                className="text-[9px] uppercase tracking-wider px-1.5 py-0.2 bg-[var(--bg-app)] border border-[var(--border)] rounded text-[var(--text-muted)]"
+                                className="text-[9px] uppercase tracking-wider px-1.5 py-0.2 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] text-[var(--text-muted)]"
                               >
                                 {tag}
                               </span>
@@ -487,14 +736,14 @@ export const TranscriberView: React.FC = () => {
             {activeTab === 'actions' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-primary)]">
                     Extracted Action Items
                   </h3>
                   <button
                     onClick={() => setShowAddActionModal(true)}
-                    className="h-7 px-3 text-xs bg-[var(--text-primary)] text-[var(--bg-app)] rounded flex items-center gap-1 hover:opacity-90 transition-opacity"
+                    className="h-7 px-3 text-xs font-semibold bg-[var(--accent)] text-[var(--accent-text)] rounded-[var(--radius-md)] flex items-center gap-1 shadow-xs hover:opacity-90 transition-opacity"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                     <span>Add Item</span>
                   </button>
                 </div>
@@ -507,10 +756,10 @@ export const TranscriberView: React.FC = () => {
                     return (
                       <div
                         key={item.id}
-                        className={`p-3 rounded-lg border border-[var(--border)] flex items-center justify-between gap-4 transition-all ${
+                        className={`p-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] flex items-center justify-between gap-4 transition-all ${
                           isDone
-                            ? 'bg-[var(--bg-surface)]/40 opacity-60'
-                            : 'bg-[var(--bg-surface)]'
+                            ? 'bg-[var(--bg-subtle)] opacity-50'
+                            : 'bg-[var(--bg-elevated)] shadow-xs'
                         }`}
                       >
                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -524,21 +773,21 @@ export const TranscriberView: React.FC = () => {
                                   : 'pending'
                               updateActionItem(item.id, { status: nextStatus })
                             }}
-                            className="shrink-0 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                            className="shrink-0 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                           >
                             <CheckCircle2
                               className={`w-4 h-4 ${
                                 isDone
                                   ? 'text-[var(--text-primary)] fill-[var(--text-primary)]'
                                   : isInProgress
-                                  ? 'text-amber-400'
+                                  ? 'text-[var(--text-primary)]'
                                   : 'text-[var(--text-muted)]'
                               }`}
                             />
                           </button>
                           <span
                             className={`text-xs truncate ${
-                              isDone ? 'line-through text-[var(--text-muted)]' : 'font-medium'
+                              isDone ? 'line-through text-[var(--text-muted)]' : 'font-medium text-[var(--text-primary)]'
                             }`}
                           >
                             {item.text}
@@ -546,23 +795,15 @@ export const TranscriberView: React.FC = () => {
                         </div>
 
                         <div className="flex items-center gap-3 shrink-0 text-xs">
-                          <span className="text-[var(--text-muted)] flex items-center gap-1">
-                            <User className="w-3 h-3" />
+                          <span className="text-[var(--text-secondary)] flex items-center gap-1">
+                            <User className="w-3 h-3 text-[var(--text-muted)]" />
                             {item.assignee}
                           </span>
                           <span className="text-[var(--text-muted)] flex items-center gap-1 font-mono text-[11px]">
-                            <Calendar className="w-3 h-3" />
+                            <CalendarIcon className="w-3 h-3 text-[var(--text-muted)]" />
                             {item.dueDate}
                           </span>
-                          <span
-                            className={`text-[10px] uppercase font-mono px-1.5 py-0.5 rounded ${
-                              item.priority === 'high'
-                                ? 'text-red-400 border border-red-500/30'
-                                : item.priority === 'medium'
-                                ? 'border border-[var(--border)] text-[var(--text-muted)]'
-                                : 'text-[var(--text-muted)]'
-                            }`}
-                          >
+                          <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] text-[var(--text-secondary)]">
                             {item.priority}
                           </span>
                         </div>
@@ -571,19 +812,19 @@ export const TranscriberView: React.FC = () => {
                   })}
                 </div>
 
-                {/* Simple Add Modal */}
+                {/* Add Modal */}
                 {showAddActionModal && (
                   <form
                     onSubmit={handleCreateAction}
-                    className="p-4 bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg space-y-3"
+                    className="p-4 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] space-y-3 shadow-xs"
                   >
-                    <h4 className="text-xs font-semibold">New Action Item</h4>
+                    <h4 className="text-xs font-semibold text-[var(--text-primary)]">New Action Item</h4>
                     <input
                       type="text"
                       placeholder="Task description..."
                       value={newActionText}
                       onChange={(e) => setNewActionText(e.target.value)}
-                      className="w-full bg-[var(--bg-app)] border border-[var(--border)] rounded px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
+                      className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none"
                       required
                     />
                     <div className="grid grid-cols-3 gap-2">
@@ -592,18 +833,18 @@ export const TranscriberView: React.FC = () => {
                         placeholder="Assignee"
                         value={newActionAssignee}
                         onChange={(e) => setNewActionAssignee(e.target.value)}
-                        className="bg-[var(--bg-app)] border border-[var(--border)] rounded px-2.5 py-1 text-xs text-[var(--text-primary)] focus:outline-none"
+                        className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-2.5 py-1 text-xs text-[var(--text-primary)] focus:outline-none"
                       />
                       <input
                         type="date"
                         value={newActionDueDate}
                         onChange={(e) => setNewActionDueDate(e.target.value)}
-                        className="bg-[var(--bg-app)] border border-[var(--border)] rounded px-2.5 py-1 text-xs text-[var(--text-primary)] focus:outline-none"
+                        className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-2.5 py-1 text-xs text-[var(--text-primary)] focus:outline-none"
                       />
                       <select
                         value={newActionPriority}
                         onChange={(e) => setNewActionPriority(e.target.value as ActionItemPriority)}
-                        className="bg-[var(--bg-app)] border border-[var(--border)] rounded px-2.5 py-1 text-xs text-[var(--text-primary)] focus:outline-none"
+                        className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-2.5 py-1 text-xs text-[var(--text-primary)] focus:outline-none"
                       >
                         <option value="low">Low Priority</option>
                         <option value="medium">Medium Priority</option>
@@ -614,13 +855,13 @@ export const TranscriberView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setShowAddActionModal(false)}
-                        className="h-7 px-3 text-xs border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)]"
+                        className="h-7 px-3 text-xs border border-[var(--border-subtle)] rounded-[var(--radius-md)] hover:bg-[var(--bg-hover)] text-[var(--text-secondary)]"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="h-7 px-3 text-xs bg-[var(--text-primary)] text-[var(--bg-app)] rounded"
+                        className="h-7 px-3 text-xs font-semibold bg-[var(--accent)] text-[var(--accent-text)] rounded-[var(--radius-md)] shadow-xs"
                       >
                         Save Action
                       </button>
@@ -633,7 +874,7 @@ export const TranscriberView: React.FC = () => {
             {activeTab === 'agenda' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-primary)]">
                     Agenda Progression
                   </h3>
                   <span className="text-xs text-[var(--text-muted)] font-mono">
@@ -646,16 +887,16 @@ export const TranscriberView: React.FC = () => {
                   {activeMeeting.agenda.map((ag) => (
                     <div
                       key={ag.id}
-                      className="p-3.5 bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg flex items-start justify-between gap-4"
+                      className="p-3.5 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] flex items-start justify-between gap-4 shadow-xs"
                     >
                       <div className="flex items-start gap-3">
-                        <span className="w-5 h-5 rounded bg-[var(--bg-elevated)] text-[var(--text-muted)] font-mono text-[11px] flex items-center justify-center shrink-0">
+                        <span className="w-5 h-5 rounded-[var(--radius-sm)] bg-[var(--bg-subtle)] text-[var(--text-muted)] font-mono text-[11px] flex items-center justify-center shrink-0 border border-[var(--border-subtle)]">
                           {ag.order}
                         </span>
                         <div>
-                          <h4 className="text-xs font-medium">{ag.title}</h4>
+                          <h4 className="text-xs font-medium text-[var(--text-primary)]">{ag.title}</h4>
                           {ag.notes && (
-                            <p className="text-[11px] text-[var(--text-muted)] mt-1">{ag.notes}</p>
+                            <p className="text-[11px] text-[var(--text-secondary)] mt-1">{ag.notes}</p>
                           )}
                         </div>
                       </div>
@@ -674,12 +915,12 @@ export const TranscriberView: React.FC = () => {
                                 : 'pending'
                             updateAgendaItem(activeMeeting.id, ag.id, { status: next })
                           }}
-                          className={`text-[10px] uppercase font-mono px-2 py-0.5 rounded border transition-colors ${
+                          className={`text-[10px] uppercase font-mono px-2 py-0.5 rounded-[var(--radius-sm)] border transition-colors ${
                             ag.status === 'complete'
-                              ? 'border border-[var(--border)] text-[var(--text-muted)]'
+                              ? 'border border-[var(--border-subtle)] text-[var(--text-muted)]'
                               : ag.status === 'active'
-                              ? 'border border-[var(--text-primary)] text-[var(--text-primary)] bg-[var(--bg-elevated)]'
-                              : 'border border-[var(--border)] text-[var(--text-muted)]'
+                              ? 'border border-[var(--text-primary)] text-[var(--accent-text)] bg-[var(--accent)] font-bold'
+                              : 'border border-[var(--border-subtle)] text-[var(--text-muted)]'
                           }`}
                         >
                           {ag.status}
@@ -694,7 +935,7 @@ export const TranscriberView: React.FC = () => {
         </div>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center text-[var(--text-muted)]">
-          <Mic className="w-8 h-8 mb-2 opacity-50" />
+          <Mic className="w-8 h-8 mb-2 opacity-30" />
           <p className="text-xs">Select or record a meeting transcription</p>
         </div>
       )}
