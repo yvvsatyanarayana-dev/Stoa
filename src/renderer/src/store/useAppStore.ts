@@ -13,6 +13,7 @@ import type {
 } from '../../../types'
 import { DEFAULT_DARK_PALETTE, DEFAULT_BW_PALETTE } from '../../../types'
 import { useThemeStore } from './useThemeStore'
+import { useP2PStore } from './useP2PStore'
 
 export type AppView =
   | 'calendar'
@@ -430,6 +431,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       await window.api.events.create(event, resourceIds)
       await get().fetchEvents()
+      try {
+        useP2PStore.getState().broadcastEventChange(event.title)
+      } catch {}
     } catch (err) {
       console.error('Error creating event:', err)
     }
@@ -439,6 +443,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       await window.api.events.update(event, resourceIds)
       await get().fetchEvents()
+      try {
+        useP2PStore.getState().broadcastEventChange(event.title)
+      } catch {}
     } catch (err) {
       console.error('Error updating event:', err)
     }
@@ -446,8 +453,12 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   deleteEvent: async (id: string) => {
     try {
+      const evt = get().events.find((e) => e.id === id)
       await window.api.events.delete(id)
       await get().fetchEvents()
+      try {
+        useP2PStore.getState().broadcastEventChange(evt ? evt.title : `Event ${id}`)
+      } catch {}
     } catch (err) {
       console.error('Error deleting event:', err)
     }

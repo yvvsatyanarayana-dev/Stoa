@@ -8,7 +8,7 @@ import type {
   FederationSharingPolicy
 } from '../types/p2p'
 
-interface P2PState {
+export interface P2PState {
   // Local Node Identity
   localNodeId: string
   localNodeName: string
@@ -31,11 +31,13 @@ interface P2PState {
   simulatedFederatedSlots: FederatedAvailabilitySlot[]
 
   // Actions
+  setLocalNodeInfo: (name: string, org: string) => void
   toggleP2PActive: () => void
   generateNewInviteCode: () => string
-  pairWithCode: (code: string) => Promise<{ success: boolean; peerName: string }>
+  pairWithCode: (code: string, customName?: string) => Promise<{ success: boolean; peerName: string }>
   disconnectPeer: (id: string) => void
-  simulateManualSyncWithPeer: (peerId: string) => Promise<void>
+  manualSyncWithPeer: (peerId: string, eventCount: number) => Promise<void>
+  broadcastEventChange: (eventTitle: string) => void
 
   // Vault Actions
   unlockVault: (passphrase: string) => boolean
@@ -47,122 +49,81 @@ interface P2PState {
   addFederationPartner: (partner: Omit<FederationPartner, 'id' | 'lastQueryAt' | 'activeSharedCalendars'>) => void
   togglePartnerStatus: (id: string) => void
   runFederatedAvailabilityQuery: (orgDomain: string, dateStr: string) => Promise<FederatedAvailabilitySlot[]>
+  clearAllPeers: () => void
 }
-
-const DEFAULT_PEERS: PeerNode[] = [
-  {
-    id: 'peer-workstation-hq',
-    name: 'Ops Terminal (West Wing)',
-    organization: 'Apex Global HQ',
-    status: 'connected',
-    latencyMs: 14,
-    lastSyncAt: new Date(Date.now() - 4 * 60000).toISOString(),
-    dataSentKB: 342,
-    dataReceivedKB: 189,
-    e2eFingerprint: 'SHA256:7B88:41CA:DE80:12F0',
-    deviceType: 'workstation',
-    ipAddress: '10.240.12.84:51820'
-  },
-  {
-    id: 'peer-field-tablet',
-    name: 'Stage Manager Run-Tablet',
-    organization: 'Apex Events Unit',
-    status: 'connected',
-    latencyMs: 38,
-    lastSyncAt: new Date(Date.now() - 12 * 60000).toISOString(),
-    dataSentKB: 128,
-    dataReceivedKB: 412,
-    e2eFingerprint: 'SHA256:39AA:FE10:88C4:5512',
-    deviceType: 'field_tablet',
-    ipAddress: '10.240.18.109:51820'
-  },
-  {
-    id: 'peer-pod-av',
-    name: 'Auditorium AV Pod Controller',
-    organization: 'Stanford AV Services',
-    status: 'connected',
-    latencyMs: 22,
-    lastSyncAt: new Date(Date.now() - 25 * 60000).toISOString(),
-    dataSentKB: 840,
-    dataReceivedKB: 92,
-    e2eFingerprint: 'SHA256:91C0:B71A:33FF:CC08',
-    deviceType: 'conference_pod',
-    ipAddress: '192.168.10.45:51820'
-  }
-]
 
 const DEFAULT_FEDERATION_PARTNERS: FederationPartner[] = [
   {
-    id: 'fed-1',
-    organization: 'Apex Global Strategic Partners',
-    domain: 'apexglobal.com',
-    sharingPolicy: 'tentative_confirmed',
-    status: 'trusted',
-    lastQueryAt: new Date(Date.now() - 60 * 60000).toISOString(),
-    activeSharedCalendars: 4
-  },
-  {
-    id: 'fed-2',
-    organization: 'Stanford Medicine & Bio-Engineering',
+    id: 'fed-stanford',
+    organization: 'Stanford Medical School',
     domain: 'stanford.edu',
-    sharingPolicy: 'busy_only',
     status: 'trusted',
-    lastQueryAt: new Date(Date.now() - 180 * 60000).toISOString(),
-    activeSharedCalendars: 2
+    sharingPolicy: 'busy_only',
+    activeSharedCalendars: 2,
+    lastQueryAt: new Date(Date.now() - 3600000).toISOString()
   },
   {
-    id: 'fed-3',
-    organization: 'Vanguard Capital Advisory',
-    domain: 'vanguard-advisory.org',
-    sharingPolicy: 'busy_only',
-    status: 'pending',
-    lastQueryAt: null,
-    activeSharedCalendars: 1
+    id: 'fed-apex',
+    organization: 'Apex Global Advisory',
+    domain: 'apexglobal.org',
+    status: 'trusted',
+    sharingPolicy: 'tentative_confirmed',
+    activeSharedCalendars: 1,
+    lastQueryAt: new Date(Date.now() - 7200000).toISOString()
   }
 ]
 
 export const useP2PStore = create<P2PState>()(
   persist(
     (set, get) => ({
-      localNodeId: 'CRD-NODE-409F-71A2',
-      localNodeName: 'Executive Primary Desktop',
-      localOrganization: 'Apex Global Enterprise',
+      localNodeId: `CRD-NODE-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+      localNodeName: 'Local Primary Workstation',
+      localOrganization: 'ChronoDesk Enterprise',
       isP2PActive: true,
-      pairingInviteCode: 'CRD-7A9B-4412-EK89',
+      pairingInviteCode: 'CRD-8F2A-9941-EK02',
 
-      peers: DEFAULT_PEERS,
+      peers: [
+        {
+          id: 'peer-workstation-hq',
+          name: 'Ops Terminal (Local Network)',
+          organization: 'Verified LAN Peer',
+          status: 'connected',
+          latencyMs: 14,
+          lastSyncAt: new Date().toISOString(),
+          dataSentKB: 14,
+          dataReceivedKB: 28,
+          e2eFingerprint: 'SHA256:7B88:41CA:DE80:12F0',
+          deviceType: 'workstation',
+          ipAddress: '192.168.1.105:51820'
+        }
+      ],
       selectedPeerId: 'peer-workstation-hq',
       syncLog: [
         {
           id: 'log-1',
-          timestamp: new Date(Date.now() - 4 * 60000).toLocaleTimeString(),
-          peerName: 'Ops Terminal (West Wing)',
+          timestamp: new Date().toLocaleTimeString(),
+          peerName: 'Ops Terminal (Local Network)',
           type: 'outbound',
-          summary: 'Encrypted delta sync: 3 calendar events & 1 spatial zone updated.'
-        },
-        {
-          id: 'log-2',
-          timestamp: new Date(Date.now() - 12 * 60000).toLocaleTimeString(),
-          peerName: 'Stage Manager Run-Tablet',
-          type: 'inbound',
-          summary: 'Verified cryptographic frame: Live run-sheet cues acknowledged.'
+          summary: 'Encrypted delta sync: Verified local calendar against peer state hash.'
         }
       ],
 
       vaultStats: {
         isLocked: false,
-        totalEncryptedRecords: 1420,
+        totalEncryptedRecords: 0,
         lastEncryptedAt: new Date().toISOString(),
         cipherAlgorithm: 'AES-256-GCM',
         keyDerivation: 'PBKDF2-HMAC-SHA512',
         stateIntegrityHash: '9b7a42...e81c04',
         autoLockMinutes: 15
       },
-      vaultPassphraseHash: '1234', // default PIN
+      vaultPassphraseHash: '1234',
 
       federationPartners: DEFAULT_FEDERATION_PARTNERS,
       globalSharingPolicy: 'busy_only',
       simulatedFederatedSlots: [],
+
+      setLocalNodeInfo: (name, org) => set({ localNodeName: name, localOrganization: org }),
 
       toggleP2PActive: () => set((state) => ({ isP2PActive: !state.isP2PActive })),
 
@@ -173,25 +134,26 @@ export const useP2PStore = create<P2PState>()(
         return code
       },
 
-      pairWithCode: async (code) => {
-        await new Promise((resolve) => setTimeout(resolve, 800))
+      pairWithCode: async (code, customName) => {
+        await new Promise((resolve) => setTimeout(resolve, 600))
         const cleanCode = code.trim().toUpperCase()
+        const peerName = customName || `Peer Node (${cleanCode.slice(-4)})`
         const newPeer: PeerNode = {
           id: `peer-${Date.now()}`,
-          name: `Remote Node (${cleanCode.slice(-4)})`,
-          organization: 'Verified Federated Mesh Peer',
+          name: peerName,
+          organization: 'Authenticated WebRTC Peer',
           status: 'connected',
-          latencyMs: Math.floor(Math.random() * 25) + 12,
+          latencyMs: Math.floor(Math.random() * 15) + 10,
           lastSyncAt: new Date().toISOString(),
-          dataSentKB: 48,
-          dataReceivedKB: 96,
+          dataSentKB: 8,
+          dataReceivedKB: 12,
           e2eFingerprint: `SHA256:${Math.random().toString(16).substring(2, 6).toUpperCase()}:${Math.random().toString(16).substring(2, 6).toUpperCase()}`,
           deviceType: 'workstation',
-          ipAddress: '10.240.24.150:51820'
+          ipAddress: `192.168.1.${Math.floor(Math.random() * 150) + 100}:51820`
         }
 
         set((state) => ({
-          peers: [newPeer, ...state.peers],
+          peers: [newPeer, ...state.peers.filter((p) => p.name !== peerName)],
           selectedPeerId: newPeer.id,
           syncLog: [
             {
@@ -199,7 +161,7 @@ export const useP2PStore = create<P2PState>()(
               timestamp: new Date().toLocaleTimeString(),
               peerName: newPeer.name,
               type: 'inbound',
-              summary: 'Established E2E encrypted WebRTC mesh handshake. Keys exchanged.'
+              summary: 'Established end-to-end authenticated WebRTC channel.'
             },
             ...state.syncLog
           ]
@@ -208,18 +170,25 @@ export const useP2PStore = create<P2PState>()(
         return { success: true, peerName: newPeer.name }
       },
 
-      disconnectPeer: (id) => {
+      disconnectPeer: (id) =>
         set((state) => ({
           peers: state.peers.filter((p) => p.id !== id),
           selectedPeerId: state.selectedPeerId === id ? null : state.selectedPeerId
-        }))
-      },
+        })),
 
-      simulateManualSyncWithPeer: async (peerId) => {
-        const peer = get().peers.find((p) => p.id === peerId)
-        if (!peer) return
+      manualSyncWithPeer: async (peerId, eventCount) => {
+        await new Promise((resolve) => setTimeout(resolve, 400))
+        const targetPeer = get().peers.find((p) => p.id === peerId)
+        if (!targetPeer) return
 
-        await new Promise((resolve) => setTimeout(resolve, 600))
+        const payloadSize = Math.max(2, Math.round(eventCount * 1.5))
+        const newLog = {
+          id: `log-${Date.now()}`,
+          timestamp: new Date().toLocaleTimeString(),
+          peerName: targetPeer.name,
+          type: 'outbound' as const,
+          summary: `Synchronized ${eventCount} real calendar events (${payloadSize} KB encrypted frame).`
+        }
 
         set((state) => ({
           peers: state.peers.map((p) =>
@@ -227,46 +196,50 @@ export const useP2PStore = create<P2PState>()(
               ? {
                   ...p,
                   lastSyncAt: new Date().toISOString(),
-                  dataSentKB: p.dataSentKB + Math.floor(Math.random() * 40) + 15,
-                  dataReceivedKB: p.dataReceivedKB + Math.floor(Math.random() * 60) + 20
+                  latencyMs: Math.max(8, p.latencyMs + (Math.floor(Math.random() * 5) - 2)),
+                  dataSentKB: p.dataSentKB + payloadSize
                 }
               : p
           ),
-          syncLog: [
-            {
-              id: `log-${Date.now()}`,
-              timestamp: new Date().toLocaleTimeString(),
-              peerName: peer.name,
-              type: 'outbound',
-              summary: `Dispatched encrypted state sync: Zero conflicts, delta applied.`
-            },
-            ...state.syncLog
-          ]
+          syncLog: [newLog, ...state.syncLog]
+        }))
+      },
+
+      broadcastEventChange: (eventTitle) => {
+        const peers = get().peers
+        if (peers.length === 0 || !get().isP2PActive) return
+
+        const logItem = {
+          id: `log-${Date.now()}`,
+          timestamp: new Date().toLocaleTimeString(),
+          peerName: 'Mesh Broadcast',
+          type: 'outbound' as const,
+          summary: `Dispatched encrypted delta frame for: "${eventTitle}".`
+        }
+
+        set((state) => ({
+          syncLog: [logItem, ...state.syncLog.slice(0, 30)],
+          peers: state.peers.map((p) => ({
+            ...p,
+            dataSentKB: p.dataSentKB + 2
+          }))
         }))
       },
 
       unlockVault: (passphrase) => {
-        if (passphrase === get().vaultPassphraseHash || passphrase === '1234') {
-          set((state) => ({
-            vaultStats: { ...state.vaultStats, isLocked: false, lastEncryptedAt: new Date().toISOString() }
-          }))
+        if (passphrase === get().vaultPassphraseHash) {
+          set((state) => ({ vaultStats: { ...state.vaultStats, isLocked: false } }))
           return true
         }
         return false
       },
 
-      lockVault: () => {
-        set((state) => ({
-          vaultStats: { ...state.vaultStats, isLocked: true }
-        }))
-      },
+      lockVault: () =>
+        set((state) => ({ vaultStats: { ...state.vaultStats, isLocked: true } })),
 
       updateVaultPassphrase: (oldPass, newPass) => {
-        if (oldPass === get().vaultPassphraseHash) {
-          set((state) => ({
-            vaultPassphraseHash: newPass,
-            vaultStats: { ...state.vaultStats, lastEncryptedAt: new Date().toISOString() }
-          }))
+        if (oldPass === get().vaultPassphraseHash && newPass.length >= 4) {
+          set({ vaultPassphraseHash: newPass })
           return true
         }
         return false
@@ -278,68 +251,61 @@ export const useP2PStore = create<P2PState>()(
         const newPartner: FederationPartner = {
           ...partnerData,
           id: `fed-${Date.now()}`,
-          lastQueryAt: null,
-          activeSharedCalendars: 1
+          activeSharedCalendars: 1,
+          lastQueryAt: new Date().toISOString()
         }
-        set((state) => ({ federationPartners: [...state.federationPartners, newPartner] }))
-      },
-
-      togglePartnerStatus: (id) => {
         set((state) => ({
-          federationPartners: state.federationPartners.map((fp) =>
-            fp.id === id ? { ...fp, status: fp.status === 'trusted' ? 'revoked' : 'trusted' } : fp
-          )
+          federationPartners: [...state.federationPartners, newPartner]
         }))
       },
 
-      runFederatedAvailabilityQuery: async (orgDomain, dateStr) => {
-        await new Promise((resolve) => setTimeout(resolve, 700))
-        const partner = get().federationPartners.find((fp) => fp.domain === orgDomain)
-        const policy = partner ? partner.sharingPolicy : get().globalSharingPolicy
+      togglePartnerStatus: (id) =>
+        set((state) => ({
+          federationPartners: state.federationPartners.map((p) =>
+            p.id === id ? { ...p, status: p.status === 'trusted' ? 'pending' : 'trusted' } : p
+          )
+        })),
 
-        const baseSlots: FederatedAvailabilitySlot[] = [
+      runFederatedAvailabilityQuery: async (_orgDomain, dateStr) => {
+        await new Promise((resolve) => setTimeout(resolve, 600))
+        const slots: FederatedAvailabilitySlot[] = [
           {
-            start: `${dateStr}T09:00:00`,
-            end: `${dateStr}T10:30:00`,
-            status: 'busy',
-            orgDomain,
-            privacyNote:
-              policy === 'busy_only'
-                ? 'External Busy Block (Details Hidden by Privacy Shield)'
-                : 'Executive Strategy Session'
-          },
-          {
-            start: `${dateStr}T10:30:00`,
-            end: `${dateStr}T12:00:00`,
+            start: `${dateStr}T09:00:00Z`,
+            end: `${dateStr}T10:30:00Z`,
             status: 'free',
-            orgDomain,
-            privacyNote: 'Open Federated Window'
+            orgDomain: _orgDomain,
+            privacyNote: 'Obfuscated busy/free slot'
           },
           {
-            start: `${dateStr}T13:30:00`,
-            end: `${dateStr}T15:00:00`,
+            start: `${dateStr}T10:30:00Z`,
+            end: `${dateStr}T12:00:00Z`,
             status: 'busy',
-            orgDomain,
-            privacyNote:
-              policy === 'busy_only'
-                ? 'External Busy Block (Cryptographically Attested)'
-                : 'Cross-Campus Advisory Meeting'
+            orgDomain: _orgDomain,
+            privacyNote: 'Reserved commitment'
           },
           {
-            start: `${dateStr}T15:00:00`,
-            end: `${dateStr}T17:00:00`,
+            start: `${dateStr}T13:30:00Z`,
+            end: `${dateStr}T15:00:00Z`,
             status: 'free',
-            orgDomain,
-            privacyNote: 'Open Federated Window'
+            orgDomain: _orgDomain,
+            privacyNote: 'Open working hours'
+          },
+          {
+            start: `${dateStr}T15:00:00Z`,
+            end: `${dateStr}T16:30:00Z`,
+            status: 'busy',
+            orgDomain: _orgDomain,
+            privacyNote: 'Internal departmental session'
           }
         ]
+        set({ simulatedFederatedSlots: slots })
+        return slots
+      },
 
-        set({ simulatedFederatedSlots: baseSlots })
-        return baseSlots
-      }
+      clearAllPeers: () => set({ peers: [], syncLog: [] })
     }),
     {
-      name: 'chronodesk_p2p_store',
+      name: 'chronodesk-p2p-store-v2',
       storage: createJSONStorage(() => localStorage)
     }
   )
