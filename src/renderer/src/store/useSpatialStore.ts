@@ -52,8 +52,8 @@ interface SpatialState {
 const DEFAULT_FLOOR_PLANS: FloorPlan[] = [
   {
     id: 'fp-convention-main',
-    name: 'Metropolitan Convention Grand Hall',
-    venue: 'San Francisco Tech Center',
+    name: 'Executive Operations Grand Hall',
+    venue: 'Corporate Headquarters',
     level: 'Ground Level - Hall A',
     gridWidth: 1200,
     gridHeight: 800,
@@ -63,7 +63,7 @@ const DEFAULT_FLOOR_PLANS: FloorPlan[] = [
   {
     id: 'fp-innovation-pavilion',
     name: 'Executive Innovation Pavilion',
-    venue: 'Silicon Valley Campus',
+    venue: 'Executive Campus',
     level: 'Level 2 - South Wing',
     gridWidth: 1000,
     gridHeight: 700,

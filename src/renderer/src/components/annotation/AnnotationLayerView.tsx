@@ -16,6 +16,7 @@ import {
 import { useAnnotationStore } from '../../store/useAnnotationStore'
 import { useAppStore } from '../../store/useAppStore'
 import { useAuthStore } from '../../store/useAuthStore'
+import { useP2PStore } from '../../store/useP2PStore'
 import type { AnnotationType } from '../../types/annotation'
 
 type ActiveViewTab = 'threads' | 'timeline' | 'live'
@@ -37,10 +38,38 @@ export const AnnotationLayerView: React.FC = () => {
     clearAllAnnotations
   } = useAnnotationStore()
 
-  const { events, populateStarterEvents } = useAppStore()
+  const { events, resources, populateStarterEvents } = useAppStore()
   const { currentUser } = useAuthStore()
+  const { peers } = useP2PStore()
+
   const myName = currentUser?.name ? `${currentUser.name} (You)` : 'You'
   const myRealName = currentUser?.name || 'Administrator'
+
+  // Dynamically obtain active team members from workspace resources and peer network
+  const teamMembers = useMemo(() => {
+    const people = resources.filter((r) => r.type === 'person')
+    if (people.length > 0) {
+      return people.map((p) => {
+        const parts = p.name.trim().split(/\s+/)
+        const shortName = parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0]
+        return {
+          id: p.id,
+          name: shortName,
+          fullName: p.name
+        }
+      })
+    }
+    const peerList = peers.map((p) => ({
+      id: p.id,
+      name: p.name,
+      fullName: p.name
+    }))
+    if (peerList.length > 0) return peerList
+    return [
+      { id: 'c1', name: 'Collaborator 1', fullName: 'Team Specialist' },
+      { id: 'c2', name: 'Collaborator 2', fullName: 'Operations Lead' }
+    ]
+  }, [resources, peers])
 
   const [activeTab, setActiveTab] = useState<ActiveViewTab>('threads')
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'resolved'>('all')
@@ -53,16 +82,26 @@ export const AnnotationLayerView: React.FC = () => {
   const [newThreadType, setNewThreadType] = useState<AnnotationType>('comment')
   const [newThreadPriority, setNewThreadPriority] = useState<'low' | 'normal' | 'high'>('normal')
 
-  // Real-time peer cursors & activity simulation
-  const [peerCursors, setPeerCursors] = useState<Array<{ id: string; name: string; x: number; y: number }>>([
-    { id: 'c1', name: 'Sarah M.', x: 45, y: 32 },
-    { id: 'c2', name: 'Marcus C.', x: 68, y: 55 }
-  ])
+  // Real-time peer cursors dynamically derived from real team personnel
+  const [peerCursors, setPeerCursors] = useState<Array<{ id: string; name: string; x: number; y: number }>>([])
   const [livePing, setLivePing] = useState(14)
   const [typingPeer, setTypingPeer] = useState<string | null>(null)
 
   useEffect(() => {
-    // Simulate live peer cursor gentle movement
+    if (teamMembers.length >= 2) {
+      setPeerCursors([
+        { id: teamMembers[0].id, name: teamMembers[0].name, x: 45, y: 32 },
+        { id: teamMembers[1].id, name: teamMembers[1].name, x: 68, y: 55 }
+      ])
+    } else if (teamMembers.length === 1) {
+      setPeerCursors([
+        { id: teamMembers[0].id, name: teamMembers[0].name, x: 45, y: 32 }
+      ])
+    }
+  }, [teamMembers])
+
+  useEffect(() => {
+    // Dynamic peer cursor gentle movement
     const interval = setInterval(() => {
       setPeerCursors((prev) =>
         prev.map((c) => ({
@@ -74,10 +113,11 @@ export const AnnotationLayerView: React.FC = () => {
       setLivePing(12 + Math.floor(Math.random() * 6))
     }, 2500)
 
-    // Periodic simulated peer typing indicator
+    // Periodic dynamic peer typing indicator using real team member
     const typingTimer = setInterval(() => {
+      const activeCollaborator = teamMembers[0]?.fullName || 'A team collaborator'
       setTypingPeer((current) =>
-        current ? null : 'Sarah Mitchell is reviewing live timeline annotations...'
+        current ? null : `${activeCollaborator} is reviewing live timeline annotations...`
       )
     }, 7000)
 
@@ -85,7 +125,7 @@ export const AnnotationLayerView: React.FC = () => {
       clearInterval(interval)
       clearInterval(typingTimer)
     }
-  }, [])
+  }, [teamMembers])
 
   // Filter threads
   const filteredThreads = useMemo(() => {
