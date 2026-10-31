@@ -158,6 +158,7 @@ interface AppState {
   createEvent: (event: CalendarEvent, resourceIds?: string[]) => Promise<void>
   updateEvent: (event: CalendarEvent, resourceIds?: string[]) => Promise<void>
   deleteEvent: (id: string) => Promise<void>
+  populateStarterEvents: () => Promise<void>
 
   // User Timetable Actions
   createTimetable: (name: string, startDate: string, endDate: string) => Promise<void>
@@ -450,6 +451,48 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch (err) {
       console.error('Error deleting event:', err)
     }
+  },
+
+  populateStarterEvents: async () => {
+    const calId = get().calendars[0]?.id || 'cal-primary'
+    const today = new Date()
+    
+    const sampleList: Array<{ title: string; desc: string; startH: number; endH: number; dayOffset: number }> = [
+      { title: 'Executive Sprint Planning', desc: 'Sprint 24 goals & release roadmap', startH: 10, endH: 11.5, dayOffset: 0 },
+      { title: 'Architecture Review & Sync', desc: 'Peer review of database & mesh layer', startH: 14, endH: 15, dayOffset: 0 },
+      { title: 'Customer Operations Briefing', desc: 'Weekly incident & feedback review', startH: 9.5, endH: 10.5, dayOffset: 1 },
+      { title: 'Security & Compliance Audit', desc: 'Zero-knowledge vault & encryption log signoff', startH: 13, endH: 14, dayOffset: 2 },
+      { title: 'Team Showcase & Retrospective', desc: 'Sprint wrapup and product demo', startH: 16, endH: 17, dayOffset: 3 }
+    ]
+
+    for (const item of sampleList) {
+      const start = new Date(today)
+      start.setDate(today.getDate() + item.dayOffset)
+      const [sh, sm] = [Math.floor(item.startH), Math.round((item.startH % 1) * 60)]
+      start.setHours(sh, sm, 0, 0)
+
+      const end = new Date(today)
+      end.setDate(today.getDate() + item.dayOffset)
+      const [eh, em] = [Math.floor(item.endH), Math.round((item.endH % 1) * 60)]
+      end.setHours(eh, em, 0, 0)
+
+      const newEvt: CalendarEvent = {
+        id: `evt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        calendar_id: calId,
+        title: item.title,
+        description: item.desc,
+        start: start.toISOString(),
+        end: end.toISOString(),
+        all_day: false,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        priority: 'medium',
+        status: 'confirmed',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+      await window.api.events.create(newEvt)
+    }
+    await get().fetchEvents()
   },
 
   rescheduleEvent: async (eventId: string, minutesToAdd: number) => {

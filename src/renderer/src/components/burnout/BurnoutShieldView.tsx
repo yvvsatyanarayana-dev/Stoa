@@ -18,7 +18,7 @@ import {
 import { isToday, format } from 'date-fns'
 import { useBurnoutStore } from '../../store/useBurnoutStore'
 import { useAppStore } from '../../store/useAppStore'
-import type { ChronotypeName, FatigueLevel, FocusBlockType, FocusBlock } from '../../types/burnout'
+import type { ChronotypeName, FatigueLevel, FocusBlockType, FocusBlock, DailyFatigueLog } from '../../types/burnout'
 
 type ActiveTab = 'overview' | 'chronotype' | 'focus' | 'history'
 
@@ -61,12 +61,10 @@ function riskColor(risk: number): string {
 export const BurnoutShieldView: React.FC = () => {
   const {
     profile,
-    fatigueHistory,
     focusBlocks,
     alerts,
     shieldEnabled,
     autoBufferEnabled,
-    weeklyBurnoutTrend,
     updateProfile,
     addFocusBlock,
     updateFocusBlock,
@@ -76,7 +74,7 @@ export const BurnoutShieldView: React.FC = () => {
     toggleAutoBuffer
   } = useBurnoutStore()
 
-  const { events, calendars, createEvent } = useAppStore()
+  const { events, calendars, createEvent, populateStarterEvents } = useAppStore()
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview')
   const [profileForm, setProfileForm] = useState(profile)
@@ -145,8 +143,65 @@ export const BurnoutShieldView: React.FC = () => {
     }
   }, [events])
 
+  // Dynamically compute real 7-day trend from user's actual events
+  const computedWeeklyTrend = useMemo(() => {
+    const now = new Date()
+    const currentDay = now.getDay()
+    const weekStart = new Date(now)
+    weekStart.setDate(now.getDate() - currentDay)
+
+    const trend: number[] = []
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart)
+      d.setDate(weekStart.getDate() + i)
+      const dateStr = format(d, 'yyyy-MM-dd')
+      const dayEvts = events.filter((e) => e.start.startsWith(dateStr))
+      const risk = Math.min(95, dayEvts.length * 20)
+      trend.push(risk)
+    }
+    return trend
+  }, [events])
+
+  // Dynamically compute 14-day history ledger from user's actual events
+  const computedFatigueHistory = useMemo(() => {
+    const history: DailyFatigueLog[] = []
+    const now = new Date()
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(now)
+      d.setDate(now.getDate() - i)
+      const dateStr = format(d, 'yyyy-MM-dd')
+      const dayEvts = events.filter((e) => e.start.startsWith(dateStr))
+
+      let durationMins = 0
+      dayEvts.forEach((e) => {
+        try {
+          durationMins += Math.max(0, (new Date(e.end).getTime() - new Date(e.start).getTime()) / 60000)
+        } catch {}
+      })
+
+      const risk = Math.min(95, Math.round(dayEvts.length * 15 + (durationMins / 60) * 10))
+      const level: FatigueLevel = risk >= 65 ? 'critical' : risk >= 45 ? 'high' : risk >= 25 ? 'moderate' : 'low'
+
+      history.push({
+        id: `fl-${dateStr}`,
+        date: dateStr,
+        cognitiveLoadScore: risk,
+        meetingDensity: dayEvts.length,
+        deepWorkBlocks: Math.max(0, 4 - dayEvts.length),
+        breaksTaken: Math.max(1, 5 - dayEvts.length),
+        fatigueLevel: level,
+        burnoutRisk: risk,
+        recommendations:
+          risk >= 50
+            ? ['High meeting density detected in calendar. Insert focus buffers.', 'Protect focus blocks.']
+            : ['Optimal cognitive load. Deep work capacity preserved.']
+      })
+    }
+    return history
+  }, [events])
+
   const activeAlerts = useMemo(() => alerts.filter((a) => !a.dismissed), [alerts])
-  const todayLog = fatigueHistory[0] ?? null
+  const todayLog = computedFatigueHistory[0] ?? null
 
   const handleProfileSave = (e: React.FormEvent) => {
     e.preventDefault()
@@ -269,6 +324,23 @@ export const BurnoutShieldView: React.FC = () => {
           </div>
         )}
 
+        {/* Empty Calendar Prompt */}
+        {events.length === 0 && (
+          <div className="p-3 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] flex items-center justify-between shadow-xs">
+            <div className="space-y-0.5">
+              <span className="text-xs font-semibold text-[var(--text-primary)]">Your calendar is currently empty</span>
+              <p className="text-[11px] text-[var(--text-muted)]">Populate starter workspace events into your SQLite calendar to activate real-time fatigue analysis.</p>
+            </div>
+            <button
+              onClick={() => populateStarterEvents()}
+              className="h-7 px-3 text-xs font-semibold bg-[var(--accent)] text-[var(--accent-text)] rounded-[var(--radius-md)] shadow-xs flex items-center gap-1.5 hover:opacity-90"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Create Starter Schedule</span>
+            </button>
+          </div>
+        )}
+
         {/* Tab Switcher */}
         <div className="flex items-center gap-2 pt-1 border-b border-[var(--border-subtle)] pb-2">
           {(['overview', 'chronotype', 'focus', 'history'] as ActiveTab[]).map((tab) => (
@@ -383,7 +455,7 @@ export const BurnoutShieldView: React.FC = () => {
                 7-Day Burnout Trajectory
               </h3>
               <div className="flex items-end justify-between gap-3 h-24 pt-4 px-2">
-                {weeklyBurnoutTrend.map((val, idx) => (
+                {computedWeeklyTrend.map((val, idx) => (
                   <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
                     <span className="text-[10px] font-mono text-[var(--text-muted)]">{val}%</span>
                     <div className="w-full bg-[var(--bg-subtle)] rounded-full h-16 overflow-hidden flex items-end">
@@ -661,7 +733,7 @@ export const BurnoutShieldView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border-subtle)]">
-                  {fatigueHistory.map((log) => (
+                  {computedFatigueHistory.map((log) => (
                     <tr key={log.id} className="hover:bg-[var(--bg-hover)]">
                       <td className="py-2.5 px-4 font-mono text-[var(--text-primary)]">{log.date}</td>
                       <td className="py-2.5 px-4">

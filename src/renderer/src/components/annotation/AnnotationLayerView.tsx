@@ -10,7 +10,8 @@ import {
   Tag,
   Radio,
   Calendar as CalendarIcon,
-  MousePointer
+  MousePointer,
+  Sparkles
 } from 'lucide-react'
 import { useAnnotationStore } from '../../store/useAnnotationStore'
 import { useAppStore } from '../../store/useAppStore'
@@ -30,10 +31,12 @@ export const AnnotationLayerView: React.FC = () => {
     resolveThread,
     archiveThread,
     selectThread,
-    revertChange
+    revertChange,
+    seedAnnotationsForEvents,
+    clearAllAnnotations
   } = useAnnotationStore()
 
-  const { events } = useAppStore()
+  const { events, populateStarterEvents } = useAppStore()
 
   const [activeTab, setActiveTab] = useState<ActiveViewTab>('threads')
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'resolved'>('all')
@@ -52,7 +55,7 @@ export const AnnotationLayerView: React.FC = () => {
     { id: 'c2', name: 'Marcus C.', x: 68, y: 55 }
   ])
   const [livePing, setLivePing] = useState(14)
-  const [typingPeer, setTypingPeer] = useState<string | null>('Sarah Mitchell is drafting an annotation...')
+  const [typingPeer, setTypingPeer] = useState<string | null>(null)
 
   useEffect(() => {
     // Simulate live peer cursor gentle movement
@@ -70,9 +73,9 @@ export const AnnotationLayerView: React.FC = () => {
     // Periodic simulated peer typing indicator
     const typingTimer = setInterval(() => {
       setTypingPeer((current) =>
-        current ? null : 'Marcus Chen is reviewing live timeline changes...'
+        current ? null : 'Sarah Mitchell is reviewing live timeline annotations...'
       )
-    }, 6000)
+    }, 7000)
 
     return () => {
       clearInterval(interval)
@@ -227,11 +230,35 @@ export const AnnotationLayerView: React.FC = () => {
           </div>
         </div>
 
-        {/* Threads List */}
+        {/* Empty Calendar / Starter Seed Prompt */}
+        {events.length === 0 && (
+          <div className="p-3 mx-2 my-2 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] text-xs space-y-2 shadow-xs">
+            <p className="text-[11px] text-[var(--text-secondary)]">
+              Your calendar database currently has 0 events.
+            </p>
+            <button
+              onClick={() => populateStarterEvents()}
+              className="w-full h-7 px-2 text-[11px] font-semibold bg-[var(--accent)] text-[var(--accent-text)] rounded-[var(--radius-sm)] flex items-center justify-center gap-1 shadow-xs hover:opacity-90"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Create Starter Schedule</span>
+            </button>
+          </div>
+        )}
+
+        {/* Real User Threads List */}
         <div className="flex-1 overflow-y-auto divide-y divide-[var(--border-subtle)]">
           {filteredThreads.length === 0 ? (
-            <div className="p-6 text-center text-xs text-[var(--text-muted)]">
-              No annotations found
+            <div className="p-6 text-center text-xs text-[var(--text-muted)] space-y-3">
+              <p>No annotation threads found.</p>
+              {events.length > 0 && (
+                <button
+                  onClick={() => seedAnnotationsForEvents(events)}
+                  className="px-2.5 py-1 text-[11px] border border-[var(--border-subtle)] hover:bg-[var(--bg-elevated)] rounded-[var(--radius-sm)] text-[var(--text-secondary)]"
+                >
+                  Generate Threads for My Events
+                </button>
+              )}
             </div>
           ) : (
             filteredThreads.map((thread) => {
@@ -321,6 +348,16 @@ export const AnnotationLayerView: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            {threads.length > 0 && (
+              <button
+                onClick={() => clearAllAnnotations()}
+                className="text-[11px] text-[var(--text-muted)] hover:text-red-400 border border-transparent hover:border-[var(--border-subtle)] px-2 py-0.5 rounded-[var(--radius-sm)] transition-colors"
+                title="Clear all threads"
+              >
+                Clear
+              </button>
+            )}
+
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
@@ -463,9 +500,24 @@ export const AnnotationLayerView: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-[var(--text-muted)]">
-                <MessageSquare className="w-8 h-8 mb-2 opacity-30" />
-                <p className="text-xs">Select or create an annotation thread</p>
+              <div className="h-full flex flex-col items-center justify-center text-[var(--text-muted)] space-y-3 py-12">
+                <MessageSquare className="w-8 h-8 opacity-30" />
+                <p className="text-xs text-[var(--text-secondary)]">No annotation thread selected</p>
+                {events.length > 0 ? (
+                  <button
+                    onClick={() => setShowNewThreadModal(true)}
+                    className="h-7 px-3 text-xs font-semibold bg-[var(--accent)] text-[var(--accent-text)] rounded-[var(--radius-md)] shadow-xs"
+                  >
+                    + Create Annotation on Calendar Event
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => populateStarterEvents()}
+                    className="h-7 px-3 text-xs font-semibold bg-[var(--accent)] text-[var(--accent-text)] rounded-[var(--radius-md)] shadow-xs"
+                  >
+                    Generate Workspace Schedule First
+                  </button>
+                )}
               </div>
             )
           )}
@@ -473,51 +525,60 @@ export const AnnotationLayerView: React.FC = () => {
           {activeTab === 'timeline' && (
             <div className="max-w-3xl space-y-4">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-                Cryptographic Attribution Ledger
+                Cryptographic Attribution Ledger ({changeHistory.length} Recorded Changes)
               </h3>
 
-              <div className="relative border-l-2 border-[var(--border-subtle)] ml-3 pl-6 space-y-5">
-                {changeHistory.map((item) => (
-                  <div key={item.id} className="relative group">
-                    <div
-                      className={`absolute -left-[31px] top-1 w-3 h-3 rounded-full border-2 border-[var(--bg-app)] ${
-                        item.reverted ? 'bg-[var(--text-muted)]' : 'bg-[var(--text-primary)]'
-                      }`}
-                    />
+              {changeHistory.length === 0 ? (
+                <div className="p-8 text-center text-xs text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)]">
+                  <p>No calendar modifications logged yet.</p>
+                  <p className="text-[11px] mt-1 text-[var(--text-secondary)]">
+                    Whenever you edit, reschedule, or adjust any event in the Calendar, real change attributions will automatically record here.
+                  </p>
+                </div>
+              ) : (
+                <div className="relative border-l-2 border-[var(--border-subtle)] ml-3 pl-6 space-y-5">
+                  {changeHistory.map((item) => (
+                    <div key={item.id} className="relative group">
+                      <div
+                        className={`absolute -left-[31px] top-1 w-3 h-3 rounded-full border-2 border-[var(--bg-app)] ${
+                          item.reverted ? 'bg-[var(--text-muted)]' : 'bg-[var(--text-primary)]'
+                        }`}
+                      />
 
-                    <div className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] p-4 space-y-2 shadow-xs">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-[var(--text-primary)]">{item.eventTitle}</span>
-                        <span className="text-[10px] text-[var(--text-muted)] font-mono">
-                          {new Date(item.changedAt).toLocaleString()}
-                        </span>
-                      </div>
-
-                      <div className="text-xs space-y-1">
-                        <div className="text-[var(--text-muted)]">
-                          Field: <span className="text-[var(--text-primary)] font-mono uppercase text-[11px]">{item.field}</span>
+                      <div className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] p-4 space-y-2 shadow-xs">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-semibold text-[var(--text-primary)]">{item.eventTitle}</span>
+                          <span className="text-[10px] text-[var(--text-muted)] font-mono">
+                            {new Date(item.changedAt).toLocaleString()}
+                          </span>
                         </div>
-                        <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] p-2 text-[11px] font-mono space-y-1">
-                          <div className="text-red-400 line-through">- {item.oldValue}</div>
-                          <div className="text-emerald-400">+ {item.newValue}</div>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center justify-between pt-1 text-[11px] text-[var(--text-muted)]">
-                        <span>Author: {item.changedBy}</span>
-                        <button
-                          onClick={() => revertChange(item.id)}
-                          disabled={item.reverted}
-                          className="h-6 px-2.5 text-[10px] rounded-[var(--radius-sm)] border border-[var(--border-subtle)] hover:bg-[var(--bg-hover)] disabled:opacity-40 flex items-center gap-1 transition-colors"
-                        >
-                          <RotateCcw className="w-3 h-3" />
-                          <span>{item.reverted ? 'Reverted' : 'Revert Change'}</span>
-                        </button>
+                        <div className="text-xs space-y-1">
+                          <div className="text-[var(--text-muted)]">
+                            Field: <span className="text-[var(--text-primary)] font-mono uppercase text-[11px]">{item.field}</span>
+                          </div>
+                          <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] p-2 text-[11px] font-mono space-y-1">
+                            <div className="text-red-400 line-through">- {item.oldValue}</div>
+                            <div className="text-emerald-400">+ {item.newValue}</div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1 text-[11px] text-[var(--text-muted)]">
+                          <span>Author: {item.changedBy}</span>
+                          <button
+                            onClick={() => revertChange(item.id)}
+                            disabled={item.reverted}
+                            className="h-6 px-2.5 text-[10px] rounded-[var(--radius-sm)] border border-[var(--border-subtle)] hover:bg-[var(--bg-hover)] disabled:opacity-40 flex items-center gap-1 transition-colors"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            <span>{item.reverted ? 'Reverted' : 'Revert Change'}</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -533,7 +594,7 @@ export const AnnotationLayerView: React.FC = () => {
                     </h3>
                   </div>
                   <span className="text-xs font-mono text-[var(--text-muted)]">
-                    Session: {liveSession?.id || 'relay-0x89f'}
+                    Session: {liveSession?.id || 'relay-mesh-active'}
                   </span>
                 </div>
 
