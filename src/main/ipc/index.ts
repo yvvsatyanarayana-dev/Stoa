@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow } from 'electron'
+import { ipcMain, BrowserWindow, nativeImage } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
 import icon from '../../../resources/icon.png?asset'
@@ -64,6 +64,9 @@ export function registerIpcHandlers(): void {
   })
 
   ipcMain.handle('window:open-secondary', (_event, viewType: string) => {
+    let appIcon = nativeImage.createFromPath(join(__dirname, '../../../resources/icon.ico'))
+    if (appIcon.isEmpty()) appIcon = nativeImage.createFromPath(icon)
+
     const secondaryWindow = new BrowserWindow({
       width: 1180,
       height: 780,
@@ -72,7 +75,7 @@ export function registerIpcHandlers(): void {
       frame: false,
       autoHideMenuBar: true,
       title: `Stoa - ${viewType.toUpperCase()}`,
-      icon,
+      icon: appIcon,
       backgroundColor: '#000000',
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
@@ -81,6 +84,10 @@ export function registerIpcHandlers(): void {
         nodeIntegration: false
       }
     })
+
+    if (!appIcon.isEmpty()) {
+      secondaryWindow.setIcon(appIcon)
+    }
 
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
       secondaryWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}?view=${viewType}`)

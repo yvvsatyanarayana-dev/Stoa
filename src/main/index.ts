@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, globalShortcut } from 'electron'
+import { app, shell, BrowserWindow, globalShortcut, nativeImage } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -7,9 +7,25 @@ import { registerIpcHandlers, setIpcMainWindow } from './ipc'
 import { initScheduler, stopScheduler } from './scheduler'
 import { startThemeScheduler, stopThemeScheduler, setMainWindow as setThemeSchedulerMainWindow } from './theme/ThemeScheduler'
 
+// Register AppUserModelId on Windows before app is ready to ensure taskbar grouping & icon
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.stoa.app')
+}
+
 let mainWindow: BrowserWindow | null = null
 
+function getAppIcon(): Electron.NativeImage {
+  try {
+    const icoPath = join(__dirname, '../../resources/icon.ico')
+    const imgFromIco = nativeImage.createFromPath(icoPath)
+    if (!imgFromIco.isEmpty()) return imgFromIco
+  } catch {}
+  return nativeImage.createFromPath(icon)
+}
+
 function createWindow(): void {
+  const appIcon = getAppIcon()
+
   mainWindow = new BrowserWindow({
     width: 1320,
     height: 860,
@@ -19,7 +35,7 @@ function createWindow(): void {
     frame: false, // Frameless window with app-themed custom titlebar
     autoHideMenuBar: true,
     title: 'Stoa',
-    icon,
+    icon: appIcon,
     backgroundColor: '#000000',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -29,11 +45,19 @@ function createWindow(): void {
     }
   })
 
+  // Explicitly set icon for Windows taskbar and Alt-Tab switcher
+  if (appIcon && !appIcon.isEmpty()) {
+    mainWindow.setIcon(appIcon)
+  }
+
   // Provide main window to IPC handlers for minimize, maximize, close
   setIpcMainWindow(mainWindow)
   setThemeSchedulerMainWindow(mainWindow)
 
   mainWindow.on('ready-to-show', () => {
+    if (appIcon && !appIcon.isEmpty()) {
+      mainWindow?.setIcon(appIcon)
+    }
     mainWindow?.show()
   })
 
