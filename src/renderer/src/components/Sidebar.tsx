@@ -24,8 +24,10 @@ import {
   Lock
 } from 'lucide-react'
 import { useAppStore, AppView } from '../store/useAppStore'
+import { useAuthStore } from '../store/useAuthStore'
 
 export const Sidebar: React.FC = () => {
+  const { currentUser, setIsAuthModalOpen } = useAuthStore()
   const {
     currentView,
     setCurrentView,
@@ -200,16 +202,16 @@ export const Sidebar: React.FC = () => {
       {/* 2. Scrollable Navigation Hierarchy */}
       <div className="flex-1 overflow-y-auto p-2 space-y-4">
         {/* Core Scheduling */}
-        {renderNavGroup('Core Scheduling', isCoreOpen, () => setIsCoreOpen(!isCoreOpen), coreNavItems)}
+        {renderNavGroup('Schedule', isCoreOpen, () => setIsCoreOpen(!isCoreOpen), coreNavItems)}
 
-        {/* Next-Gen Intelligence */}
-        {renderNavGroup('Advanced Intelligence', isIntelligenceOpen, () => setIsIntelligenceOpen(!isIntelligenceOpen), intelligenceNavItems)}
+        {/* Tools & Advanced Intelligence */}
+        {renderNavGroup('Tools', isIntelligenceOpen, () => setIsIntelligenceOpen(!isIntelligenceOpen), intelligenceNavItems)}
 
-        {/* Analytics & Operations */}
-        {renderNavGroup('Operations & Insights', isOpsOpen, () => setIsOpsOpen(!isOpsOpen), opsNavItems)}
+        {/* Reports & Operations */}
+        {renderNavGroup('Reports', isOpsOpen, () => setIsOpsOpen(!isOpsOpen), opsNavItems)}
 
-        {/* System & Tools */}
-        {renderNavGroup('Security & Infrastructure', isSystemOpen, () => setIsSystemOpen(!isSystemOpen), systemNavItems)}
+        {/* System & Settings */}
+        {renderNavGroup('System', isSystemOpen, () => setIsSystemOpen(!isSystemOpen), systemNavItems)}
 
         {/* Active Calendars List */}
         <div className="space-y-0.5 pt-1 border-t border-[var(--border-subtle)]">
@@ -286,24 +288,36 @@ export const Sidebar: React.FC = () => {
       {/* 3. Executive Identity & Status Footer */}
       <div className="p-2.5 border-t border-[var(--border-subtle)] bg-[var(--bg-sidebar)]">
         <div className="flex items-center justify-between p-2 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] shadow-xs">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="relative">
-              <div className="w-7 h-7 rounded-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center font-bold text-xs text-[var(--text-primary)]">
-                AM
-              </div>
+          <button
+            onClick={() => setIsAuthModalOpen(true)}
+            className="flex items-center gap-2.5 min-w-0 text-left hover:opacity-85 transition-opacity group cursor-pointer"
+            title="Manage User Account or Sign In with Google"
+          >
+            <div className="relative shrink-0">
+              {currentUser.avatarUrl ? (
+                <img
+                  src={currentUser.avatarUrl}
+                  alt={currentUser.name}
+                  className="w-7 h-7 rounded-full object-cover border border-[var(--border-subtle)]"
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center font-bold text-xs text-[var(--text-primary)]">
+                  {currentUser.initials}
+                </div>
+              )}
               <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-[var(--bg-elevated)]" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-[var(--text-primary)] truncate">
-                Alex Mercer
+              <p className="text-xs font-semibold text-[var(--text-primary)] truncate group-hover:underline">
+                {currentUser.name}
               </p>
               <p className="text-[10px] text-[var(--text-muted)] truncate font-mono">
-                Administrator
+                {currentUser.role}
               </p>
             </div>
-          </div>
+          </button>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={() => setIsWorkspaceLocked(true)}
               className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] rounded transition-colors"

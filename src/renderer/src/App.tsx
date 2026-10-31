@@ -37,6 +37,7 @@ import { DailyDigestModal } from './components/notifications/DailyDigestModal'
 import { LiveNotificationToast } from './components/notifications/LiveNotificationToast'
 import { WorkspaceLockScreen } from './components/enterprise/WorkspaceLockScreen'
 import { TemplateMarketplaceModal } from './components/enterprise/TemplateMarketplaceModal'
+import { AuthAccountModal } from './components/modals/AuthAccountModal'
 import { soundService } from './services/soundService'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts'
@@ -196,6 +197,7 @@ export const App: React.FC = () => {
         {/* Category H: Enterprise Suite (Lock Screen & Template Marketplace) */}
         <TemplateMarketplaceModal />
         <WorkspaceLockScreen />
+        <AuthAccountModal />
       </div>
     </ErrorBoundary>
   )
