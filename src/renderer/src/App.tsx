@@ -12,6 +12,8 @@ import { SettingsView } from './components/settings/SettingsView'
 import { WorkspaceProfilesManager } from './components/enterprise/WorkspaceProfilesManager'
 import { ThemeStudio } from './components/settings/ThemeStudio'
 import { AuditLogViewer } from './components/enterprise/AuditLogViewer'
+import { SpatialCanvasView } from './components/spatial/SpatialCanvasView'
+import { P2PRelayView } from './components/p2p/P2PRelayView'
 import { EventModal } from './components/modals/EventModal'
 import { SlotModal } from './components/modals/SlotModal'
 import { CalendarModal } from './components/modals/CalendarModal'
@@ -135,6 +137,7 @@ export const App: React.FC = () => {
                   {currentView === 'timetable' && <TimetableBuilderView />}
                   {currentView === 'resources' && <ResourcesView />}
                   {currentView === 'conferences' && <ConferenceView />}
+                  {currentView === 'spatial-canvas' && <SpatialCanvasView />}
                   {currentView === 'dashboard' && <DashboardView />}
                   {currentView === 'notifications' && <NotificationsView />}
                   {currentView === 'profiles' && (
@@ -148,6 +151,7 @@ export const App: React.FC = () => {
                       <AuditLogViewer />
                     </div>
                   )}
+                  {currentView === 'p2p-relay' && <P2PRelayView />}
                   {currentView === 'settings' && <SettingsView />}
                 </>
               )}

@@ -108,6 +108,8 @@ export const Header: React.FC = () => {
                 ? 'Resource & Room Booking'
                 : currentView === 'conferences'
                 ? 'Conference & Multi-Track Planner'
+                : currentView === 'spatial-canvas'
+                ? 'Spatial Canvas & 3D Floor Plan'
                 : currentView === 'dashboard'
                 ? 'Analytics & Utilization Dashboard'
                 : currentView === 'notifications'
@@ -118,6 +120,8 @@ export const Header: React.FC = () => {
                 ? 'Theme Studio'
                 : currentView === 'audit-log'
                 ? 'Security & Audit Log'
+                : currentView === 'p2p-relay'
+                ? 'Decentralized P2P Mesh & Vault'
                 : 'System Settings'}
             </span>
           </div>

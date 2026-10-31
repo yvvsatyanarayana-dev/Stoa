@@ -12,7 +12,9 @@ import {
   Rss,
   Building2,
   Palette,
-  ShieldCheck
+  ShieldCheck,
+  Box,
+  Network
 } from 'lucide-react'
 import { useAppStore, AppView } from '../store/useAppStore'
 
@@ -35,6 +37,7 @@ export const Sidebar: React.FC = () => {
     { id: 'timetable', label: 'Timetable Builder', icon: <TableProperties className="w-3.5 h-3.5" /> },
     { id: 'resources', label: 'Resources & Rooms', icon: <Users className="w-3.5 h-3.5" /> },
     { id: 'conferences', label: 'Conferences & Events', icon: <Presentation className="w-3.5 h-3.5" /> },
+    { id: 'spatial-canvas', label: 'Spatial Floor Plan', icon: <Box className="w-3.5 h-3.5" /> },
     { id: 'dashboard', label: 'Dashboard & Reports', icon: <LayoutDashboard className="w-3.5 h-3.5" /> },
     {
       id: 'notifications',
@@ -48,6 +51,7 @@ export const Sidebar: React.FC = () => {
     { id: 'profiles', label: 'Profiles', icon: <Building2 className="w-3.5 h-3.5" /> },
     { id: 'theme-studio', label: 'Theme Studio', icon: <Palette className="w-3.5 h-3.5" /> },
     { id: 'audit-log', label: 'Security Log', icon: <ShieldCheck className="w-3.5 h-3.5" /> },
+    { id: 'p2p-relay', label: 'P2P Mesh & Vault', icon: <Network className="w-3.5 h-3.5" /> },
     { id: 'settings', label: 'Settings', icon: <SettingsIcon className="w-3.5 h-3.5" /> }
   ]
 

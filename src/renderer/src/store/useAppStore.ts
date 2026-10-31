@@ -19,11 +19,13 @@ export type AppView =
   | 'timetable'
   | 'resources'
   | 'conferences'
+  | 'spatial-canvas'
   | 'dashboard'
   | 'notifications'
   | 'profiles'
   | 'theme-studio'
   | 'audit-log'
+  | 'p2p-relay'
   | 'settings'
 
 export type CalendarViewType = 'day' | 'week' | 'month' | 'agenda'

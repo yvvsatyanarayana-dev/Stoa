@@ -244,6 +244,14 @@ function createDefaultCommands(
       action: () => setCurrentView('conferences'),
     },
     {
+      id: 'nav:spatial-canvas-view',
+      title: 'Spatial Canvas & 3D Floor Plan',
+      description: 'Interactive 2D/isometric venue floor plans and infinite whiteboard run-sheet',
+      category: 'navigation',
+      keywords: ['spatial', 'floor', 'plan', 'isometric', '3d', 'booths', 'stages', 'whiteboard', 'canvas'],
+      action: () => setCurrentView('spatial-canvas'),
+    },
+    {
       id: 'nav:notifications-view',
       title: 'Notifications',
       description: 'View notification history',
@@ -283,6 +291,14 @@ function createDefaultCommands(
       category: 'navigation',
       keywords: ['security', 'audit', 'log', 'history', 'revert', 'rollback', 'compliance'],
       action: () => setCurrentView('audit-log'),
+    },
+    {
+      id: 'nav:p2p-relay-view',
+      title: 'Decentralized P2P Mesh & Vault',
+      description: 'Serverless WebRTC calendar sync, zero-knowledge vault, and multi-org federation',
+      category: 'navigation',
+      keywords: ['p2p', 'peer', 'mesh', 'vault', 'encrypted', 'federation', 'webrtc', 'relay'],
+      action: () => setCurrentView('p2p-relay'),
     },
 
     // Action Commands
