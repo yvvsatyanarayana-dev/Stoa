@@ -194,10 +194,9 @@ export const Sidebar: React.FC = () => {
               <h2 className="text-xs font-bold text-[var(--text-primary)] truncate leading-tight group-hover:underline">
                 {activeWorkspace.name}
               </h2>
-              <span className="text-[10px] text-[var(--text-muted)] font-mono flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live Mesh
-              </span>
+              <p className="text-[10px] text-[var(--text-muted)] truncate">
+                {activeWorkspace.domain || 'Workspace'}
+              </p>
             </div>
           </div>
           <div className="text-[var(--text-muted)] group-hover:text-[var(--text-primary)] p-1 rounded transition-colors">
@@ -208,9 +207,9 @@ export const Sidebar: React.FC = () => {
         {/* Real-time Workspace Popover Dropdown */}
         {isWorkspaceDropdownOpen && (
           <div className="absolute top-14 left-3 right-3 z-50 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-xl shadow-2xl p-2 space-y-1.5 animate-in fade-in zoom-in-95">
-            <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-[var(--text-muted)] flex items-center justify-between border-b border-[var(--border-subtle)] pb-1.5">
-              <span>Workspaces ({workspaces.length})</span>
-              <span className="text-emerald-400 font-bold">Real-Time</span>
+            <div className="px-2 py-1 text-[10px] font-medium text-[var(--text-muted)] flex items-center justify-between border-b border-[var(--border-subtle)] pb-1.5">
+              <span>Workspaces</span>
+              <span className="text-[10px] text-[var(--text-muted)] font-mono">{workspaces.length} total</span>
             </div>
 
             <div className="max-h-48 overflow-y-auto space-y-0.5 py-0.5">
@@ -248,10 +247,10 @@ export const Sidebar: React.FC = () => {
                   setIsWorkspaceDropdownOpen(false)
                   setIsCreateWorkspaceModalOpen(true)
                 }}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium text-[var(--accent)] hover:bg-[var(--bg-hover)] transition-colors"
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium text-[var(--accent)] hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>+ Create Real Workspace</span>
+                <span>New Workspace</span>
               </button>
 
               <button
@@ -259,10 +258,10 @@ export const Sidebar: React.FC = () => {
                   setIsWorkspaceDropdownOpen(false)
                   setCurrentView('profiles')
                 }}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors"
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
               >
                 <Building className="w-3.5 h-3.5" />
-                <span>Manage Workspace Profiles</span>
+                <span>Workspace Settings</span>
               </button>
             </div>
           </div>

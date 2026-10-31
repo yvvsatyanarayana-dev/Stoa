@@ -50,11 +50,11 @@ export const CreateWorkspaceModal: React.FC = () => {
               <Plus className="w-4 h-4 stroke-[2.5]" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                Create Real-Time Workspace
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+                Create Workspace
               </h3>
-              <p className="text-[11px] text-[var(--text-muted)] font-mono">
-                Isolated company schedules, settings & reports
+              <p className="text-[11px] text-[var(--text-muted)]">
+                Add a new workspace to organize your schedules
               </p>
             </div>
           </div>
