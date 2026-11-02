@@ -190,8 +190,8 @@ export const TeamAvailabilityOverlay: React.FC = () => {
     const attendees = selectedMemberIds
       .map((id) => teamMembers.find((m) => m.id === id))
       .filter(Boolean)
-      .map((m, idx) => ({
-        id: `att-${Date.now()}-${idx}`,
+      .map((m) => ({
+        id: `att-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
         event_id: `evt-${Date.now()}`,
         name: m!.name,
         email: `${m!.name.toLowerCase().replace(/\s+/g, '.')}@stoa.internal`,
@@ -199,7 +199,7 @@ export const TeamAvailabilityOverlay: React.FC = () => {
       }))
 
     setSelectedEvent({
-      id: `evt-${Date.now()}`,
+      id: `evt-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
       calendar_id: calendars[0]?.id || 'cal-primary',
       title: 'Team Sync & Alignment',
       start: sDate.toISOString(),

@@ -35,6 +35,8 @@ const SHORTCUTS_DATA: ShortcutItem[] = [
   { id: 'export-hub', keys: ['Ctrl', 'E'], description: 'Open Export, Sharing & iCal Hub', category: 'Creation & Actions' },
 
   // Power Features & Displays
+  { id: 'mission-control', keys: ['Ctrl', 'B'], description: 'Toggle Mission Control Modular Split Dock', category: 'Power Features & Displays' },
+  { id: 'nexus-optimizer', keys: ['Ctrl', 'Shift', 'O'], description: 'Autonomous Day-Flow Optimizer (Nexus AI)', category: 'Power Features & Displays' },
   { id: 'presentation', keys: ['Ctrl', 'P'], description: 'Launch Wallboard Presentation Mode', category: 'Power Features & Displays' },
   { id: 'lock-workspace', keys: ['Ctrl', 'Shift', 'L'], description: 'Instant Lock Workspace Screen', category: 'Power Features & Displays' },
   { id: 'fullscreen', keys: ['F11'], description: 'Toggle Distraction-Free Fullscreen', category: 'Power Features & Displays' },

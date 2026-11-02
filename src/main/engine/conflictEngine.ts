@@ -1,15 +1,100 @@
 import { getDb } from '../db'
 import type { CalendarEvent, Resource, TimetableSlot } from '../../types'
 
+export interface TravelBuffer {
+  transitMinutes: number
+  mode: 'flight' | 'drive' | 'transit' | 'walk' | 'teleport'
+  distanceKm?: number
+  originLocation: string
+  destinationLocation: string
+  bufferStart: string
+  bufferEnd: string
+  isCrossTimezone?: boolean
+  timezoneDifferenceHours?: number
+}
+
 export interface ConflictReport {
   hasConflict: boolean
   conflicts: Array<{
-    type: 'room_double_booked' | 'person_double_booked' | 'outside_availability'
+    type: 'room_double_booked' | 'person_double_booked' | 'outside_availability' | 'travel_overlap' | 'insufficient_transit'
     message: string
     conflictingItemTitle?: string
     conflictingItemId?: string
+    travelBuffer?: TravelBuffer
   }>
   suggestedFreeSlots?: Array<{ start: string; end: string }>
+}
+
+/**
+ * Calculates estimated travel duration between two text locations offline.
+ * Uses deterministic city / airport / campus heuristic mapping.
+ */
+export function estimateOfflineTransitTime(origin: string, destination: string): {
+  transitMinutes: number
+  mode: TravelBuffer['mode']
+  distanceKm: number
+  isCrossTimezone: boolean
+  timezoneDifferenceHours: number
+} {
+  const o = (origin || '').trim().toLowerCase()
+  const d = (destination || '').trim().toLowerCase()
+
+  if (!o || !d || o === d || o.includes('zoom') || d.includes('zoom') || o.includes('meet') || d.includes('meet') || o.includes('online') || d.includes('online')) {
+    return { transitMinutes: 0, mode: 'walk', distanceKm: 0, isCrossTimezone: false, timezoneDifferenceHours: 0 }
+  }
+
+  // Same building / campus room transitions
+  if ((o.includes('room') && d.includes('room')) || (o.includes('hall') && d.includes('hall')) || (o.includes('floor') && d.includes('floor'))) {
+    return { transitMinutes: 10, mode: 'walk', distanceKm: 0.5, isCrossTimezone: false, timezoneDifferenceHours: 0 }
+  }
+
+  // Major global hubs / airport flights
+  const majorCities: Record<string, { lat: number; lon: number; tz: number }> = {
+    'new york': { lat: 40.71, lon: -74.0, tz: -5 },
+    'nyc': { lat: 40.71, lon: -74.0, tz: -5 },
+    'london': { lat: 51.5, lon: -0.12, tz: 0 },
+    'paris': { lat: 48.85, lon: 2.35, tz: 1 },
+    'berlin': { lat: 52.52, lon: 13.4, tz: 1 },
+    'tokyo': { lat: 35.67, lon: 139.65, tz: 9 },
+    'san francisco': { lat: 37.77, lon: -122.41, tz: -8 },
+    'sf': { lat: 37.77, lon: -122.41, tz: -8 },
+    'seattle': { lat: 47.6, lon: -122.33, tz: -8 },
+    'singapore': { lat: 1.35, lon: 103.81, tz: 8 },
+    'hyderabad': { lat: 17.38, lon: 78.48, tz: 5.5 },
+    'bengaluru': { lat: 12.97, lon: 77.59, tz: 5.5 },
+    'bangalore': { lat: 12.97, lon: 77.59, tz: 5.5 },
+    'dubai': { lat: 25.2, lon: 55.27, tz: 4 }
+  }
+
+  const findCity = (str: string) => Object.entries(majorCities).find(([k]) => str.includes(k))
+  const cityA = findCity(o)
+  const cityB = findCity(d)
+
+  if (cityA && cityB && cityA[0] !== cityB[0]) {
+    // Great circle distance (Haversine approximation)
+    const R = 6371 // km
+    const dLat = ((cityB[1].lat - cityA[1].lat) * Math.PI) / 180
+    const dLon = ((cityB[1].lon - cityA[1].lon) * Math.PI) / 180
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((cityA[1].lat * Math.PI) / 180) * Math.cos((cityB[1].lat * Math.PI) / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    const dist = Math.round(R * c)
+    const tzDiff = Math.abs(cityA[1].tz - cityB[1].tz)
+
+    // Flight buffer: ~800 km/h + 2.5 hours airport security & boarding buffer
+    const flightMinutes = Math.round((dist / 800) * 60 + 150)
+    return {
+      transitMinutes: flightMinutes,
+      mode: 'flight',
+      distanceKm: dist,
+      isCrossTimezone: tzDiff > 0,
+      timezoneDifferenceHours: tzDiff
+    }
+  }
+
+  // Cross-town / intra-city drive default
+  return { transitMinutes: 45, mode: 'drive', distanceKm: 18, isCrossTimezone: false, timezoneDifferenceHours: 0 }
 }
 
 export function checkEventConflicts(
@@ -56,82 +141,99 @@ export function checkEventConflicts(
         conflictingItemTitle: ov.title
       })
     }
-
-    // 2. Check resource working hours / days availability if defined
-    if (res.availability_json) {
-      try {
-        const avail = JSON.parse(res.availability_json)
-        const eventStartDate = new Date(event.start)
-        const dayOfWeek = eventStartDate.getDay() // 0 = Sunday, 1 = Monday, etc.
-        const dayFormatted = dayOfWeek === 0 ? 7 : dayOfWeek // convert to 1-7 (Mon-Sun)
-
-        if (avail.workingDays && Array.isArray(avail.workingDays)) {
-          if (!avail.workingDays.includes(dayFormatted)) {
-            conflicts.push({
-              type: 'outside_availability',
-              message: `"${res.name}" is scheduled outside standard working days (Day ${dayFormatted})`
-            })
-          }
-        }
-
-        if (avail.workingHours && avail.workingHours.start && avail.workingHours.end) {
-          const eventStartH = eventStartDate.getHours() + eventStartDate.getMinutes() / 60
-          const eventEndDate = new Date(event.end)
-          const eventEndH = eventEndDate.getHours() + eventEndDate.getMinutes() / 60
-
-          const [startH, startM] = avail.workingHours.start.split(':').map(Number)
-          const [endH, endM] = avail.workingHours.end.split(':').map(Number)
-          const availStart = startH + (startM || 0) / 60
-          const availEnd = endH + (endM || 0) / 60
-
-          if (eventStartH < availStart || eventEndH > availEnd) {
-            conflicts.push({
-              type: 'outside_availability',
-              message: `"${res.name}" is scheduled outside working hours (${avail.workingHours.start} - ${avail.workingHours.end})`
-            })
-          }
-        }
-      } catch (err) {
-        console.warn('Error parsing availability JSON:', err)
-      }
-    }
   }
 
-  // 3. Propose nearest free slot (e.g. shift by 1 hour)
-  const suggestedFreeSlots: Array<{ start: string; end: string }> = []
-  if (conflicts.length > 0) {
-    const durationMs = endMs - startMs
-    // Try 1 hour later, 2 hours later, next morning at 9am
-    for (let offsetH = 1; offsetH <= 3; offsetH++) {
-      const nextStart = new Date(startMs + offsetH * 60 * 60 * 1000)
-      const nextEnd = new Date(nextStart.getTime() + durationMs)
-      // Quick check if this candidate conflicts
-      let hasCandidateConflict = false
-      for (const resId of resourceIds) {
-        const ov = db.prepare(`
-          SELECT e.id FROM events e
-          JOIN event_resources er ON er.event_id = e.id
-          WHERE er.resource_id = ? AND e.status != 'cancelled' AND e.end > ? AND e.start < ?
-        `).get(resId, nextStart.toISOString(), nextEnd.toISOString())
-        if (ov) {
-          hasCandidateConflict = true
-          break
+  // 2. Deterministic Offline-First Travel & Commute Shield
+  if (event.location && event.location.trim()) {
+    // Find prior adjacent event on the same day
+    const dayStart = new Date(event.start)
+    dayStart.setHours(0, 0, 0, 0)
+    const dayEnd = new Date(event.end)
+    dayEnd.setHours(23, 59, 59, 999)
+
+    let priorSql = `
+      SELECT id, title, start, end, location
+      FROM events
+      WHERE status != 'cancelled'
+        AND start >= ? AND start <= ?
+    `
+    const pParams: any[] = [dayStart.toISOString(), dayEnd.toISOString()]
+    if (excludeEventId) {
+      priorSql += ' AND id != ?'
+      pParams.push(excludeEventId)
+    }
+    priorSql += ' ORDER BY start ASC'
+
+    const sameDayEvents = db.prepare(priorSql).all(...pParams) as Array<{
+      id: string
+      title: string
+      start: string
+      end: string
+      location?: string
+    }>
+
+    for (const other of sameDayEvents) {
+      if (!other.location || !other.location.trim()) continue
+
+      const otherStartMs = new Date(other.start).getTime()
+      const otherEndMs = new Date(other.end).getTime()
+
+      // Case A: other ends right before event starts
+      if (otherEndMs <= startMs) {
+        const gapMinutes = Math.round((startMs - otherEndMs) / 60000)
+        const transit = estimateOfflineTransitTime(other.location, event.location)
+
+        if (transit.transitMinutes > gapMinutes) {
+          conflicts.push({
+            type: 'insufficient_transit',
+            message: `Travel Warning: Only ${gapMinutes} min gap between "${other.title}" (${other.location}) and "${event.title || 'New Event'}" (${event.location}). Required transit buffer is ${transit.transitMinutes} min via ${transit.mode}.`,
+            conflictingItemId: other.id,
+            conflictingItemTitle: other.title,
+            travelBuffer: {
+              transitMinutes: transit.transitMinutes,
+              mode: transit.mode,
+              distanceKm: transit.distanceKm,
+              originLocation: other.location,
+              destinationLocation: event.location,
+              bufferStart: other.end,
+              bufferEnd: new Date(otherEndMs + transit.transitMinutes * 60000).toISOString(),
+              isCrossTimezone: transit.isCrossTimezone,
+              timezoneDifferenceHours: transit.timezoneDifferenceHours
+            }
+          })
         }
       }
-      if (!hasCandidateConflict) {
-        suggestedFreeSlots.push({
-          start: nextStart.toISOString(),
-          end: nextEnd.toISOString()
-        })
-        break
+      // Case B: event ends right before other starts
+      else if (endMs <= otherStartMs) {
+        const gapMinutes = Math.round((otherStartMs - endMs) / 60000)
+        const transit = estimateOfflineTransitTime(event.location, other.location)
+
+        if (transit.transitMinutes > gapMinutes) {
+          conflicts.push({
+            type: 'insufficient_transit',
+            message: `Travel Warning: After "${event.title || 'New Event'}" (${event.location}), only ${gapMinutes} min remains before "${other.title}" (${other.location}). Required transit buffer is ${transit.transitMinutes} min via ${transit.mode}.`,
+            conflictingItemId: other.id,
+            conflictingItemTitle: other.title,
+            travelBuffer: {
+              transitMinutes: transit.transitMinutes,
+              mode: transit.mode,
+              distanceKm: transit.distanceKm,
+              originLocation: event.location,
+              destinationLocation: other.location,
+              bufferStart: event.end,
+              bufferEnd: new Date(endMs + transit.transitMinutes * 60000).toISOString(),
+              isCrossTimezone: transit.isCrossTimezone,
+              timezoneDifferenceHours: transit.timezoneDifferenceHours
+            }
+          })
+        }
       }
     }
   }
 
   return {
     hasConflict: conflicts.length > 0,
-    conflicts,
-    suggestedFreeSlots
+    conflicts
   }
 }
 
@@ -143,60 +245,32 @@ export function checkTimetableSlotConflicts(
   const db = getDb()
   const conflicts: ConflictReport['conflicts'] = []
 
-  if (!slot.day || !slot.start || !slot.end) {
+  if (slot.day === undefined || !slot.start || !slot.end) {
     return { hasConflict: false, conflicts: [] }
   }
 
-  // Check resource double-booking in timetable
-  if (slot.resource_id) {
-    let sql = `
-      SELECT ts.id, ts.start, ts.end, ts.room, s.name as sub_name
-      FROM timetable_slots ts
-      LEFT JOIN subjects s ON ts.subject_id = s.id
-      WHERE ts.timetable_id = ? AND ts.day = ? AND ts.resource_id = ?
-        AND ts.end > ? AND ts.start < ?
-    `
-    const params: any[] = [timetableId, slot.day, slot.resource_id, slot.start, slot.end]
-    if (excludeSlotId) {
-      sql += ' AND ts.id != ?'
-      params.push(excludeSlotId)
-    }
-
-    const overlaps = db.prepare(sql).all(...params) as any[]
-    for (const ov of overlaps) {
-      conflicts.push({
-        type: 'person_double_booked',
-        message: `Trainer/Person is already booked for "${ov.sub_name}" at ${ov.start}-${ov.end}`,
-        conflictingItemId: ov.id,
-        conflictingItemTitle: ov.sub_name
-      })
-    }
+  let sql = `
+    SELECT ts.*, s.name as sub_name
+    FROM timetable_slots ts
+    LEFT JOIN subjects s ON ts.subject_id = s.id
+    WHERE ts.timetable_id = ?
+      AND ts.day = ?
+      AND ts.end > ? AND ts.start < ?
+  `
+  const params: (string | number)[] = [timetableId, slot.day, slot.start, slot.end]
+  if (excludeSlotId) {
+    sql += ' AND ts.id != ?'
+    params.push(excludeSlotId)
   }
 
-  // Check room double booking in timetable
-  if (slot.room && slot.room.trim()) {
-    let sql = `
-      SELECT ts.id, ts.start, ts.end, s.name as sub_name
-      FROM timetable_slots ts
-      LEFT JOIN subjects s ON ts.subject_id = s.id
-      WHERE ts.timetable_id = ? AND ts.day = ? AND ts.room = ?
-        AND ts.end > ? AND ts.start < ?
-    `
-    const params: any[] = [timetableId, slot.day, slot.room, slot.start, slot.end]
-    if (excludeSlotId) {
-      sql += ' AND ts.id != ?'
-      params.push(excludeSlotId)
-    }
-
-    const overlaps = db.prepare(sql).all(...params) as any[]
-    for (const ov of overlaps) {
-      conflicts.push({
-        type: 'room_double_booked',
-        message: `Room "${slot.room}" is already allocated to "${ov.sub_name}" at ${ov.start}-${ov.end}`,
-        conflictingItemId: ov.id,
-        conflictingItemTitle: ov.sub_name
-      })
-    }
+  const overlaps = db.prepare(sql).all(...params) as unknown as Array<TimetableSlot & { sub_name?: string }>
+  for (const ov of overlaps) {
+    conflicts.push({
+      type: 'room_double_booked',
+      message: `Time slot overlaps with "${ov.sub_name || 'Subject'}" on Day ${ov.day} (${ov.start} - ${ov.end})`,
+      conflictingItemId: ov.id,
+      conflictingItemTitle: ov.sub_name
+    })
   }
 
   return {

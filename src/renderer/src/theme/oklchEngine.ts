@@ -216,6 +216,12 @@ export function paletteToCssVariables(palette: ThemePalette, isDark: boolean): R
     [`--shadow-sm`]: `0 1px 3px ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,.06)'}`,
     [`--shadow-md`]: `0 4px 16px -2px ${isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,.10)'}`,
     [`--shadow-lg`]: `0 20px 40px -10px ${isDark ? 'rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.08)' : 'rgba(0,0,0,.16)'}`,
+
+    // Scrollbars
+    [`--scrollbar-thumb`]: oklchToHex(palette.border),
+    [`--scrollbar-thumb-hover`]: oklchToHex({ ...palette.border, l: clampL(isDark ? palette.border.l + 0.16 : palette.border.l - 0.16) }),
+    [`--scrollbar-thumb-active`]: oklchToHex(palette.textMuted),
+    [`--scrollbar-track`]: 'transparent',
   };
 
   // Event stops

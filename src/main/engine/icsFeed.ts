@@ -1,6 +1,7 @@
 import type { CalendarEvent } from '../../types'
 import https from 'https'
 import http from 'http'
+import { randomUUID } from 'crypto'
 
 export interface ParsedIcsResult {
   calendarName?: string
@@ -41,7 +42,7 @@ export function parseIcsText(icsContent: string, targetCalendarId: string): Pars
 
         if (startIso && endIso) {
           events.push({
-            id: currentEvent['UID'] || `evt-ics-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+            id: currentEvent['UID'] || `evt-ics-${Date.now()}-${randomUUID().slice(0, 8)}`,
             calendar_id: targetCalendarId,
             title: unescapeIcsText(currentEvent['SUMMARY'] || 'External Event'),
             description: currentEvent['DESCRIPTION'] ? unescapeIcsText(currentEvent['DESCRIPTION']) : undefined,

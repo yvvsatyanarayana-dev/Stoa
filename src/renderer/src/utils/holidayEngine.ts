@@ -3,6 +3,26 @@ import type { CalendarEvent } from '../../../types'
 
 export type HolidayRegion = 'US' | 'UK' | 'IN' | 'DE' | 'CA' | 'AU' | 'INTL'
 
+/**
+ * Detects real-time holiday region based on system locale, timezone, or user persistence
+ */
+export function detectSystemHolidayRegion(): HolidayRegion {
+  try {
+    const saved = localStorage.getItem('stoa_holiday_region') as HolidayRegion | null
+    if (saved && ['US', 'UK', 'IN', 'DE', 'CA', 'AU', 'INTL'].includes(saved)) {
+      return saved
+    }
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+    if (tz.includes('Kolkata') || tz.includes('Calcutta') || tz.includes('India') || tz.includes('Asia/Kolkata')) return 'IN'
+    if (tz.includes('London') || tz.includes('Europe/London')) return 'UK'
+    if (tz.includes('Berlin') || tz.includes('Europe/Berlin') || tz.includes('Europe/Paris')) return 'DE'
+    if (tz.includes('Toronto') || tz.includes('Vancouver') || tz.includes('America/Toronto')) return 'CA'
+    if (tz.includes('Sydney') || tz.includes('Melbourne') || tz.includes('Australia/')) return 'AU'
+    if (tz.includes('America/')) return 'US'
+  } catch {}
+  return 'US'
+}
+
 export interface PublicHoliday {
   date: string // YYYY-MM-DD
   name: string

@@ -244,12 +244,12 @@ function createDefaultCommands(
       action: () => setCurrentView('conferences'),
     },
     {
-      id: 'nav:spatial-canvas-view',
-      title: 'Spatial Canvas & 3D Floor Plan',
-      description: 'Interactive 2D/isometric venue floor plans and infinite whiteboard run-sheet',
+      id: 'nav:academic-hub',
+      title: 'Academic Mastery & Exam Hub',
+      description: 'SuperMemo SM-2 Spaced Repetition, Attendance Margin Shield & Syllabus Chunker',
       category: 'navigation',
-      keywords: ['spatial', 'floor', 'plan', 'isometric', '3d', 'booths', 'stages', 'whiteboard', 'canvas'],
-      action: () => setCurrentView('spatial-canvas'),
+      keywords: ['academic', 'exams', 'study', 'spaced repetition', 'sm2', 'attendance', 'bunk', 'syllabus', 'students'],
+      action: () => setCurrentView('academic'),
     },
     {
       id: 'nav:notifications-view',
@@ -301,6 +301,30 @@ function createDefaultCommands(
       action: () => setCurrentView('p2p-relay'),
     },
     {
+      id: 'nav:temporal-swarm-view',
+      title: 'Temporal AI Agent Swarm',
+      description: 'Autonomous multi-agent calendar negotiation, deep work protection, and strategist planning',
+      category: 'navigation',
+      keywords: ['swarm', 'agent', 'temporal', 'ai', 'scheduler', 'guardian', 'strategist', 'diplomat', 'archivist'],
+      action: () => setCurrentView('temporal-swarm'),
+    },
+    {
+      id: 'nav:cross-dimensional-view',
+      title: 'Cross-Dimensional 6D Life Optimizer',
+      description: 'Unified orthogonal axes: Time, Energy, Attention, Money, Relationships, and Health with Pareto frontier rebalancing',
+      category: 'navigation',
+      keywords: ['cross-dimensional', '6d', 'pareto', 'energy', 'attention', 'money', 'relationships', 'health', 'radar', 'sankey', 'frontier', 'life'],
+      action: () => setCurrentView('cross-dimensional'),
+    },
+    {
+      id: 'nav:neural-interface-view',
+      title: 'Neural Calendar Interface & Intent Terminal',
+      description: 'Thought-to-event streaming, BCI spectral telemetry, cognitive flow auto-shield, and sleep spindle dream mining',
+      category: 'navigation',
+      keywords: ['neural', 'bci', 'eeg', 'intent', 'thought', 'brain', 'dream', 'spindle', 'ultradian', 'telemetry', 'cadence'],
+      action: () => setCurrentView('neural-interface'),
+    },
+    {
       id: 'nav:burnout-shield-view',
       title: 'Predictive Burnout Shield',
       description: 'Biometric fatigue-aware scheduling, cognitive load protection, and chronotype optimizer',
@@ -323,6 +347,14 @@ function createDefaultCommands(
       category: 'navigation',
       keywords: ['annotation', 'collaborate', 'comments', 'live', 'cursor', 'attribution', 'timeline', 'peer'],
       action: () => setCurrentView('annotation-layer'),
+    },
+    {
+      id: 'nav:scenario-worlds-view',
+      title: 'Generative Schedule Worlds & Multiverse',
+      description: 'Procedural alternate universes, Automerge CRDT forks, "What If" career & life simulations, and 1-click timeline enactments',
+      category: 'navigation',
+      keywords: ['multiverse', 'scenario', 'worlds', 'what if', 'crdt', 'fork', 'branch', 'timeline', 'simulation', 'vp', 'sabbatical'],
+      action: () => setCurrentView('scenario-worlds'),
     },
 
     // Action Commands
@@ -352,6 +384,38 @@ function createDefaultCommands(
         } else {
           alert('Please select a timetable first');
         }
+      },
+    },
+    {
+      id: 'action:nexus-optimizer',
+      title: 'Autonomous Day-Flow Optimizer (Nexus AI)',
+      description: 'Autonomous schedule compaction, Deep Work recovery & cognitive rhythm synchronization',
+      category: 'actions',
+      keywords: ['nexus', 'optimizer', 'autonomous', 'defrag', 'flow', 'deep', 'work', 'ai'],
+      shortcut: 'Ctrl+Shift+O',
+      action: () => {
+        appStore.setIsDayFlowOptimizerOpen(true);
+      },
+    },
+    {
+      id: 'action:toggle-mission-control',
+      title: 'Toggle Mission Control Modular Dock',
+      description: 'Open or collapse side panel with Live Radar, Task Matrix & Binaural Focus Timer',
+      category: 'actions',
+      keywords: ['mission', 'control', 'dock', 'radar', 'tasks', 'pomodoro', 'focus', 'soundscapes'],
+      shortcut: 'Ctrl+B',
+      action: () => {
+        appStore.toggleMissionControl();
+      },
+    },
+    {
+      id: 'action:toggle-flow-waves',
+      title: 'Toggle Neuro-Cognitive Energy Flow Waves',
+      description: 'Show or hide circadian and ultradian peak focus zones on the calendar',
+      category: 'actions',
+      keywords: ['energy', 'waves', 'circadian', 'ultradian', 'flow', 'cognitive', 'peak'],
+      action: () => {
+        appStore.toggleEnergyFlowWave();
       },
     },
     {

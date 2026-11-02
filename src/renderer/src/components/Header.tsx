@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,9 +15,13 @@ import {
   ShieldAlert,
   Tv,
   AppWindow,
-  Keyboard
+  Keyboard,
+  Timer,
+  Radio,
+  MoreHorizontal
 } from 'lucide-react'
 import { useAppStore, CalendarViewType } from '../store/useAppStore'
+import { useP2PStore } from '../store/useP2PStore'
 import { format, addWeeks, subWeeks, addDays, subDays, addMonths, subMonths } from 'date-fns'
 
 export const Header: React.FC = () => {
@@ -39,12 +43,37 @@ export const Header: React.FC = () => {
     setIsExportHubOpen,
     isConflictPredictorOpen,
     setIsConflictPredictorOpen,
+    isLiveMeetingHudOpen,
+    setIsLiveMeetingHudOpen,
+    isMissionControlOpen,
+    toggleMissionControl,
+    isP2PCollaborationModalOpen,
+    toggleP2PCollaborationModal,
     setIsNlpQuickAddOpen,
     setIsPresentationModeOpen,
     setIsShortcutsModalOpen,
     themeMode,
     toggleThemeMode
   } = useAppStore()
+
+  const { peers } = useP2PStore()
+  const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false)
+  const toolsMenuRef = useRef<HTMLDivElement>(null)
+
+  // Close tools dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (toolsMenuRef.current && !toolsMenuRef.current.contains(e.target as Node)) {
+        setIsToolsMenuOpen(false)
+      }
+    }
+    if (isToolsMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isToolsMenuOpen])
 
   const handlePrev = (): void => {
     if (calendarViewType === 'day') setSelectedDate(subDays(selectedDate, 1))
@@ -65,9 +94,9 @@ export const Header: React.FC = () => {
   const formattedDate = format(selectedDate, 'MMMM yyyy')
 
   return (
-    <header className="h-12 bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)] px-4 flex items-center justify-between shrink-0 select-none text-[var(--text-primary)] transition-colors">
+    <header className="h-12 bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)] px-4 flex items-center justify-between shrink-0 select-none text-[var(--text-primary)] transition-colors gap-3">
       {/* Left: View Title & Date Controls */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5 shrink-0">
         {currentView === 'calendar' ? (
           <div className="flex items-center gap-2">
             <button
@@ -92,24 +121,32 @@ export const Header: React.FC = () => {
                 <ChevronRight className="w-3.5 h-3.5 stroke-[2]" />
               </button>
             </div>
-            <div className="flex items-center gap-1.5 ml-1.5">
+            <div className="flex items-center gap-1.5 ml-1">
               <CalendarIcon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-              <span className="text-[13px] font-semibold tracking-tight text-[var(--text-primary)]">
+              <span className="text-[13px] font-semibold tracking-tight text-[var(--text-primary)] whitespace-nowrap">
                 {formattedDate}
               </span>
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <span className="text-[13px] font-semibold tracking-tight text-[var(--text-primary)]">
+            <span className="text-[13px] font-semibold tracking-tight text-[var(--text-primary)] whitespace-nowrap">
               {currentView === 'timetable'
                 ? 'Timetable Builder'
                 : currentView === 'resources'
                 ? 'Resource & Room Booking'
                 : currentView === 'conferences'
                 ? 'Conference & Multi-Track Planner'
-                : currentView === 'spatial-canvas'
-                ? 'Spatial Canvas & 3D Floor Plan'
+                : currentView === 'academic'
+                ? 'Academic Mastery & Exam Hub'
+                : currentView === 'temporal-swarm'
+                ? 'Temporal AI Agent Swarm'
+                : currentView === 'cross-dimensional'
+                ? 'Cross-Dimensional 6D Life Optimizer'
+                : currentView === 'neural-interface'
+                ? 'Neural Calendar BCI Interface'
+                : currentView === 'scenario-worlds'
+                ? 'Generative Schedule Worlds & Multiverse'
                 : currentView === 'burnout-shield'
                 ? 'Predictive Burnout Shield & Biometrics'
                 : currentView === 'transcriber'
@@ -136,7 +173,7 @@ export const Header: React.FC = () => {
 
       {/* Middle: Sleek Segmented Switcher for Calendar Views */}
       {currentView === 'calendar' && (
-        <div className="flex items-center bg-[var(--bg-subtle)] p-0.5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] text-[11px] font-medium">
+        <div className="hidden md:flex items-center bg-[var(--bg-subtle)] p-0.5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] text-[11px] font-medium shrink-0">
           {(['day', 'week', 'month', 'agenda'] as CalendarViewType[]).map((type) => {
             const isActive = calendarViewType === type
             return (
@@ -156,10 +193,10 @@ export const Header: React.FC = () => {
         </div>
       )}
 
-      {/* Right: Search, Theme Toggle, Notification Bell & Quick Add */}
-      <div className="flex items-center gap-2">
-        {/* Search Input with modern shortcut pill */}
-        <div className="relative w-48 flex items-center">
+      {/* Right: Cleanly Grouped Search, HUD Docks, P2P Pill, Tools & New Event */}
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Search Input */}
+        <div className="relative w-36 lg:w-44 flex items-center shrink-0">
           <Search className="w-3.5 h-3.5 text-[var(--text-muted)] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
@@ -169,93 +206,203 @@ export const Header: React.FC = () => {
             onKeyDown={(e) => {
               if (e.key === 'Enter') fetchEvents()
             }}
-            className="w-full h-7 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] pl-8 pr-7 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all shadow-xs"
+            className="w-full h-7 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] pl-8 pr-6 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 transition-all shadow-xs"
           />
-          <kbd className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center h-4 min-w-[16px] px-1 text-[9px] font-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] leading-none select-none">
+          <kbd className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center h-4 min-w-[14px] px-1 text-[9px] font-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-sm)] leading-none select-none">
             ↵
           </kbd>
         </div>
 
-        {/* Smart Natural Language Quick Add */}
+        {/* NLP Quick Add */}
         <button
           onClick={() => setIsNlpQuickAddOpen(true)}
-          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
+          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors shrink-0"
           title="Smart Natural Language Quick Add (Ctrl+Shift+N)"
         >
-          <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
+          <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
         </button>
 
-        {/* Conflict Predictor */}
+        {/* Divider */}
+        <div className="h-4 w-[1px] bg-[var(--border-subtle)] mx-0.5" />
+
+        {/* Live HUD & Mission Control Docks Pill */}
+        <div className="flex items-center bg-[var(--bg-subtle)] p-0.5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] shrink-0 gap-0.5">
+          {/* Live Meeting HUD Clock */}
+          <button
+            onClick={() => setIsLiveMeetingHudOpen(!isLiveMeetingHudOpen)}
+            className={`p-1 rounded-[var(--radius-sm)] transition-all ${
+              isLiveMeetingHudOpen
+                ? 'bg-neutral-800 text-white shadow-xs'
+                : 'text-[var(--text-secondary)] hover:text-white hover:bg-[var(--bg-hover)]'
+            }`}
+            title="Toggle Live Meeting HUD Clock"
+          >
+            <Timer className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Mission Control Dock */}
+          <button
+            onClick={toggleMissionControl}
+            className={`p-1 rounded-[var(--radius-sm)] transition-all ${
+              isMissionControlOpen
+                ? 'bg-neutral-800 text-white shadow-xs'
+                : 'text-[var(--text-secondary)] hover:text-white hover:bg-[var(--bg-hover)]'
+            }`}
+            title="Toggle Mission Control Modular Dock (Ctrl+B)"
+          >
+            <Radio className="w-3.5 h-3.5 text-blue-400" />
+          </button>
+        </div>
+
+        {/* True Offline-First P2P CRDT Collaboration Mesh Pill */}
         <button
-          onClick={() => setIsConflictPredictorOpen(!isConflictPredictorOpen)}
-          className={`p-1.5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors ${
-            isConflictPredictorOpen
-              ? 'bg-[var(--accent)] text-[var(--accent-text)]'
-              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
+          onClick={toggleP2PCollaborationModal}
+          className={`h-7 px-2 rounded-[var(--radius-md)] border text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap ${
+            isP2PCollaborationModalOpen
+              ? 'bg-neutral-800 text-white border-neutral-600 shadow-xs'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] border-[var(--border-subtle)]'
           }`}
-          title="Conflict & Fatigue Predictor"
+          title="True Offline-First P2P Mesh Collaboration (Zero Server • E2E Encrypted)"
         >
-          <ShieldAlert className="w-3.5 h-3.5" />
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[11px] font-bold">P2P</span>
+          <span className="text-[9px] px-1 py-0.2 rounded font-mono bg-neutral-800 text-neutral-300 border border-neutral-700">
+            {peers.length}
+          </span>
         </button>
 
-        {/* Smart Free Slot Finder */}
-        <button
-          onClick={() => setIsFreeSlotFinderOpen(true)}
-          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
-          title="Smart Free Slot Finder"
-        >
-          <Zap className="w-3.5 h-3.5" />
-        </button>
+        {/* Divider */}
+        <div className="h-4 w-[1px] bg-[var(--border-subtle)] mx-0.5" />
 
-        {/* World Clock & Timezone Planner */}
-        <button
-          onClick={() => setIsWorldClockOpen(true)}
-          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
-          title="World Clock & Cross-Timezone Planner"
-        >
-          <Globe className="w-3.5 h-3.5" />
-        </button>
+        {/* More Tools Dropdown Menu (Consolidates 6 auxiliary utilities) */}
+        <div className="relative" ref={toolsMenuRef}>
+          <button
+            onClick={() => setIsToolsMenuOpen(!isToolsMenuOpen)}
+            className={`p-1.5 rounded-[var(--radius-md)] border transition-all shrink-0 ${
+              isToolsMenuOpen
+                ? 'bg-[var(--bg-hover)] text-white border-neutral-600'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] border-[var(--border-subtle)]'
+            }`}
+            title="More Calendar & System Utilities"
+          >
+            <MoreHorizontal className="w-3.5 h-3.5" />
+          </button>
 
-        {/* Export, Sharing & Integration Hub */}
-        <button
-          onClick={() => setIsExportHubOpen(true)}
-          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
-          title="Export, Sharing & Public Integration Hub (Ctrl+E)"
-        >
-          <Share2 className="w-3.5 h-3.5" />
-        </button>
+          {isToolsMenuOpen && (
+            <div className="absolute right-0 top-full mt-1.5 w-60 py-1.5 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] shadow-2xl z-50 text-xs">
+              <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] border-b border-[var(--border-subtle)]">
+                Calendar Utilities & Tools
+              </div>
 
-        {/* Distraction-Free Presentation Mode */}
-        <button
-          onClick={() => setIsPresentationModeOpen(true)}
-          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
-          title="Wallboard Presentation Mode (Ctrl+P)"
-        >
-          <Tv className="w-3.5 h-3.5" />
-        </button>
+              <button
+                onClick={() => {
+                  setIsConflictPredictorOpen(!isConflictPredictorOpen)
+                  setIsToolsMenuOpen(false)
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--bg-hover)] text-[var(--text-primary)] transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>Conflict Predictor</span>
+                </div>
+              </button>
 
-        {/* Multi-Window Detach Current View */}
-        <button
-          onClick={() => window.api?.window?.openSecondary(currentView)}
-          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
-          title={`Open ${currentView.toUpperCase()} in Independent Window`}
-        >
-          <AppWindow className="w-3.5 h-3.5" />
-        </button>
+              <button
+                onClick={() => {
+                  setIsFreeSlotFinderOpen(true)
+                  setIsToolsMenuOpen(false)
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--bg-hover)] text-[var(--text-primary)] transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Zap className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Smart Free Slot Finder</span>
+                </div>
+              </button>
 
-        {/* Keyboard Shortcuts Reference */}
-        <button
-          onClick={() => setIsShortcutsModalOpen(true)}
-          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
-          title="Keyboard Shortcuts Reference (?)"
-        >
-          <Keyboard className="w-3.5 h-3.5" />
-        </button>
+              <button
+                onClick={() => {
+                  setIsWorldClockOpen(true)
+                  setIsToolsMenuOpen(false)
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--bg-hover)] text-[var(--text-primary)] transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Globe className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                  <span>World Clock Planner</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsExportHubOpen(true)
+                  setIsToolsMenuOpen(false)
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--bg-hover)] text-[var(--text-primary)] transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Share2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <span>Export & Public Hub</span>
+                </div>
+                <kbd className="text-[9px] font-mono text-[var(--text-muted)] bg-[var(--bg-subtle)] px-1 rounded border border-[var(--border-subtle)]">
+                  Ctrl+E
+                </kbd>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsPresentationModeOpen(true)
+                  setIsToolsMenuOpen(false)
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--bg-hover)] text-[var(--text-primary)] transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Tv className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                  <span>Wallboard Presentation</span>
+                </div>
+                <kbd className="text-[9px] font-mono text-[var(--text-muted)] bg-[var(--bg-subtle)] px-1 rounded border border-[var(--border-subtle)]">
+                  Ctrl+P
+                </kbd>
+              </button>
+
+              <div className="my-1 border-t border-[var(--border-subtle)]" />
+
+              <button
+                onClick={() => {
+                  window.api?.window?.openSecondary(currentView)
+                  setIsToolsMenuOpen(false)
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--bg-hover)] text-[var(--text-primary)] transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <AppWindow className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                  <span>Detach Window</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsShortcutsModalOpen(true)
+                  setIsToolsMenuOpen(false)
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--bg-hover)] text-[var(--text-primary)] transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Keyboard className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                  <span>Keyboard Shortcuts</span>
+                </div>
+                <kbd className="text-[9px] font-mono text-[var(--text-muted)] bg-[var(--bg-subtle)] px-1 rounded border border-[var(--border-subtle)]">
+                  ?
+                </kbd>
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Theme Switcher Toggle (Light <-> Dark) */}
         <button
           onClick={toggleThemeMode}
-          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
+          className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors shrink-0"
           title={`Switch to ${themeMode === 'dark' ? 'Light' : 'Dark'} Mode`}
         >
           {themeMode === 'dark' ? (
@@ -268,7 +415,7 @@ export const Header: React.FC = () => {
         {/* Notification Icon */}
         <button
           onClick={() => setCurrentView('notifications')}
-          className="relative p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors"
+          className="relative p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded-[var(--radius-md)] border border-[var(--border-subtle)] transition-colors shrink-0"
           title="Notification Center"
         >
           <Bell className="w-3.5 h-3.5" />
@@ -277,16 +424,16 @@ export const Header: React.FC = () => {
           )}
         </button>
 
-        {/* Quick Add Event Primary Button */}
+        {/* Quick Add Event Primary High-Contrast Button */}
         <button
           onClick={() => {
             setSelectedEvent(null)
             setIsEventModalOpen(true)
           }}
-          className="btn-primary flex items-center gap-1.5 py-1 px-2.5 text-xs font-medium"
+          className="h-7 px-3 text-xs font-bold rounded-[var(--radius-md)] bg-white text-black hover:bg-neutral-200 active:scale-[0.98] transition-all shadow-sm shrink-0 whitespace-nowrap flex items-center gap-1.5 ml-1"
         >
-          <Plus className="w-3 h-3 stroke-[2.5]" />
-          <span>New Event</span>
+          <Plus className="w-3.5 h-3.5 text-black stroke-[2.5] shrink-0" />
+          <span className="text-black font-bold whitespace-nowrap">New Event</span>
         </button>
       </div>
     </header>

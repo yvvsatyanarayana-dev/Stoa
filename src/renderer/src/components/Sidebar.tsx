@@ -7,13 +7,13 @@ import {
   LayoutDashboard,
   Bell,
   Settings as SettingsIcon,
+  GraduationCap,
   Plus,
   Trash2,
   Rss,
   Building2,
   Palette,
   ShieldCheck,
-  Box,
   Network,
   Shield,
   Mic,
@@ -21,14 +21,20 @@ import {
   ChevronDown,
   ChevronRight,
   Sparkles,
+  Brain,
+  Compass,
+  Activity,
+  Globe,
   Lock,
   LogOut,
   Check,
-  Building
+  Building,
+  Camera
 } from 'lucide-react'
 import { useAppStore, AppView } from '../store/useAppStore'
 import { useAuthStore } from '../store/useAuthStore'
 import { useWorkspaceStore } from '../store/useWorkspaceStore'
+import { useP2PStore } from '../store/useP2PStore'
 
 export const Sidebar: React.FC = () => {
   const { currentUser, setIsAuthModalOpen, logout } = useAuthStore()
@@ -64,6 +70,8 @@ export const Sidebar: React.FC = () => {
     setIsWorkspaceLocked
   } = useAppStore()
 
+  const { peers } = useP2PStore()
+
   // Collapsible section states
   const [isCoreOpen, setIsCoreOpen] = useState(true)
   const [isIntelligenceOpen, setIsIntelligenceOpen] = useState(true)
@@ -73,38 +81,42 @@ export const Sidebar: React.FC = () => {
 
   // 1. Core Scheduling
   const coreNavItems: Array<{ id: AppView; label: string; icon: React.ReactNode; shortcut?: string }> = [
-    { id: 'calendar', label: 'Calendar', icon: <CalendarIcon className="w-3.5 h-3.5" />, shortcut: '1' },
-    { id: 'timetable', label: 'Timetable Builder', icon: <TableProperties className="w-3.5 h-3.5" />, shortcut: '2' },
-    { id: 'resources', label: 'Resources & Rooms', icon: <Users className="w-3.5 h-3.5" /> },
-    { id: 'conferences', label: 'Conferences & Tracks', icon: <Presentation className="w-3.5 h-3.5" /> }
+    { id: 'calendar', label: 'Calendar', icon: <CalendarIcon className="w-3.5 h-3.5 text-blue-400" />, shortcut: '1' },
+    { id: 'timetable', label: 'Timetable Builder', icon: <TableProperties className="w-3.5 h-3.5 text-indigo-400" />, shortcut: '2' },
+    { id: 'resources', label: 'Resources & Rooms', icon: <Users className="w-3.5 h-3.5 text-teal-400" /> },
+    { id: 'academic', label: 'Academic & Exam Hub', icon: <GraduationCap className="w-3.5 h-3.5 text-yellow-400" /> },
+    { id: 'conferences', label: 'Conferences & Tracks', icon: <Presentation className="w-3.5 h-3.5 text-pink-400" /> }
   ]
 
   // 2. Intelligence & Advanced Suites
   const intelligenceNavItems: Array<{ id: AppView; label: string; icon: React.ReactNode }> = [
-    { id: 'spatial-canvas', label: 'Spatial 3D Floor Plan', icon: <Box className="w-3.5 h-3.5" /> },
-    { id: 'burnout-shield', label: 'Predictive Burnout Shield', icon: <Shield className="w-3.5 h-3.5" /> },
-    { id: 'transcriber', label: 'AI Meeting Transcriber', icon: <Mic className="w-3.5 h-3.5" /> },
-    { id: 'annotation-layer', label: 'Live Collaborative Layer', icon: <MessageSquare className="w-3.5 h-3.5" /> }
+    { id: 'temporal-swarm', label: 'Temporal AI Swarm', icon: <Brain className="w-3.5 h-3.5 text-amber-400" /> },
+    { id: 'cross-dimensional', label: 'Cross-Dimensional 6D', icon: <Compass className="w-3.5 h-3.5 text-sky-400" /> },
+    { id: 'scenario-worlds', label: 'Generative Worlds & Multiverse', icon: <Globe className="w-3.5 h-3.5 text-emerald-400" /> },
+    { id: 'neural-interface', label: 'Neural BCI & Intent', icon: <Activity className="w-3.5 h-3.5 text-purple-400" /> },
+    { id: 'burnout-shield', label: 'Predictive Burnout Shield', icon: <Shield className="w-3.5 h-3.5 text-rose-400" /> },
+    { id: 'transcriber', label: 'AI Meeting Transcriber', icon: <Mic className="w-3.5 h-3.5 text-cyan-400" /> },
+    { id: 'annotation-layer', label: 'Live Collaborative Layer', icon: <MessageSquare className="w-3.5 h-3.5 text-orange-400" /> }
   ]
 
   // 3. Analytics & Notifications
   const opsNavItems: Array<{ id: AppView; label: string; icon: React.ReactNode; badge?: number }> = [
-    { id: 'dashboard', label: 'Analytics & Reports', icon: <LayoutDashboard className="w-3.5 h-3.5" /> },
+    { id: 'dashboard', label: 'Analytics & Reports', icon: <LayoutDashboard className="w-3.5 h-3.5 text-emerald-400" /> },
     {
       id: 'notifications',
       label: 'Notification Center',
-      icon: <Bell className="w-3.5 h-3.5" />,
+      icon: <Bell className="w-3.5 h-3.5 text-amber-400" />,
       badge: unreadNotificationsCount || (notificationLogs.length > 0 ? notificationLogs.length : undefined)
     }
   ]
 
   // 4. System & Security
-  const systemNavItems: Array<{ id: AppView; label: string; icon: React.ReactNode }> = [
-    { id: 'p2p-relay', label: 'P2P Mesh & Vault', icon: <Network className="w-3.5 h-3.5" /> },
-    { id: 'profiles', label: 'Workspace Profiles', icon: <Building2 className="w-3.5 h-3.5" /> },
-    { id: 'theme-studio', label: 'Theme Studio', icon: <Palette className="w-3.5 h-3.5" /> },
-    { id: 'audit-log', label: 'Security & Audit Log', icon: <ShieldCheck className="w-3.5 h-3.5" /> },
-    { id: 'settings', label: 'System Settings', icon: <SettingsIcon className="w-3.5 h-3.5" /> }
+  const systemNavItems: Array<{ id: AppView; label: string; icon: React.ReactNode; badge?: number }> = [
+    { id: 'p2p-relay', label: 'P2P Mesh & Vault', icon: <Network className="w-3.5 h-3.5 text-lime-400" />, badge: peers.length },
+    { id: 'profiles', label: 'Workspace Profiles', icon: <Building2 className="w-3.5 h-3.5 text-blue-400" /> },
+    { id: 'theme-studio', label: 'Theme Studio', icon: <Palette className="w-3.5 h-3.5 text-fuchsia-400" /> },
+    { id: 'audit-log', label: 'Security & Audit Log', icon: <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> },
+    { id: 'settings', label: 'System Settings', icon: <SettingsIcon className="w-3.5 h-3.5 text-violet-400" /> }
   ]
 
   const handleNewEvent = (): void => {
@@ -144,11 +156,7 @@ export const Sidebar: React.FC = () => {
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <span
-                    className={`transition-colors shrink-0 ${
-                      isActive ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)] group-hover:text-[var(--text-primary)]'
-                    }`}
-                  >
+                  <span className="shrink-0 flex items-center justify-center">
                     {item.icon}
                   </span>
                   <span className="truncate text-xs">{item.label}</span>
@@ -247,9 +255,9 @@ export const Sidebar: React.FC = () => {
                   setIsWorkspaceDropdownOpen(false)
                   setIsCreateWorkspaceModalOpen(true)
                 }}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium text-[var(--accent)] hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                <Plus className="w-3.5 h-3.5 text-blue-400 stroke-[2.5]" />
                 <span>New Workspace</span>
               </button>
 
@@ -260,7 +268,7 @@ export const Sidebar: React.FC = () => {
                 }}
                 className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
               >
-                <Building className="w-3.5 h-3.5" />
+                <Building className="w-3.5 h-3.5 text-indigo-400" />
                 <span>Workspace Settings</span>
               </button>
             </div>
@@ -271,10 +279,10 @@ export const Sidebar: React.FC = () => {
         <div className="pt-2.5">
           <button
             onClick={handleNewEvent}
-            className="w-full flex items-center justify-center gap-2 py-1.5 px-3 text-xs font-semibold rounded-[var(--radius-md)] bg-[var(--accent)] text-[var(--accent-text)] hover:opacity-90 active:scale-[0.98] transition-all shadow-xs"
+            className="w-full flex items-center justify-center gap-2 py-1.5 px-3 text-xs font-bold rounded-[var(--radius-md)] bg-white text-black hover:bg-neutral-200 active:scale-[0.98] transition-all shadow-sm"
           >
-            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>Create Event</span>
+            <Plus className="w-3.5 h-3.5 text-black stroke-[2.5]" />
+            <span className="text-black font-bold">Create Event</span>
           </button>
         </div>
       </div>
@@ -308,17 +316,17 @@ export const Sidebar: React.FC = () => {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setIsFeedSubscriptionModalOpen(true)}
-                className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded transition-colors"
+                className="p-1 text-[var(--text-muted)] hover:text-amber-400 hover:bg-[var(--bg-hover)] rounded transition-colors"
                 title="Subscribe to External Feed (.ics / Webcal)"
               >
-                <Rss className="w-3 h-3" />
+                <Rss className="w-3 h-3 text-amber-400" />
               </button>
               <button
                 onClick={() => setIsCalendarModalOpen(true)}
-                className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)] rounded transition-colors"
+                className="p-1 text-[var(--text-muted)] hover:text-sky-400 hover:bg-[var(--bg-hover)] rounded transition-colors"
                 title="Create Custom Calendar"
               >
-                <Plus className="w-3 h-3" />
+                <Plus className="w-3 h-3 text-sky-400" />
               </button>
             </div>
           </div>
@@ -373,7 +381,7 @@ export const Sidebar: React.FC = () => {
             className="flex items-center gap-2.5 min-w-0 text-left hover:opacity-85 transition-opacity group cursor-pointer"
             title="Account Profile Settings"
           >
-            <div className="relative shrink-0">
+            <div className="relative shrink-0 group/avatar">
               {currentUser?.avatarUrl ? (
                 <img
                   src={currentUser.avatarUrl}
@@ -385,6 +393,9 @@ export const Sidebar: React.FC = () => {
                   {currentUser?.initials || 'U'}
                 </div>
               )}
+              <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center text-white">
+                <Camera className="w-3 h-3" />
+              </div>
               <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-[var(--bg-elevated)]" />
             </div>
             <div className="min-w-0">
@@ -400,24 +411,24 @@ export const Sidebar: React.FC = () => {
           <div className="flex items-center gap-0.5 shrink-0">
             <button
               onClick={() => setIsWorkspaceLocked(true)}
-              className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] rounded transition-colors"
+              className="p-1.5 text-[var(--text-muted)] hover:text-amber-400 hover:bg-[var(--bg-subtle)] rounded transition-colors"
               title="Lock Stoa Workspace"
             >
-              <Lock className="w-3.5 h-3.5" />
+              <Lock className="w-3.5 h-3.5 text-amber-400" />
             </button>
             <button
               onClick={() => setCurrentView('theme-studio')}
-              className="p-1.5 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] rounded transition-colors"
+              className="p-1.5 text-[var(--text-muted)] hover:text-fuchsia-400 hover:bg-[var(--bg-subtle)] rounded transition-colors"
               title="Open Theme Studio"
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <Sparkles className="w-3.5 h-3.5 text-fuchsia-400" />
             </button>
             <button
               onClick={logout}
-              className="p-1.5 text-[var(--text-muted)] hover:text-red-400 hover:bg-[var(--bg-subtle)] rounded transition-colors"
+              className="p-1.5 text-[var(--text-muted)] hover:text-rose-400 hover:bg-[var(--bg-subtle)] rounded transition-colors"
               title="Sign Out / Switch Account"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <LogOut className="w-3.5 h-3.5 text-rose-400" />
             </button>
           </div>
         </div>

@@ -14,13 +14,19 @@ import type {
 import { DEFAULT_DARK_PALETTE, DEFAULT_BW_PALETTE } from '../../../types'
 import { useThemeStore } from './useThemeStore'
 import { useP2PStore } from './useP2PStore'
+import { p2pMeshService } from '../services/p2pMeshService'
+import { crdtEngine } from '../services/crdtSyncEngine'
 
 export type AppView =
   | 'calendar'
   | 'timetable'
   | 'resources'
   | 'conferences'
-  | 'spatial-canvas'
+  | 'academic'
+  | 'temporal-swarm'
+  | 'cross-dimensional'
+  | 'scenario-worlds'
+  | 'neural-interface'
   | 'burnout-shield'
   | 'transcriber'
   | 'annotation-layer'
@@ -109,6 +115,38 @@ interface AppState {
   isConflictPredictorOpen: boolean
   setIsConflictPredictorOpen: (open: boolean) => void
 
+  isLiveMeetingHudOpen: boolean
+  setIsLiveMeetingHudOpen: (open: boolean) => void
+
+  // Stoa Nexus Suite
+  isMissionControlOpen: boolean
+  setIsMissionControlOpen: (open: boolean) => void
+  toggleMissionControl: () => void
+
+  // True Offline-First P2P CRDT Collaboration
+  isP2PCollaborationModalOpen: boolean
+  setIsP2PCollaborationModalOpen: (open: boolean) => void
+  toggleP2PCollaborationModal: () => void
+
+  isEnergyFlowWaveVisible: boolean
+  setIsEnergyFlowWaveVisible: (visible: boolean) => void
+  toggleEnergyFlowWave: () => void
+
+  isDayFlowOptimizerOpen: boolean
+  setIsDayFlowOptimizerOpen: (open: boolean) => void
+
+  nexusTasks: Array<{
+    id: string
+    title: string
+    durationMinutes: number
+    priority: 'urgent' | 'high' | 'medium' | 'low'
+    completed: boolean
+    category?: string
+  }>
+  addNexusTask: (title: string, durationMinutes: number, priority?: 'urgent' | 'high' | 'medium' | 'low', category?: string) => void
+  toggleNexusTask: (id: string) => void
+  deleteNexusTask: (id: string) => void
+
   isPresentationModeOpen: boolean
   setIsPresentationModeOpen: (open: boolean) => void
 
@@ -159,7 +197,6 @@ interface AppState {
   createEvent: (event: CalendarEvent, resourceIds?: string[]) => Promise<void>
   updateEvent: (event: CalendarEvent, resourceIds?: string[]) => Promise<void>
   deleteEvent: (id: string) => Promise<void>
-  populateStarterEvents: () => Promise<void>
 
   // User Timetable Actions
   createTimetable: (name: string, startDate: string, endDate: string) => Promise<void>
@@ -264,6 +301,68 @@ export const useAppStore = create<AppState>((set, get) => ({
   isConflictPredictorOpen: false,
   setIsConflictPredictorOpen: (isConflictPredictorOpen) => set({ isConflictPredictorOpen }),
 
+  isLiveMeetingHudOpen: false,
+  setIsLiveMeetingHudOpen: (isLiveMeetingHudOpen) => set({ isLiveMeetingHudOpen }),
+
+  // Stoa Nexus Suite Implementation
+  isMissionControlOpen: true,
+  setIsMissionControlOpen: (isMissionControlOpen) => set({ isMissionControlOpen }),
+  toggleMissionControl: () => set((state) => ({ isMissionControlOpen: !state.isMissionControlOpen })),
+
+  // True Offline-First P2P CRDT Collaboration
+  isP2PCollaborationModalOpen: false,
+  setIsP2PCollaborationModalOpen: (isP2PCollaborationModalOpen) => set({ isP2PCollaborationModalOpen }),
+  toggleP2PCollaborationModal: () => set((state) => ({ isP2PCollaborationModalOpen: !state.isP2PCollaborationModalOpen })),
+
+  isEnergyFlowWaveVisible: true,
+  setIsEnergyFlowWaveVisible: (isEnergyFlowWaveVisible) => set({ isEnergyFlowWaveVisible }),
+  toggleEnergyFlowWave: () => set((state) => ({ isEnergyFlowWaveVisible: !state.isEnergyFlowWaveVisible })),
+
+  isDayFlowOptimizerOpen: false,
+  setIsDayFlowOptimizerOpen: (isDayFlowOptimizerOpen) => set({ isDayFlowOptimizerOpen }),
+
+  nexusTasks: (() => {
+    try {
+      const saved = localStorage.getItem('stoa_nexus_tasks')
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return []
+  })(),
+  addNexusTask: (title, durationMinutes, priority = 'medium', category = 'Focus') =>
+    set((state) => {
+      const updated = [
+        {
+          id: `ntask-${Date.now()}`,
+          title,
+          durationMinutes,
+          priority,
+          completed: false,
+          category
+        },
+        ...state.nexusTasks
+      ]
+      try {
+        localStorage.setItem('stoa_nexus_tasks', JSON.stringify(updated))
+      } catch {}
+      return { nexusTasks: updated }
+    }),
+  toggleNexusTask: (id) =>
+    set((state) => {
+      const updated = state.nexusTasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+      try {
+        localStorage.setItem('stoa_nexus_tasks', JSON.stringify(updated))
+      } catch {}
+      return { nexusTasks: updated }
+    }),
+  deleteNexusTask: (id) =>
+    set((state) => {
+      const updated = state.nexusTasks.filter((t) => t.id !== id)
+      try {
+        localStorage.setItem('stoa_nexus_tasks', JSON.stringify(updated))
+      } catch {}
+      return { nexusTasks: updated }
+    }),
+
   isPresentationModeOpen: false,
   setIsPresentationModeOpen: (isPresentationModeOpen) => set({ isPresentationModeOpen }),
 
@@ -308,16 +407,20 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchInitialData: async () => {
     set({ isLoading: true })
     try {
+      if (!window.api?.data) {
+        set({ isLoading: false })
+        return
+      }
       const data = await window.api.data.getInitial()
-      const events = await window.api.events.list()
-      const notifs = await window.api.notifications.getHistory()
-      const conferences = await window.api.conferences.list()
+      const events = window.api.events ? await window.api.events.list() : []
+      const notifs = window.api.notifications ? await window.api.notifications.getHistory() : []
+      const conferences = window.api.conferences ? await window.api.conferences.list() : []
 
       let activeTtId = data.timetables.length > 0 ? data.timetables[0].id : null
       let activeSlots: TimetableSlot[] = []
       let subs: Subject[] = data.subjects || []
 
-      if (activeTtId) {
+      if (activeTtId && window.api.timetables) {
         const ttData = await window.api.timetables.get(activeTtId)
         if (ttData) {
           activeSlots = ttData.slots
@@ -352,8 +455,23 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   fetchEvents: async () => {
     try {
+      if (!window.api?.events) return
       const { searchQuery } = get()
-      const events = await window.api.events.list({ query: searchQuery || undefined })
+      const rawEvents = await window.api.events.list({ query: searchQuery || undefined })
+      const events = (rawEvents || []).map((ev: CalendarEvent) => {
+        if (
+          ev.title.includes('Neural Flow Shield') ||
+          ev.title.includes('Focus Time (Do Not Disturb)') ||
+          ev.title.includes('🎯 Focus Time')
+        ) {
+          return {
+            ...ev,
+            title: 'Focus Time',
+            description: 'Protected focus time to work without interruptions.'
+          }
+        }
+        return ev
+      })
       set({ events })
     } catch (err) {
       console.error('Error fetching events:', err)
@@ -433,6 +551,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       await get().fetchEvents()
       try {
         useP2PStore.getState().broadcastEventChange(event.title)
+        p2pMeshService.broadcastCRDTSync(get().events)
       } catch {}
     } catch (err) {
       console.error('Error creating event:', err)
@@ -445,6 +564,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       await get().fetchEvents()
       try {
         useP2PStore.getState().broadcastEventChange(event.title)
+        p2pMeshService.broadcastCRDTSync(get().events)
       } catch {}
     } catch (err) {
       console.error('Error updating event:', err)
@@ -454,56 +574,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   deleteEvent: async (id: string) => {
     try {
       const evt = get().events.find((e) => e.id === id)
+      if (evt) {
+        crdtEngine.registerLocalTombstone(id, evt.title)
+      }
       await window.api.events.delete(id)
       await get().fetchEvents()
       try {
         useP2PStore.getState().broadcastEventChange(evt ? evt.title : `Event ${id}`)
+        p2pMeshService.broadcastCRDTSync(get().events)
       } catch {}
     } catch (err) {
       console.error('Error deleting event:', err)
     }
-  },
-
-  populateStarterEvents: async () => {
-    const calId = get().calendars[0]?.id || 'cal-primary'
-    const today = new Date()
-    
-    const sampleList: Array<{ title: string; desc: string; startH: number; endH: number; dayOffset: number }> = [
-      { title: 'Executive Sprint Planning', desc: 'Sprint 24 goals & release roadmap', startH: 10, endH: 11.5, dayOffset: 0 },
-      { title: 'Architecture Review & Sync', desc: 'Peer review of database & mesh layer', startH: 14, endH: 15, dayOffset: 0 },
-      { title: 'Customer Operations Briefing', desc: 'Weekly incident & feedback review', startH: 9.5, endH: 10.5, dayOffset: 1 },
-      { title: 'Security & Compliance Audit', desc: 'Zero-knowledge vault & encryption log signoff', startH: 13, endH: 14, dayOffset: 2 },
-      { title: 'Team Showcase & Retrospective', desc: 'Sprint wrapup and product demo', startH: 16, endH: 17, dayOffset: 3 }
-    ]
-
-    for (const item of sampleList) {
-      const start = new Date(today)
-      start.setDate(today.getDate() + item.dayOffset)
-      const [sh, sm] = [Math.floor(item.startH), Math.round((item.startH % 1) * 60)]
-      start.setHours(sh, sm, 0, 0)
-
-      const end = new Date(today)
-      end.setDate(today.getDate() + item.dayOffset)
-      const [eh, em] = [Math.floor(item.endH), Math.round((item.endH % 1) * 60)]
-      end.setHours(eh, em, 0, 0)
-
-      const newEvt: CalendarEvent = {
-        id: `evt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-        calendar_id: calId,
-        title: item.title,
-        description: item.desc,
-        start: start.toISOString(),
-        end: end.toISOString(),
-        all_day: false,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        priority: 'medium',
-        status: 'confirmed',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-      await window.api.events.create(newEvt)
-    }
-    await get().fetchEvents()
   },
 
   rescheduleEvent: async (eventId: string, minutesToAdd: number) => {

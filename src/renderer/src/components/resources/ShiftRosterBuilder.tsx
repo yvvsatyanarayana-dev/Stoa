@@ -87,15 +87,32 @@ export const ShiftRosterBuilder: React.FC = () => {
   }, [resources])
 
   // Roster schedule state: memberId -> dayIndex (0 to 6) -> ShiftType
-  const [roster, setRoster] = useState<Record<string, ShiftType[]>>({})
+  const [roster, setRoster] = useState<Record<string, ShiftType[]>>(() => {
+    try {
+      const saved = localStorage.getItem('stoa_shift_roster')
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return {}
+  })
+
+  // Persist roster changes
+  React.useEffect(() => {
+    try {
+      if (Object.keys(roster).length > 0) {
+        localStorage.setItem('stoa_shift_roster', JSON.stringify(roster))
+      }
+    } catch {}
+  }, [roster])
 
   // Initialize or maintain roster data
   React.useEffect(() => {
     if (teamMembers.length > 0) {
       setRoster((prev) => {
         const next = { ...prev }
+        let changed = false
         teamMembers.forEach((m, idx) => {
           if (!next[m.id]) {
+            changed = true
             // Default rotation template: Mon-Fri Morning, Sat-Sun Off (staggered)
             const defaultWeek: ShiftType[] = ['morning', 'morning', 'morning', 'morning', 'morning', 'off', 'off']
             // Stagger shifts across team
@@ -108,7 +125,7 @@ export const ShiftRosterBuilder: React.FC = () => {
             }
           }
         })
-        return next
+        return changed ? next : prev
       })
     }
   }, [teamMembers])

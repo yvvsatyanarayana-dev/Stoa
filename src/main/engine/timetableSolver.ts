@@ -1,4 +1,5 @@
 import type { TimetableSlot, SolverSubjectRequirement, SolverOptions, SolverResult } from '../../types'
+import { randomUUID } from 'crypto'
 
 export type { SolverSubjectRequirement, SolverOptions, SolverResult }
 
@@ -140,7 +141,7 @@ export function solveTimetable(options: SolverOptions): SolverResult {
         subjectDayCount.set(subjKey, (subjectDayCount.get(subjKey) || 0) + 1)
 
         const assignedSlot: TimetableSlot = {
-          id: `slot-auto-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          id: `slot-auto-${Date.now()}-${randomUUID().slice(0, 8)}`,
           timetable_id,
           subject_id: task.subject_id,
           resource_id: task.resource_id,

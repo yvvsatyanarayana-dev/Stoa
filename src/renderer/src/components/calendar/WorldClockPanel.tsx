@@ -59,12 +59,38 @@ export const WorldClockPanel: React.FC<{
   const isOpen = propIsOpen !== undefined ? propIsOpen : isWorldClockOpen
   const handleClose = propOnClose !== undefined ? propOnClose : () => setIsWorldClockOpen(false)
 
-  const [activeCities, setActiveCities] = useState<CityTimezone[]>([
-    GLOBAL_CITIES[0], // London
-    GLOBAL_CITIES[1], // New York
-    GLOBAL_CITIES[3], // Tokyo
-    GLOBAL_CITIES[6]  // Mumbai
-  ])
+  const [activeCities, setActiveCities] = useState<CityTimezone[]>(() => {
+    try {
+      const saved = localStorage.getItem('stoa_world_clock_cities')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      }
+    } catch (e) {
+      console.warn('Failed to parse stoa_world_clock_cities', e)
+    }
+    const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+    const localCityName = localTz.split('/')[1]?.replace(/_/g, ' ') || 'Local Time'
+    const localCityCode = localCityName.slice(0, 3).toUpperCase()
+    const homeCity: CityTimezone = {
+      name: `${localCityName} (Home)`,
+      zone: localTz,
+      country: 'Current Location',
+      cityCode: localCityCode
+    }
+
+    const otherDefaults = GLOBAL_CITIES.filter((c) => c.zone !== localTz).slice(0, 3)
+    return [homeCity, ...otherDefaults]
+  })
+
+  // Real-time persistence of active cities
+  useEffect(() => {
+    try {
+      localStorage.setItem('stoa_world_clock_cities', JSON.stringify(activeCities))
+    } catch (e) {
+      console.warn('Failed to save stoa_world_clock_cities', e)
+    }
+  }, [activeCities])
 
   const [currentTime, setCurrentTime] = useState<Date>(new Date())
   const [searchQuery, setSearchQuery] = useState<string>('')

@@ -39,6 +39,7 @@ export const ResourcesView: React.FC = () => {
     updateResource,
     deleteResource,
     events,
+    activeTimetableSlots,
     resourceActiveTab,
     setResourceActiveTab
   } = useAppStore()
@@ -47,9 +48,74 @@ export const ResourcesView: React.FC = () => {
   const setActiveTab = setResourceActiveTab
   const [filterType, setFilterType] = useState<string>('all')
   const [editingResource, setEditingResource] = useState<Partial<Resource> | null>(null)
-  const [isInitializingSample, setIsInitializingSample] = useState<boolean>(false)
+  const [isImporting, setIsImporting] = useState<boolean>(false)
 
   const filtered = filterType === 'all' ? resources : resources.filter((r) => r.type === filterType)
+
+  // Scan live schedule for real room and personnel entities
+  const scheduleCandidates = React.useMemo(() => {
+    const rooms = new Set<string>()
+    const persons = new Set<string>()
+
+    events.forEach((e) => {
+      if (e.location && e.location.trim().length > 1) {
+        rooms.add(e.location.trim())
+      }
+      if (e.attendees && Array.isArray(e.attendees)) {
+        e.attendees.forEach((a) => {
+          if (a.name && a.name.trim().length > 1) {
+            persons.add(a.name.trim())
+          }
+        })
+      }
+    })
+
+    activeTimetableSlots.forEach((slot) => {
+      if (slot.room && slot.room.trim().length > 1) {
+        rooms.add(slot.room.trim())
+      }
+    })
+
+    const existingNames = new Set(resources.map((r) => r.name.toLowerCase().trim()))
+    const newRooms = Array.from(rooms).filter((r) => !existingNames.has(r.toLowerCase()))
+    const newPersons = Array.from(persons).filter((p) => !existingNames.has(p.toLowerCase()))
+
+    return {
+      rooms: newRooms,
+      persons: newPersons,
+      total: newRooms.length + newPersons.length
+    }
+  }, [events, activeTimetableSlots, resources])
+
+  const handleImportScheduleResources = async () => {
+    setIsImporting(true)
+    for (const roomName of scheduleCandidates.rooms) {
+      await createResource({
+        id: `res-${Date.now()}-${crypto.randomUUID().slice(0, 6)}`,
+        name: roomName,
+        type: 'room',
+        capacity: 20,
+        availability_json: JSON.stringify({
+          workingHours: { start: '08:00', end: '19:00' },
+          workingDays: [1, 2, 3, 4, 5]
+        })
+      })
+    }
+
+    for (const personName of scheduleCandidates.persons) {
+      await createResource({
+        id: `res-${Date.now()}-${crypto.randomUUID().slice(0, 6)}`,
+        name: personName,
+        type: 'person',
+        capacity: 1,
+        availability_json: JSON.stringify({
+          workingHours: { start: '09:00', end: '17:00' },
+          workingDays: [1, 2, 3, 4, 5]
+        })
+      })
+    }
+    setIsImporting(false)
+  }
 
   const handleSave = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault()
@@ -72,49 +138,18 @@ export const ResourcesView: React.FC = () => {
     setEditingResource(null)
   }
 
-  // Quick seed helper for realistic starter enterprise resources
-  const handleSeedStarterResources = async () => {
-    setIsInitializingSample(true)
-    const starterData: Array<{ name: string; type: Resource['type']; capacity: number }> = [
-      { name: 'Dr. Sarah Chen', type: 'person', capacity: 1 },
-      { name: 'Marcus Vance', type: 'person', capacity: 1 },
-      { name: 'Elena Rostova', type: 'person', capacity: 1 },
-      { name: 'Alex Morgan', type: 'person', capacity: 1 },
-      { name: 'Executive Boardroom', type: 'room', capacity: 18 },
-      { name: 'Innovation Studio', type: 'room', capacity: 10 },
-      { name: 'Focus Pod Alpha', type: 'room', capacity: 4 },
-      { name: 'Auditorium Zenith', type: 'room', capacity: 60 },
-      { name: 'Polycom Studio X50 Video Bar', type: 'equipment', capacity: 1 },
-      { name: '4K Mobile Display Rig', type: 'equipment', capacity: 1 }
-    ]
-
-    for (const item of starterData) {
-      await createResource({
-        id: `res-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-        name: item.name,
-        type: item.type,
-        capacity: item.capacity,
-        availability_json: JSON.stringify({
-          workingHours: { start: '09:00', end: '17:00' },
-          workingDays: [1, 2, 3, 4, 5]
-        })
-      })
-    }
-    setIsInitializingSample(false)
-  }
-
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-[var(--bg-app)] text-[var(--text-primary)]">
       {/* Top Navigation & Sub-Suite Tabs Bar */}
       <div className="bg-[var(--bg-sidebar)] border-b border-[var(--border-subtle)] px-6 py-2.5 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0 select-none">
-        {/* Navigation Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+        {/* Navigation Tabs - Clean Segmented Pill Control */}
+        <div className="flex flex-wrap items-center bg-[var(--bg-subtle)] p-0.5 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] text-xs shrink-0 gap-0.5">
           <button
             onClick={() => setActiveTab('directory')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all shrink-0 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all shrink-0 cursor-pointer ${
               activeTab === 'directory'
-                ? 'bg-[var(--accent)] text-[var(--accent-text)] shadow-xs'
-                : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
+                ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] font-bold shadow-xs border border-[var(--border-default)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-transparent'
             }`}
           >
             <FolderTree className="w-3.5 h-3.5" />
@@ -123,10 +158,10 @@ export const ResourcesView: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('availability')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all shrink-0 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all shrink-0 cursor-pointer ${
               activeTab === 'availability'
-                ? 'bg-[var(--accent)] text-[var(--accent-text)] shadow-xs'
-                : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
+                ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] font-bold shadow-xs border border-[var(--border-default)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-transparent'
             }`}
           >
             <Users className="w-3.5 h-3.5" />
@@ -135,10 +170,10 @@ export const ResourcesView: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('suggester')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all shrink-0 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all shrink-0 cursor-pointer ${
               activeTab === 'suggester'
-                ? 'bg-[var(--accent)] text-[var(--accent-text)] shadow-xs'
-                : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
+                ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] font-bold shadow-xs border border-[var(--border-default)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-transparent'
             }`}
           >
             <DoorClosed className="w-3.5 h-3.5" />
@@ -147,10 +182,10 @@ export const ResourcesView: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('conflicts')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all shrink-0 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all shrink-0 cursor-pointer ${
               activeTab === 'conflicts'
-                ? 'bg-[var(--accent)] text-[var(--accent-text)] shadow-xs'
-                : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
+                ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] font-bold shadow-xs border border-[var(--border-default)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-transparent'
             }`}
           >
             <AlertOctagon className="w-3.5 h-3.5" />
@@ -159,10 +194,10 @@ export const ResourcesView: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('roster')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all shrink-0 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all shrink-0 cursor-pointer ${
               activeTab === 'roster'
-                ? 'bg-[var(--accent)] text-[var(--accent-text)] shadow-xs'
-                : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
+                ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] font-bold shadow-xs border border-[var(--border-default)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-transparent'
             }`}
           >
             <CalendarRange className="w-3.5 h-3.5" />
@@ -171,10 +206,10 @@ export const ResourcesView: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('attendance')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all shrink-0 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-semibold transition-all shrink-0 cursor-pointer ${
               activeTab === 'attendance'
-                ? 'bg-[var(--accent)] text-[var(--accent-text)] shadow-xs'
-                : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]'
+                ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] font-bold shadow-xs border border-[var(--border-default)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-transparent'
             }`}
           >
             <UserCheck className="w-3.5 h-3.5" />
@@ -258,14 +293,20 @@ export const ResourcesView: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
-                      <button
-                        onClick={handleSeedStarterResources}
-                        disabled={isInitializingSample}
-                        className="btn-primary w-full sm:w-auto py-1.5 px-4 text-xs inline-flex items-center justify-center gap-1.5 shadow-xs"
-                      >
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>Load Sample Enterprise Assets</span>
-                      </button>
+                      {scheduleCandidates.total > 0 ? (
+                        <button
+                          onClick={handleImportScheduleResources}
+                          disabled={isImporting}
+                          className="btn-primary w-full sm:w-auto py-1.5 px-4 text-xs inline-flex items-center justify-center gap-1.5 shadow-xs"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>
+                            {isImporting
+                              ? 'Importing...'
+                              : `Import ${scheduleCandidates.total} Entities from Schedule`}
+                          </span>
+                        </button>
+                      ) : null}
 
                       <button
                         onClick={() =>
@@ -275,10 +316,10 @@ export const ResourcesView: React.FC = () => {
                             capacity: 8
                           })
                         }
-                        className="btn-secondary w-full sm:w-auto py-1.5 px-4 text-xs inline-flex items-center justify-center gap-1.5"
+                        className={`${scheduleCandidates.total > 0 ? 'btn-secondary' : 'btn-primary'} w-full sm:w-auto py-1.5 px-4 text-xs inline-flex items-center justify-center gap-1.5 shadow-xs`}
                       >
                         <Plus className="w-3.5 h-3.5" />
-                        <span>Add Manually</span>
+                        <span>Add New Resource</span>
                       </button>
                     </div>
                   </div>

@@ -3,7 +3,8 @@ import { useAppStore } from '../../store/useAppStore'
 import {
   HolidayRegion,
   scanHolidayConflicts,
-  HolidayConflict
+  HolidayConflict,
+  detectSystemHolidayRegion
 } from '../../utils/holidayEngine'
 import { format } from 'date-fns'
 import { CalendarOff, X, ArrowRight, CheckCircle2, RefreshCw, AlertTriangle } from 'lucide-react'
@@ -13,9 +14,16 @@ export const HolidayRescheduleModal: React.FC<{
   onClose: () => void
 }> = ({ isOpen, onClose }) => {
   const { events, updateEvent } = useAppStore()
-  const [region, setRegion] = useState<HolidayRegion>('US')
+  const [region, setRegion] = useState<HolidayRegion>(() => detectSystemHolidayRegion())
   const [isApplying, setIsApplying] = useState<boolean>(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+  const handleSelectRegion = (reg: HolidayRegion) => {
+    setRegion(reg)
+    try {
+      localStorage.setItem('stoa_holiday_region', reg)
+    } catch {}
+  }
 
   const conflicts: HolidayConflict[] = useMemo(() => {
     return scanHolidayConflicts(events, region)
@@ -104,7 +112,7 @@ export const HolidayRescheduleModal: React.FC<{
                 <button
                   key={reg}
                   type="button"
-                  onClick={() => setRegion(reg)}
+                  onClick={() => handleSelectRegion(reg)}
                   className={`px-2 py-1 rounded-xs text-xs font-semibold transition-all ${
                     region === reg
                       ? 'bg-[var(--accent)] text-[var(--accent-text)] shadow-xs'

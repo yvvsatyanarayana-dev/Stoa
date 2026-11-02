@@ -73,17 +73,34 @@ export const DailyDigestModal: React.FC = () => {
   const focusHoursRemaining = Math.max(0, estimatedWorkHours - totalMeetingMinutes / 60).toFixed(1)
 
   const handleShieldFocus = async () => {
-    const start = new Date(today)
-    start.setHours(14, 0, 0, 0)
-    const end = new Date(start.getTime() + 2 * 3600000)
+    let candidateStart = new Date()
+    candidateStart.setMinutes(Math.ceil(candidateStart.getMinutes() / 30) * 30 + 15, 0, 0)
+
+    // If already late afternoon / evening, schedule for tomorrow 09:00 AM
+    if (candidateStart.getHours() >= 17) {
+      candidateStart.setDate(candidateStart.getDate() + 1)
+      candidateStart.setHours(9, 0, 0, 0)
+    }
+
+    let candidateEnd = new Date(candidateStart.getTime() + 2 * 3600000)
+
+    // Ensure it doesn't collide with existing scheduled commitments
+    for (const evt of todayEvents) {
+      const eStart = new Date(evt.start).getTime()
+      const eEnd = new Date(evt.end).getTime()
+      if (candidateStart.getTime() < eEnd && candidateEnd.getTime() > eStart) {
+        candidateStart = new Date(eEnd + 15 * 60000)
+        candidateEnd = new Date(candidateStart.getTime() + 2 * 3600000)
+      }
+    }
 
     await createEvent({
       id: `evt-focus-${Date.now()}`,
       calendar_id: calendars[0]?.id || 'cal-primary',
       title: 'Shielded Focus Block (Deep Work)',
       description: '[FOCUS_BLOCK] [SHIELD: strict]\nProtected uninterrupted focus block.',
-      start: start.toISOString(),
-      end: end.toISOString(),
+      start: candidateStart.toISOString(),
+      end: candidateEnd.toISOString(),
       all_day: false,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       priority: 'high',

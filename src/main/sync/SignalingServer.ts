@@ -2,6 +2,7 @@
 
 import WebSocket, { WebSocketServer } from 'ws'
 import { app } from 'electron'
+import { randomUUID } from 'crypto'
 
 interface ConnectedClient {
   ws: WebSocket
@@ -29,7 +30,7 @@ export function startSignalingServer(port: number = 8765): Promise<void> {
     })
 
     wss.on('connection', (ws, req) => {
-      const clientId = `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      const clientId = `client-${Date.now()}-${randomUUID().slice(0, 8)}`
       console.log(`[SignalingServer] New connection: ${clientId} from ${req.socket.remoteAddress}`)
 
       const client: ConnectedClient = {

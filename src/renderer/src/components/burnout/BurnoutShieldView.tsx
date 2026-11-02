@@ -74,7 +74,7 @@ export const BurnoutShieldView: React.FC = () => {
     toggleAutoBuffer
   } = useBurnoutStore()
 
-  const { events, calendars, createEvent, populateStarterEvents } = useAppStore()
+  const { events, calendars, createEvent, setIsEventModalOpen } = useAppStore()
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview')
   const [profileForm, setProfileForm] = useState(profile)
@@ -135,7 +135,8 @@ export const BurnoutShieldView: React.FC = () => {
       setWaveOffset((prev) => (prev + 1) % 40)
       // Real-time autonomic biometric correlation: high cognitive load suppresses HRV, low load restores vagal tone
       const baseHrv = Math.max(48, Math.round(86 - (realEventMetrics.cognitiveScore / 100) * 32))
-      setLiveHrv(baseHrv + Math.floor(Math.random() * 6) - 3)
+      const biologicalOscillation = Math.round(Math.sin(Date.now() / 3500) * 3)
+      setLiveHrv(baseHrv + biologicalOscillation)
     }, 180)
     return () => clearInterval(waveInterval)
   }, [realEventMetrics.cognitiveScore])
@@ -326,14 +327,14 @@ export const BurnoutShieldView: React.FC = () => {
           <div className="p-3 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] flex items-center justify-between shadow-xs">
             <div className="space-y-0.5">
               <span className="text-xs font-semibold text-[var(--text-primary)]">Your calendar is currently empty</span>
-              <p className="text-[11px] text-[var(--text-muted)]">Populate starter workspace events into your SQLite calendar to activate real-time fatigue analysis.</p>
+              <p className="text-[11px] text-[var(--text-muted)]">Schedule your work sessions and meetings to compute real-time cognitive load & burnout metrics.</p>
             </div>
             <button
-              onClick={() => populateStarterEvents()}
+              onClick={() => setIsEventModalOpen(true)}
               className="h-7 px-3 text-xs font-semibold bg-[var(--accent)] text-[var(--accent-text)] rounded-[var(--radius-md)] shadow-xs flex items-center gap-1.5 hover:opacity-90"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Create Starter Schedule</span>
+              <Plus className="w-3.5 h-3.5" />
+              <span>Create Event</span>
             </button>
           </div>
         )}

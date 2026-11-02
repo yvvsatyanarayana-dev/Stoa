@@ -35,7 +35,7 @@ export const LiveNotificationToast: React.FC = () => {
       soundService.playForPriority(data.event?.priority)
 
       const newToast: ActiveToast = {
-        id: `toast-${Date.now()}-${Math.random()}`,
+        id: `toast-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
         reminder: data.reminder,
         event: data.event,
         timestamp: data.timestamp

@@ -9,7 +9,7 @@ import { startThemeScheduler, stopThemeScheduler, setMainWindow as setThemeSched
 
 // Register AppUserModelId on Windows before app is ready to ensure taskbar grouping & icon
 if (process.platform === 'win32') {
-  app.setAppUserModelId('com.stoa.app')
+  app.setAppUserModelId('com.stoa.workspace.app')
 }
 
 let mainWindow: BrowserWindow | null = null
@@ -19,6 +19,11 @@ function getAppIcon(): Electron.NativeImage {
     const icoPath = join(__dirname, '../../resources/icon.ico')
     const imgFromIco = nativeImage.createFromPath(icoPath)
     if (!imgFromIco.isEmpty()) return imgFromIco
+  } catch {}
+  try {
+    const pngPath = join(__dirname, '../../resources/icon.png')
+    const imgFromPng = nativeImage.createFromPath(pngPath)
+    if (!imgFromPng.isEmpty()) return imgFromPng
   } catch {}
   return nativeImage.createFromPath(icon)
 }
@@ -79,7 +84,7 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId('com.stoa.app')
+  electronApp.setAppUserModelId('com.stoa.workspace.app')
 
   // Initialize SQLite database
   initDatabase()

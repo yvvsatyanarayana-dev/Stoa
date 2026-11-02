@@ -1,4 +1,4 @@
-appId: com.stoa.app
+appId: com.stoa.workspace.app
 productName: Stoa
 directories:
   buildResources: build

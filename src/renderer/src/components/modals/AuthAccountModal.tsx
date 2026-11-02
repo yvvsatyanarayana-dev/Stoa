@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   X,
   User,
@@ -6,9 +6,18 @@ import {
   Shield,
   CheckCircle2,
   LogOut,
+  Camera,
+  Upload,
+  Trash2,
+  RefreshCw,
   Image as ImageIcon
 } from 'lucide-react'
 import { useAuthStore } from '../../store/useAuthStore'
+import {
+  readFileAsDataUrl,
+  optimizeProfileImage,
+  getGoogleProfileImageUrl
+} from '../../utils/imageUtils'
 
 export const AuthAccountModal: React.FC = () => {
   const {
@@ -23,9 +32,13 @@ export const AuthAccountModal: React.FC = () => {
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [isDragging, setIsDragging] = useState(false)
+  const [isProcessingImage, setIsProcessingImage] = useState(false)
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null)
 
-  // Ensure fields are always synchronized with the logged-in user's real details
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Ensure fields are synchronized with the logged-in user's details
   useEffect(() => {
     if (isAuthModalOpen && currentUser) {
       setName(currentUser.name || '')
@@ -36,6 +49,62 @@ export const AuthAccountModal: React.FC = () => {
   }, [isAuthModalOpen, currentUser])
 
   if (!isAuthModalOpen || !currentUser) return null
+
+  const handleImageFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setFeedbackMsg('Please select a valid image file (PNG, JPG, WebP, SVG).')
+      return
+    }
+
+    try {
+      setIsProcessingImage(true)
+      const rawDataUrl = await readFileAsDataUrl(file)
+      const optimizedDataUrl = await optimizeProfileImage(rawDataUrl, 256, 0.88)
+      setAvatarUrl(optimizedDataUrl)
+      // Save directly to user profile immediately so it reflects in sidebar right away
+      updateProfile({ avatarUrl: optimizedDataUrl })
+      setFeedbackMsg('Profile photo updated successfully!')
+    } catch {
+      setFeedbackMsg('Failed to process image. Please try another file.')
+    } finally {
+      setIsProcessingImage(false)
+    }
+  }
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      handleImageFile(file)
+    }
+    // Reset file input so selecting the same file again works
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) {
+      handleImageFile(file)
+    }
+  }
+
+  const handleUseGoogleAvatar = () => {
+    const targetEmail = email.trim() || currentUser.email
+    const targetName = name.trim() || currentUser.name
+    const googleImg = getGoogleProfileImageUrl(targetEmail, targetName)
+    setAvatarUrl(googleImg)
+    updateProfile({ avatarUrl: googleImg })
+    setFeedbackMsg('Google profile image retrieved and saved!')
+  }
+
+  const handleRemoveAvatar = () => {
+    setAvatarUrl('')
+    updateProfile({ avatarUrl: undefined })
+    setFeedbackMsg('Photo removed. Initials restored.')
+  }
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault()
@@ -52,7 +121,7 @@ export const AuthAccountModal: React.FC = () => {
     setTimeout(() => {
       setFeedbackMsg(null)
       setIsAuthModalOpen(false)
-    }, 900)
+    }, 800)
   }
 
   const handleSignOut = () => {
@@ -60,35 +129,20 @@ export const AuthAccountModal: React.FC = () => {
     logout()
   }
 
+  const isGoogleUser = currentUser.provider === 'google' || email.toLowerCase().includes('@gmail.com')
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 animate-in fade-in select-none">
       <div className="w-full max-w-md bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-lg)] shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-app)]">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={name}
-                  className="w-9 h-9 rounded-full object-cover border border-[var(--border-subtle)]"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] flex items-center justify-center font-bold text-xs text-[var(--text-primary)]">
-                  {currentUser.initials || 'U'}
-                </div>
-              )}
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[var(--bg-app)]" />
-            </div>
-
-            <div>
-              <h3 className="text-sm font-bold text-[var(--text-primary)] leading-tight">
-                Account Profile Settings
-              </h3>
-              <p className="text-[11px] text-[var(--text-muted)] font-mono">
-                {currentUser.provider === 'google' ? 'Google Authenticated' : 'Local User Account'}
-              </p>
-            </div>
+            <h3 className="text-sm font-bold text-[var(--text-primary)] leading-tight">
+              Account Profile Settings
+            </h3>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-[var(--text-muted)]">
+              {currentUser.provider === 'google' ? 'Google Auth' : 'Local Account'}
+            </span>
           </div>
 
           <button
@@ -101,14 +155,104 @@ export const AuthAccountModal: React.FC = () => {
 
         {/* Feedback Alert */}
         {feedbackMsg && (
-          <div className="px-4 py-2 bg-emerald-500/15 border-b border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
+          <div className="px-4 py-2 bg-emerald-500/15 border-b border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2 animate-in fade-in">
             <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-            <span>{feedbackMsg}</span>
+            <span className="truncate">{feedbackMsg}</span>
           </div>
         )}
 
         {/* Edit Profile Form */}
-        <form onSubmit={handleSaveProfile} className="p-5 space-y-4 text-xs">
+        <form onSubmit={handleSaveProfile} noValidate className="p-5 space-y-4 text-xs">
+          {/* Avatar Upload Hub */}
+          <div className="p-3 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] flex items-center gap-4">
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"
+              className="hidden"
+              onChange={handleFileInputChange}
+            />
+
+            {/* Circular Avatar with Camera overlay and Drop zone */}
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault()
+                setIsDragging(true)
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+              className={`relative w-16 h-16 rounded-full shrink-0 cursor-pointer group transition-all overflow-hidden ${
+                isDragging ? 'ring-2 ring-[var(--accent)] scale-105' : ''
+              }`}
+              title="Click or drag an image here to upload new photo"
+            >
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={name}
+                  className="w-full h-full rounded-full object-cover border border-[var(--border-subtle)]"
+                />
+              ) : (
+                <div className="w-full h-full rounded-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex items-center justify-center font-bold text-sm text-[var(--text-primary)]">
+                  {currentUser.initials || 'U'}
+                </div>
+              )}
+
+              {/* Hover Overlay */}
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
+                <Camera className="w-4 h-4 mb-0.5" />
+                <span className="text-[8px] font-medium tracking-tight">Change</span>
+              </div>
+
+              {/* Green online presence badge */}
+              <span className="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[var(--bg-app)]" />
+            </div>
+
+            {/* Avatar controls */}
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isProcessingImage}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-2.5 py-1 text-xs font-medium rounded-[var(--radius-sm)] bg-[var(--bg-hover)] text-[var(--text-primary)] hover:bg-[var(--accent)] hover:text-[var(--accent-text)] border border-[var(--border-subtle)] transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Upload className="w-3 h-3" />
+                  <span>{isProcessingImage ? 'Optimizing...' : 'Upload Image'}</span>
+                </button>
+
+                {avatarUrl && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    className="p-1 text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                    title="Remove custom photo and use initials"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Google Profile Photo Option */}
+              {isGoogleUser && (
+                <button
+                  type="button"
+                  onClick={handleUseGoogleAvatar}
+                  className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  <RefreshCw className="w-2.5 h-2.5" />
+                  <span>Use Google Profile Image</span>
+                </button>
+              )}
+
+              <p className="text-[10px] text-[var(--text-muted)] leading-tight">
+                Drop PNG, JPG or WebP. Auto-optimized locally for instant offline rendering.
+              </p>
+            </div>
+          </div>
+
           <div className="space-y-3">
             <div>
               <label className="text-[11px] font-medium text-[var(--text-secondary)] block mb-1">
@@ -122,7 +266,7 @@ export const AuthAccountModal: React.FC = () => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your full name"
-                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-strong)]"
                 />
               </div>
             </div>
@@ -139,7 +283,7 @@ export const AuthAccountModal: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
-                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-strong)]"
                 />
               </div>
             </div>
@@ -156,23 +300,34 @@ export const AuthAccountModal: React.FC = () => {
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
                     placeholder="e.g. Administrator"
-                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-strong)]"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="text-[11px] font-medium text-[var(--text-secondary)] block mb-1">
-                  Avatar Image URL (Optional)
+                  Image Source
                 </label>
                 <div className="relative">
                   <ImageIcon className="w-3.5 h-3.5 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
-                    type="url"
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                    placeholder="https://..."
-                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                    type="text"
+                    value={
+                      avatarUrl.startsWith('data:')
+                        ? 'Custom photo uploaded (Offline base64)'
+                        : avatarUrl.includes('google') || avatarUrl.includes('unavatar') || avatarUrl.includes('dicebear')
+                        ? 'Google profile photo'
+                        : avatarUrl
+                    }
+                    onChange={(e) => {
+                      const val = e.target.value
+                      if (!val.startsWith('Custom photo') && !val.startsWith('Google profile')) {
+                        setAvatarUrl(val)
+                      }
+                    }}
+                    placeholder="Upload above or paste web link"
+                    className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] pl-8 pr-3 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--border-strong)] truncate text-[11px]"
                   />
                 </div>
               </div>
@@ -200,7 +355,7 @@ export const AuthAccountModal: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-4 py-1.5 rounded-[var(--radius-md)] bg-[var(--accent)] text-[var(--accent-text)] font-semibold shadow-xs hover:opacity-90 active:scale-[0.99] transition-all cursor-pointer"
+                className="px-4 py-1.5 rounded-[var(--radius-md)] bg-white text-black font-bold shadow-xs hover:bg-neutral-200 active:scale-[0.99] transition-all cursor-pointer"
               >
                 Save Profile
               </button>

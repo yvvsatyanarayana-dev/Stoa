@@ -3,6 +3,7 @@ import type { CalendarEvent } from '../../types'
 import type { ICSMirrorConfig, MirrorEvent } from '../../types/sync'
 import { getDb, icsMirrorDb, mirrorEventsDb } from '../db'
 import type { ICSMirrorSyncResult } from '../../types/sync'
+import { randomUUID } from 'crypto'
 
 /**
  * Computes SHA-256 hash of a string
@@ -24,7 +25,7 @@ function normalizeIcsEvent(
 ): CalendarEvent {
   const now = new Date().toISOString()
   return {
-    id: parsedEvent.id || `evt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    id: parsedEvent.id || `evt-${Date.now()}-${randomUUID().slice(0, 8)}`,
     calendar_id: calendarId,
     title: parsedEvent.title || 'External Event',
     description: parsedEvent.description,
@@ -140,7 +141,7 @@ export async function syncMirror(mirror: ICSMirrorConfig): Promise<ICSMirrorSync
     for (const parsedEvent of result.events) {
       if (!parsedEvent.start) continue
 
-      const icsUid = parsedEvent.id || `ics-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+      const icsUid = parsedEvent.id || `ics-${Date.now()}-${randomUUID().slice(0, 8)}`
       const eventContent = JSON.stringify(parsedEvent)
       const contentHash = await computeHash(eventContent)
       processedUids.add(icsUid)

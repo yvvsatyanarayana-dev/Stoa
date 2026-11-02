@@ -1,7 +1,12 @@
-import React, { useState } from 'react'
-import { X } from 'lucide-react'
+import React, { useState, useRef } from 'react'
+import { X, Camera, Upload } from 'lucide-react'
 import { StoaIcon } from '../common/StoaIcon'
 import { useAuthStore } from '../../store/useAuthStore'
+import {
+  readFileAsDataUrl,
+  optimizeProfileImage,
+  getGoogleProfileImageUrl
+} from '../../utils/imageUtils'
 
 export const AuthGatewayView: React.FC = () => {
   const { loginWithGoogle, registerAccount, loginWithCredentials } = useAuthStore()
@@ -17,6 +22,8 @@ export const AuthGatewayView: React.FC = () => {
   const [googleName, setGoogleName] = useState('')
   const [googleEmail, setGoogleEmail] = useState('')
   const [googleWorkspace, setGoogleWorkspace] = useState('')
+  const [googleAvatar, setGoogleAvatar] = useState('')
+  const googleFileInputRef = useRef<HTMLInputElement>(null)
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,12 +38,24 @@ export const AuthGatewayView: React.FC = () => {
     await loginWithCredentials(email.trim(), password)
   }
 
+  const handleGoogleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file && file.type.startsWith('image/')) {
+      try {
+        const raw = await readFileAsDataUrl(file)
+        const optimized = await optimizeProfileImage(raw, 256, 0.88)
+        setGoogleAvatar(optimized)
+      } catch {}
+    }
+  }
+
   const handleGoogleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const cleanName = googleName.trim() || 'Google User'
     const cleanEmail = googleEmail.trim() || 'user@gmail.com'
     const cleanWs = googleWorkspace.trim() || `${cleanName}'s Workspace`
-    await loginWithGoogle(cleanEmail, cleanName, undefined, cleanWs)
+    const finalAvatar = googleAvatar || getGoogleProfileImageUrl(cleanEmail, cleanName)
+    await loginWithGoogle(cleanEmail, cleanName, finalAvatar, cleanWs)
   }
 
   const handleDemoAccess = async () => {
@@ -264,6 +283,49 @@ export const AuthGatewayView: React.FC = () => {
             </div>
 
             <form onSubmit={handleGoogleSubmit} className="space-y-3">
+              {/* Profile Photo Preview & Upload */}
+              <div className="flex items-center gap-3 p-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
+                <input
+                  ref={googleFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleGoogleImagePick}
+                />
+
+                <div
+                  onClick={() => googleFileInputRef.current?.click()}
+                  className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 cursor-pointer group border border-[var(--border-subtle)]"
+                  title="Click to upload custom photo"
+                >
+                  <img
+                    src={googleAvatar || getGoogleProfileImageUrl(googleEmail, googleName)}
+                    alt="Google Profile Preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                    <Camera className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-medium text-[var(--text-primary)]">Google Photo</span>
+                    <button
+                      type="button"
+                      onClick={() => googleFileInputRef.current?.click()}
+                      className="text-[10px] text-[var(--text-muted)] hover:text-[var(--text-primary)] font-medium flex items-center gap-1 cursor-pointer"
+                    >
+                      <Upload className="w-2.5 h-2.5" />
+                      <span>{googleAvatar ? 'Replace' : 'Upload'}</span>
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-[var(--text-muted)] truncate">
+                    {googleAvatar ? 'Custom image loaded' : 'Will sync from Google profile'}
+                  </p>
+                </div>
+              </div>
+
               <div className="space-y-1">
                 <label className="text-[11px] font-medium text-[var(--text-secondary)]">
                   Name

@@ -10,13 +10,18 @@ export interface ParsedEvent {
 }
 
 function getMonday(d: Date): Date {
-  const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-  return new Date(d.setDate(diff))
+  const copy = new Date(d)
+  const day = copy.getDay()
+  const diff = copy.getDate() - day + (day === 0 ? -6 : 1)
+  copy.setDate(diff)
+  return copy
 }
 
 function toYMD(d: Date): string {
-  return d.toISOString().slice(0, 10)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 function nextWeekday(dayName: string): string {
@@ -44,7 +49,8 @@ function thisWeekday(dayName: string): string {
   if (target === undefined) return toYMD(new Date())
   const monday = getMonday(new Date())
   const result = new Date(monday)
-  result.setDate(monday.getDate() + target - 1)
+  const dayOffset = target === 0 ? 6 : target - 1
+  result.setDate(monday.getDate() + dayOffset)
   return toYMD(result)
 }
 
@@ -259,19 +265,21 @@ export function parseSlotQuery(input: string): ParsedSlotQuery {
   if (peopleMatch) attendeeCount = parseInt(peopleMatch[1])
 
   const today = new Date()
-  const todayYMD = today.toISOString().slice(0, 10)
+  const todayYMD = toYMD(today)
 
   if (/today/i.test(input)) {
     daysToSearch = 1
   } else if (/tomorrow/i.test(input)) {
     // Start from tomorrow
-    const tm = new Date(today); tm.setDate(today.getDate() + 1)
-    return { durationMinutes, attendeeCount, daysToSearch: 1, startDate: tm.toISOString().slice(0, 10) }
+    const tm = new Date(today)
+    tm.setDate(today.getDate() + 1)
+    return { durationMinutes, attendeeCount, daysToSearch: 1, startDate: toYMD(tm) }
   } else if (/this\s+week/i.test(input)) {
     daysToSearch = 5
   } else if (/next\s+week/i.test(input)) {
-    const nm = new Date(today); nm.setDate(today.getDate() + 7)
-    return { durationMinutes, attendeeCount, daysToSearch: 5, startDate: nm.toISOString().slice(0, 10) }
+    const nm = new Date(today)
+    nm.setDate(today.getDate() + 7)
+    return { durationMinutes, attendeeCount, daysToSearch: 5, startDate: toYMD(nm) }
   } else if (/next\s+(\d+)\s+days?/i.test(input)) {
     const m = input.match(/next\s+(\d+)\s+days?/i)
     if (m) daysToSearch = parseInt(m[1])

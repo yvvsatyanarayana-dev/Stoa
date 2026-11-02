@@ -73,12 +73,12 @@ export const AttendanceTracker: React.FC = () => {
       } else {
         // Populate from team personnel resources if no attendees explicitly linked
         const staff = resources.filter((r) => r.type === 'person')
-        staff.forEach((m, idx) => {
+        staff.forEach((m) => {
           initial[`gen-${m.id}`] = {
             attendeeId: `gen-${m.id}`,
             name: m.name,
             email: `${m.name.toLowerCase().replace(/\s+/g, '.')}@stoa.internal`,
-            status: idx % 4 === 3 ? 'late' : 'present',
+            status: 'present',
             notes: ''
           }
         })

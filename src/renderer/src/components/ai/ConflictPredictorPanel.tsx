@@ -1,17 +1,19 @@
 import React, { useMemo } from 'react'
 import { useAppStore } from '../../store/useAppStore'
 import { CalendarEvent } from '../../../../types'
-import { ShieldAlert, X, CheckCircle2, AlertTriangle, AlertCircle, ExternalLink } from 'lucide-react'
+import { ShieldAlert, X, CheckCircle2, AlertTriangle, AlertCircle, ExternalLink, Plane, Car, Footprints } from 'lucide-react'
 import { format } from 'date-fns'
+import { estimateOfflineTransit, TransitEstimate } from '../../utils/transitEngine'
 
 interface ConflictIssue {
   id: string
-  type: 'overlap' | 'back_to_back' | 'resource_conflict' | 'outside_hours'
+  type: 'overlap' | 'back_to_back' | 'resource_conflict' | 'outside_hours' | 'travel_overlap'
   severity: 'warning' | 'error'
   eventId: string
   eventTitle: string
   message: string
   relatedEventId?: string
+  transitDetails?: TransitEstimate & { origin: string; destination: string; gapMinutes: number }
 }
 
 function detectConflicts(events: CalendarEvent[]): ConflictIssue[] {
@@ -48,16 +50,16 @@ function detectConflicts(events: CalendarEvent[]): ConflictIssue[] {
       })
     }
 
-    // Check against all subsequent events
+    // Check against subsequent events within reasonable horizon
     for (let j = i + 1; j < sorted.length; j++) {
       const other = sorted[j]
       const otherStart = new Date(other.start).getTime()
       const otherEnd = new Date(other.end).getTime()
 
-      // Stop if the other event starts way after
+      // Stop if the other event starts > 24 hours later
       if (otherStart > evEnd + 24 * 60 * 60 * 1000) break
 
-      // Overlap: same calendar, times overlap
+      // 1. Overlap: same calendar, times overlap
       if (ev.calendar_id === other.calendar_id && otherStart < evEnd && otherEnd > evStart) {
         issues.push({
           id: `overlap-${ev.id}-${other.id}`,
@@ -70,7 +72,33 @@ function detectConflicts(events: CalendarEvent[]): ConflictIssue[] {
         })
       }
 
-      // Back-to-back: gap < 5 min between end of ev and start of other
+      // 2. Travel & Transit Shield: consecutive events with different physical locations
+      if (ev.location && other.location && ev.location.trim() !== other.location.trim()) {
+        const transit = estimateOfflineTransit(ev.location, other.location)
+        if (transit.transitMinutes > 0) {
+          const gapMs = otherStart - evEnd
+          const gapMinutes = Math.round(gapMs / 60000)
+          if (gapMinutes < transit.transitMinutes) {
+            issues.push({
+              id: `travel-${ev.id}-${other.id}`,
+              type: 'travel_overlap',
+              severity: gapMinutes < 0 ? 'error' : 'warning',
+              eventId: ev.id,
+              eventTitle: ev.title || '(Untitled)',
+              message: `Insufficient transit to "${other.title || '(Untitled)'}": requires ${transit.transitMinutes}m (${transit.mode.toUpperCase()}${transit.distanceKm ? ` ~${transit.distanceKm}km` : ''}) between "${ev.location}" and "${other.location}", but available gap is ${gapMinutes < 0 ? '0' : gapMinutes}m.`,
+              relatedEventId: other.id,
+              transitDetails: {
+                ...transit,
+                origin: ev.location,
+                destination: other.location,
+                gapMinutes
+              }
+            })
+          }
+        }
+      }
+
+      // 3. Back-to-back: gap < 5 min between end of ev and start of other
       if (otherStart > evEnd && otherStart - evEnd < 5 * 60 * 1000) {
         issues.push({
           id: `btb-${ev.id}-${other.id}`,
@@ -83,7 +111,7 @@ function detectConflicts(events: CalendarEvent[]): ConflictIssue[] {
         })
       }
 
-      // Resource conflict: shared resource_id at same time
+      // 4. Resource conflict: shared resource_id at same time
       const evResources = (ev.resources || []).map((r) => r.id)
       const otherResources = (other.resources || []).map((r) => r.id)
       const sharedRes = evResources.filter((id) => otherResources.includes(id))
@@ -112,6 +140,7 @@ function detectConflicts(events: CalendarEvent[]): ConflictIssue[] {
 
 const typeLabels: Record<ConflictIssue['type'], string> = {
   overlap: 'Overlap',
+  travel_overlap: 'Transit Shield',
   back_to_back: 'Back-to-Back',
   resource_conflict: 'Resource Conflict',
   outside_hours: 'Outside Hours'
@@ -209,6 +238,21 @@ export const ConflictPredictorPanel: React.FC = () => {
                         </span>
                       </div>
                       <p className="text-[var(--text-secondary)] mt-0.5">{issue.message}</p>
+                      {issue.transitDetails && (
+                        <div className="mt-2 p-2 rounded-[var(--radius-sm)] bg-[var(--bg-app)] border border-[var(--border-subtle)] space-y-1">
+                          <div className="flex items-center gap-1.5 text-[10px] font-mono text-[var(--accent)]">
+                            {issue.transitDetails.mode === 'flight' && <Plane className="w-3 h-3" />}
+                            {issue.transitDetails.mode === 'drive' && <Car className="w-3 h-3" />}
+                            {issue.transitDetails.mode === 'walk' && <Footprints className="w-3 h-3" />}
+                            <span className="font-semibold uppercase">{issue.transitDetails.mode} Transit Required</span>
+                            <span>• {issue.transitDetails.transitMinutes} min</span>
+                          </div>
+                          <div className="text-[10px] text-[var(--text-muted)] flex items-center justify-between">
+                            <span>Origin: {issue.transitDetails.origin}</span>
+                            <span>Dest: {issue.transitDetails.destination}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <button

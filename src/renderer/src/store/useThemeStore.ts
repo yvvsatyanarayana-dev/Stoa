@@ -58,12 +58,18 @@ function getHighContrastVariables(isDark: boolean): Record<string, string> {
       '--text-secondary': '#FAFAFA',
       '--text-muted': '#D4D4D4',
       '--border-default': '#FAFAFA',
+      '--scrollbar-thumb': '#737373',
+      '--scrollbar-thumb-hover': '#D4D4D4',
+      '--scrollbar-thumb-active': '#FAFAFA',
     };
   }
   return {
     '--text-secondary': '#0A0A0A',
     '--text-muted': '#262626',
     '--border-default': '#0A0A0A',
+    '--scrollbar-thumb': '#707070',
+    '--scrollbar-thumb-hover': '#262626',
+    '--scrollbar-thumb-active': '#0A0A0A',
   };
 }
 

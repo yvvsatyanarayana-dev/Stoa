@@ -161,6 +161,20 @@ export function useGlobalShortcuts(): void {
           return
         }
 
+        // Ctrl+B: Toggle Mission Control Dock
+        if (e.key.toLowerCase() === 'b') {
+          e.preventDefault()
+          useAppStore.getState().toggleMissionControl()
+          return
+        }
+
+        // Ctrl+Shift+O: Open Autonomous Day-Flow Optimizer
+        if (e.shiftKey && e.key.toLowerCase() === 'o') {
+          e.preventDefault()
+          useAppStore.getState().setIsDayFlowOptimizerOpen(true)
+          return
+        }
+
         // Ctrl+E: Export & Sharing Hub
         if (e.key.toLowerCase() === 'e') {
           e.preventDefault()

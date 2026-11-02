@@ -237,7 +237,7 @@ export const NaturalLanguageQuickAdd: React.FC = () => {
                 if (e.key === 'Escape') handleClose()
               }}
               placeholder={`Try: ${PLACEHOLDER_EXAMPLES[placeholderIdx]}`}
-              className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--border-default)] transition-all"
+              className="w-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-0 focus:border-[var(--border-strong)] transition-all font-medium"
             />
             {input && (
               <button

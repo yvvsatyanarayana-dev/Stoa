@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { join } from 'path'
 import { app } from 'electron'
 import { existsSync, mkdirSync } from 'fs'
+import { randomUUID } from 'crypto'
 import type {
   Calendar,
   Category,
@@ -1109,7 +1110,7 @@ export const icsMirrorDb = {
   },
   create(mirror: Omit<ICSMirrorConfig, 'createdAt' | 'updatedAt'> & { createdAt?: string; updatedAt?: string }): ICSMirrorConfig {
     const now = new Date().toISOString()
-    const id = mirror.id || `mirror-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+    const id = mirror.id || `mirror-${Date.now()}-${randomUUID().slice(0, 8)}`
     getDb().prepare(`
       INSERT INTO ics_mirrors (id, calendar_id, url, name, etag, last_modified, schedule_cron, enabled, last_synced_at, last_sync_status, last_sync_error, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -1184,7 +1185,7 @@ export const mirrorEventsDb = {
     return { ...r, eventData: r.event_data_json ? JSON.parse(r.event_data_json) : undefined }
   },
   add(event: Omit<MirrorEvent, 'id'> & { id?: string }): MirrorEvent {
-    const id = event.id || `mevt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+    const id = event.id || `mevt-${Date.now()}-${randomUUID().slice(0, 8)}`
     getDb().prepare(`
       INSERT INTO mirror_events (id, mirror_id, ics_uid, content_hash, action, event_data_json, synced_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -1233,7 +1234,7 @@ export const bundleMetadataDb = {
     }
   },
   create(bundle: Omit<BundleMetadata, 'id' | 'createdAt'> & { id?: string; createdAt?: string }): BundleMetadata {
-    const id = bundle.id || `bundle-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+    const id = bundle.id || `bundle-${Date.now()}-${randomUUID().slice(0, 8)}`
     const now = new Date().toISOString()
     getDb().prepare(`
       INSERT INTO bundle_metadata (id, version, name, description, file_path, file_size, checksum_sha256, encryption_params_json, tables_included_json, created_at, created_by)

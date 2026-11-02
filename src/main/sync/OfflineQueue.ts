@@ -4,6 +4,7 @@ import { syncQueueDb, getDb } from '../db'
 import { flushSyncQueue, isConnected, onMessage } from './NetworkLayer'
 import { syncMetadataDb } from '../db'
 import type { SyncTableType } from './types'
+import { randomUUID } from 'crypto'
 
 let isOnline = false
 let flushTimer: NodeJS.Timeout | null = null
@@ -61,7 +62,7 @@ export function queueAction(
   entityId: string,
   payload: any
 ): string {
-  const id = `sync-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  const id = `sync-${Date.now()}-${randomUUID().slice(0, 8)}`
 
   syncQueueDb.add({ id, type, tableName: table, entityId, payload })
 

@@ -1,5 +1,6 @@
 import { ipcMain, BrowserWindow, nativeImage } from 'electron'
 import { join } from 'path'
+import { randomUUID } from 'crypto'
 import { is } from '@electron-toolkit/utils'
 import icon from '../../../resources/icon.png?asset'
 import {
@@ -141,7 +142,7 @@ export function registerIpcHandlers(): void {
     const res = eventDb.create(event, resourceIds)
     try {
       auditLogDb.add({
-        id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        id: `audit-${Date.now()}-${randomUUID().slice(0, 8)}`,
         entity_type: 'event',
         entity_id: event.id,
         entity_title: event.title || 'Untitled Event',
@@ -159,7 +160,7 @@ export function registerIpcHandlers(): void {
     const res = eventDb.update(event, resourceIds)
     try {
       auditLogDb.add({
-        id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        id: `audit-${Date.now()}-${randomUUID().slice(0, 8)}`,
         entity_type: 'event',
         entity_id: event.id,
         entity_title: event.title || 'Untitled Event',
@@ -179,7 +180,7 @@ export function registerIpcHandlers(): void {
     if (prev) {
       try {
         auditLogDb.add({
-          id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          id: `audit-${Date.now()}-${randomUUID().slice(0, 8)}`,
           entity_type: 'event',
           entity_id: id,
           entity_title: prev.title || 'Untitled Event',
@@ -716,7 +717,7 @@ export function registerIpcHandlers(): void {
     }
 
     auditLogDb.add({
-      id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      id: `audit-${Date.now()}-${randomUUID().slice(0, 8)}`,
       entity_type: entry.entity_type,
       entity_id: entry.entity_id,
       entity_title: `Reverted: ${entry.entity_title}`,

@@ -21,7 +21,8 @@ export const ConferenceView: React.FC = () => {
     setActiveConferenceId,
     createConference,
     updateConference,
-    deleteConference
+    deleteConference,
+    resources
   } = useAppStore()
 
   const [activeTab, setActiveTab] = useState<'tracks' | 'runsheet'>('tracks')
@@ -50,10 +51,11 @@ export const ConferenceView: React.FC = () => {
     e.preventDefault()
     if (!newConfTitle.trim()) return
 
+    const roomResources = resources.filter((r) => r.type === 'room')
     const defaultTracks: ConferenceTrack[] = [
-      { id: 'track-1', name: 'Main Auditorium', room: 'Hall A', color: '#0A0A0A' },
-      { id: 'track-2', name: 'Engineering & Tech', room: 'Lab 2', color: '#404040' },
-      { id: 'track-3', name: 'Executive Workshops', room: 'Boardroom', color: '#737373' }
+      { id: 'track-1', name: 'Main Auditorium', room: roomResources[0]?.name || 'Plenary Hall', color: '#0A0A0A' },
+      { id: 'track-2', name: 'Engineering & Tech', room: roomResources[1]?.name || 'Technical Lab', color: '#404040' },
+      { id: 'track-3', name: 'Executive Workshops', room: roomResources[2]?.name || 'Executive Suite', color: '#737373' }
     ]
 
     const newConf: Conference = {

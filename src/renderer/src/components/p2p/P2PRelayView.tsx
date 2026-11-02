@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useP2PStore } from '../../store/useP2PStore'
 import { useAppStore } from '../../store/useAppStore'
+import { p2pMeshService } from '../../services/p2pMeshService'
 import {
   Network,
   Lock,
@@ -44,30 +45,25 @@ export const P2PRelayView: React.FC = () => {
     globalSharingPolicy,
     updateSharingPolicy,
     runFederatedAvailabilityQuery,
-    simulatedFederatedSlots
+    federatedAvailabilitySlots
   } = useP2PStore()
 
   const [activeTab, setActiveTab] = useState<'mesh' | 'vault' | 'federation'>('mesh')
-  const { events, calendars, settings } = useAppStore()
+  const { events, calendars, settings, toggleP2PCollaborationModal } = useAppStore()
   const [inputPairCode, setInputPairCode] = useState('')
   const [isPairingLoading, setIsPairingLoading] = useState(false)
   const [pairSuccessMessage, setPairSuccessMessage] = useState<string | null>(null)
   const [copiedCode, setCopiedCode] = useState(false)
 
-  // Real-time live mesh ping & packet activity loop
+  // Real-time live mesh heartbeat
   useEffect(() => {
-    if (!isP2PActive || peers.length === 0) return
+    if (!isP2PActive) return
+    p2pMeshService.sendRealPresencePing()
     const interval = setInterval(() => {
-      useP2PStore.setState((state) => ({
-        peers: state.peers.map((p) => ({
-          ...p,
-          latencyMs: Math.max(8, p.latencyMs + (Math.floor(Math.random() * 5) - 2)),
-          dataReceivedKB: p.dataReceivedKB + (Math.random() > 0.6 ? 1 : 0)
-        }))
-      }))
-    }, 3000)
+      p2pMeshService.sendRealPresencePing()
+    }, 5000)
     return () => clearInterval(interval)
-  }, [isP2PActive, peers.length])
+  }, [isP2PActive])
 
   // Vault form state
   const [oldPin, setOldPin] = useState('')
@@ -124,6 +120,15 @@ export const P2PRelayView: React.FC = () => {
           <p className="text-xs text-[var(--text-muted)] mt-1">
             Serverless peer-to-peer real-time schedule synchronization, zero-knowledge offline vault, and multi-tenant federated availability.
           </p>
+          <div className="pt-2">
+            <button
+              onClick={toggleP2PCollaborationModal}
+              className="h-7 px-3 text-xs font-bold rounded-[var(--radius-md)] bg-white text-black hover:bg-neutral-200 active:scale-[0.98] transition-all shadow-sm shrink-0 whitespace-nowrap inline-flex items-center gap-1.5"
+            >
+              <Radio className="w-3.5 h-3.5 text-black stroke-[2.5]" />
+              <span>Offline-First Collaboration Suite (QR & P2P)</span>
+            </button>
+          </div>
         </div>
 
         {/* Tab Segmented Control */}
@@ -454,12 +459,15 @@ export const P2PRelayView: React.FC = () => {
               <div>
                 {vaultStats.isLocked ? (
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       const pin = prompt('Enter Master Vault PIN (Default is 1234):')
-                      if (pin && unlockVault(pin)) {
-                        alert('Vault successfully unlocked.')
-                      } else if (pin) {
-                        alert('Incorrect PIN.')
+                      if (pin) {
+                        const success = await unlockVault(pin)
+                        if (success) {
+                          alert('Vault successfully unlocked.')
+                        } else {
+                          alert('Incorrect PIN.')
+                        }
                       }
                     }}
                     className="btn-primary text-xs py-2 px-4 shadow-xs"
@@ -537,13 +545,14 @@ export const P2PRelayView: React.FC = () => {
                   />
                 </div>
                 <button
-                  onClick={() => {
-                    if (updateVaultPassphrase(oldPin, newPin)) {
+                  onClick={async () => {
+                    const success = await updateVaultPassphrase(oldPin, newPin)
+                    if (success) {
                       alert('Vault master passphrase rotated and database re-keyed.')
                       setOldPin('')
                       setNewPin('')
                     } else {
-                      alert('Current PIN is incorrect.')
+                      alert('Current PIN is incorrect or new PIN is under 4 characters.')
                     }
                   }}
                   className="btn-primary text-xs py-2 px-4 shadow-xs"
@@ -685,7 +694,7 @@ export const P2PRelayView: React.FC = () => {
             </div>
 
             {/* Results Timeline */}
-            {simulatedFederatedSlots.length > 0 && (
+            {federatedAvailabilitySlots.length > 0 && (
               <div className="mt-4 p-4 rounded-[var(--radius-md)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] space-y-3">
                 <div className="flex items-center justify-between text-xs font-bold text-[var(--text-primary)]">
                   <span>Cryptographically Verified Availability for {selectedPartnerDomain}</span>
@@ -693,7 +702,7 @@ export const P2PRelayView: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  {simulatedFederatedSlots.map((slot, i) => (
+                  {federatedAvailabilitySlots.map((slot, i) => (
                     <div
                       key={i}
                       className="p-3 rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex items-center justify-between text-xs"

@@ -10,7 +10,7 @@ import {
   parseRRuleString,
   getRRuleSummary
 } from '../../utils/recurrenceEngine'
-import { scanHolidayConflicts } from '../../utils/holidayEngine'
+import { scanHolidayConflicts, detectSystemHolidayRegion } from '../../utils/holidayEngine'
 
 export const EventModal: React.FC = () => {
   const {
@@ -28,10 +28,20 @@ export const EventModal: React.FC = () => {
   const [title, setTitle] = useState('')
   const [calendarId, setCalendarId] = useState(calendars[0]?.id || '')
   const [categoryId, setCategoryId] = useState(categories[0]?.id || '')
-  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'))
-  const [startTime, setStartTime] = useState('09:00')
-  const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'))
-  const [endTime, setEndTime] = useState('10:00')
+  const [startDate, setStartDate] = useState(() => format(new Date(), 'yyyy-MM-dd'))
+  const [startTime, setStartTime] = useState(() => {
+    const d = new Date()
+    d.setMinutes(0, 0, 0)
+    d.setHours(d.getHours() + 1)
+    return format(d, 'HH:mm')
+  })
+  const [endDate, setEndDate] = useState(() => format(new Date(), 'yyyy-MM-dd'))
+  const [endTime, setEndTime] = useState(() => {
+    const d = new Date()
+    d.setMinutes(0, 0, 0)
+    d.setHours(d.getHours() + 2)
+    return format(d, 'HH:mm')
+  })
   const [location, setLocation] = useState('')
   const [meetingUrl, setMeetingUrl] = useState('')
   const [description, setDescription] = useState('')
@@ -72,7 +82,7 @@ export const EventModal: React.FC = () => {
           updated_at: ''
         }
       ],
-      'US'
+      detectSystemHolidayRegion()
     )
     return conflicts.length > 0 ? conflicts[0] : null
   }, [startDate, startTime, endDate, endTime, calendarId, title])
@@ -137,6 +147,16 @@ export const EventModal: React.FC = () => {
       setConflictReport(null)
       setIsRecurring(false)
       setIsFocusBlock(false)
+      const now = new Date()
+      const nextHour = new Date(now)
+      nextHour.setMinutes(0, 0, 0)
+      nextHour.setHours(now.getHours() + 1)
+      const afterHour = new Date(nextHour)
+      afterHour.setHours(nextHour.getHours() + 1)
+      setStartDate(format(nextHour, 'yyyy-MM-dd'))
+      setStartTime(format(nextHour, 'HH:mm'))
+      setEndDate(format(afterHour, 'yyyy-MM-dd'))
+      setEndTime(format(afterHour, 'HH:mm'))
       setRecurrenceConfig({
         freq: 'WEEKLY',
         interval: 1,

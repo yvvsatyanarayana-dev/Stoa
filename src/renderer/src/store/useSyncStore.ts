@@ -112,6 +112,7 @@ export const useSyncStore = create<SyncState>()(
       // Async actions
       fetchStatus: async () => {
         try {
+          if (!window.api?.sync) return
           const result = await window.api.sync.getStatus()
           set({
             status: result.status,
@@ -126,6 +127,7 @@ export const useSyncStore = create<SyncState>()(
 
       fetchQueue: async () => {
         try {
+          if (!window.api?.sync) return
           const queue = await window.api.sync.getQueue()
           set({ queue, queueLength: queue.length })
         } catch (error) {
@@ -135,6 +137,7 @@ export const useSyncStore = create<SyncState>()(
 
       fetchCacheStats: async () => {
         try {
+          if (!window.api?.sync) return
           const stats = await window.api.sync.getCacheStats()
           set({ cacheStats: stats })
         } catch (error) {
@@ -144,6 +147,7 @@ export const useSyncStore = create<SyncState>()(
 
       fetchConfig: async () => {
         try {
+          if (!window.api?.sync) return
           const config = await window.api.sync.getConfig()
           set({ config })
         } catch (error) {
@@ -154,6 +158,10 @@ export const useSyncStore = create<SyncState>()(
       manualSync: async () => {
         set({ status: 'syncing' })
         try {
+          if (!window.api?.sync) {
+            set({ status: 'idle' })
+            return
+          }
           await window.api.sync.manualSync()
           await get().fetchStatus()
           await get().fetchQueue()
@@ -165,6 +173,7 @@ export const useSyncStore = create<SyncState>()(
 
       clearQueue: async () => {
         try {
+          if (!window.api?.sync) return
           await window.api.sync.clearQueue()
           await get().fetchQueue()
         } catch (error) {
@@ -174,6 +183,7 @@ export const useSyncStore = create<SyncState>()(
 
       retryQueue: async () => {
         try {
+          if (!window.api?.sync) return
           await window.api.sync.retryQueue()
           await get().fetchQueue()
         } catch (error) {
@@ -183,6 +193,7 @@ export const useSyncStore = create<SyncState>()(
 
       clearCache: async () => {
         try {
+          if (!window.api?.sync) return
           await window.api.sync.clearCache()
           await get().fetchCacheStats()
         } catch (error) {
@@ -192,6 +203,7 @@ export const useSyncStore = create<SyncState>()(
 
       invalidateCache: async (pattern) => {
         try {
+          if (!window.api?.sync) return
           await window.api.sync.invalidateCache(pattern)
           await get().fetchCacheStats()
         } catch (error) {
@@ -201,6 +213,7 @@ export const useSyncStore = create<SyncState>()(
 
       updateConfig: async (config) => {
         try {
+          if (!window.api?.sync) return
           await window.api.sync.setConfig(config)
           set((state) => ({ config: { ...state.config, ...config } }))
         } catch (error) {
@@ -210,6 +223,7 @@ export const useSyncStore = create<SyncState>()(
 
       recordView: async (viewType, params) => {
         try {
+          if (!window.api?.sync) return
           await window.api.sync.recordView(viewType, params)
         } catch (error) {
           console.error('[SyncStore] Failed to record view:', error)

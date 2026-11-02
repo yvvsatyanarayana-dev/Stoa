@@ -6,13 +6,17 @@ import { CalendarView } from './components/calendar/CalendarView'
 import { TimetableBuilderView } from './components/timetable/TimetableBuilderView'
 import { ResourcesView } from './components/resources/ResourcesView'
 import { ConferenceView } from './components/conference/ConferenceView'
+import { AcademicCommandCenter } from './components/academic/AcademicCommandCenter'
+import { TemporalAgentSwarmView } from './components/swarm/TemporalAgentSwarmView'
+import { CrossDimensionalView } from './components/cross-dimensional/CrossDimensionalView'
+import { ScenarioWorldView } from './components/scenarios/ScenarioWorldView'
+import { NeuralInterfaceView } from './components/neural/NeuralInterfaceView'
 import { DashboardView } from './components/dashboard/DashboardView'
 import { NotificationsView } from './components/notifications/NotificationsView'
 import { SettingsView } from './components/settings/SettingsView'
 import { WorkspaceProfilesManager } from './components/enterprise/WorkspaceProfilesManager'
 import { ThemeStudio } from './components/settings/ThemeStudio'
 import { AuditLogViewer } from './components/enterprise/AuditLogViewer'
-import { SpatialCanvasView } from './components/spatial/SpatialCanvasView'
 import { BurnoutShieldView } from './components/burnout/BurnoutShieldView'
 import { TranscriberView } from './components/transcriber/TranscriberView'
 import { AnnotationLayerView } from './components/annotation/AnnotationLayerView'
@@ -35,9 +39,13 @@ import { KeyboardShortcutsModal } from './components/modals/KeyboardShortcutsMod
 import { PreMeetingBriefingModal } from './components/notifications/PreMeetingBriefingModal'
 import { DailyDigestModal } from './components/notifications/DailyDigestModal'
 import { LiveNotificationToast } from './components/notifications/LiveNotificationToast'
+import { FocusTimePromptToast } from './components/neural/FocusTimePromptToast'
 import { WorkspaceLockScreen } from './components/enterprise/WorkspaceLockScreen'
 import { TemplateMarketplaceModal } from './components/enterprise/TemplateMarketplaceModal'
 import { AuthAccountModal } from './components/modals/AuthAccountModal'
+import { LiveMeetingHud } from './components/hud/LiveMeetingHud'
+import { P2PCollaborationModal } from './components/p2p/P2PCollaborationModal'
+import { p2pMeshService } from './services/p2pMeshService'
 import { soundService } from './services/soundService'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts'
@@ -68,6 +76,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     useWorkspaceStore.getState().sanitizeWorkspaces()
     fetchInitialData()
+    p2pMeshService.init()
 
     // F4: Multi-Window view routing (?view=...)
     const params = new URLSearchParams(window.location.search)
@@ -82,10 +91,12 @@ export const App: React.FC = () => {
       }
     }
 
-    const unsubscribe = window.api.notifications.onReceived((data) => {
-      console.log('[Live Notification]', data)
-      fetchNotifications()
-    })
+    const unsubscribe = window.api?.notifications?.onReceived
+      ? window.api.notifications.onReceived((data) => {
+          console.log('[Live Notification]', data)
+          fetchNotifications()
+        })
+      : undefined
 
     return () => {
       if (unsubscribe) unsubscribe()
@@ -151,7 +162,11 @@ export const App: React.FC = () => {
                     {currentView === 'timetable' && <TimetableBuilderView />}
                     {currentView === 'resources' && <ResourcesView />}
                     {currentView === 'conferences' && <ConferenceView />}
-                    {currentView === 'spatial-canvas' && <SpatialCanvasView />}
+                    {currentView === 'academic' && <AcademicCommandCenter />}
+                    {currentView === 'temporal-swarm' && <TemporalAgentSwarmView />}
+                    {currentView === 'cross-dimensional' && <CrossDimensionalView />}
+                    {currentView === 'scenario-worlds' && <ScenarioWorldView />}
+                    {currentView === 'neural-interface' && <NeuralInterfaceView />}
                     {currentView === 'burnout-shield' && <BurnoutShieldView />}
                     {currentView === 'transcriber' && <TranscriberView />}
                     {currentView === 'annotation-layer' && <AnnotationLayerView />}
@@ -204,12 +219,19 @@ export const App: React.FC = () => {
         <PreMeetingBriefingModal />
         <DailyDigestModal />
         <LiveNotificationToast />
+        <FocusTimePromptToast />
 
         {/* Category H: Enterprise Suite (Lock Screen & Template Marketplace) */}
         <TemplateMarketplaceModal />
         <WorkspaceLockScreen />
         <CreateWorkspaceModal />
         <AuthAccountModal />
+
+        {/* Dynamic Live Meeting HUD & Smart Agenda Clock */}
+        <LiveMeetingHud />
+
+        {/* True Offline-First Peer-to-Peer CRDT Collaboration Suite */}
+        <P2PCollaborationModal />
       </div>
     </ErrorBoundary>
   )

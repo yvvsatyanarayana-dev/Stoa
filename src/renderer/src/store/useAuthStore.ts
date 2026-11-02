@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { UserAccount, AuthState } from '../types/auth'
 import { useWorkspaceStore } from './useWorkspaceStore'
+import { getGoogleProfileImageUrl } from '../utils/imageUtils'
 
 function extractInitials(name: string): string {
   if (!name.trim()) return 'U'
@@ -37,6 +38,10 @@ export const useAuthStore = create<AuthState>()(
           const wsStore = useWorkspaceStore.getState()
           wsStore.sanitizeWorkspaces()
 
+          if (!existing.avatarUrl) {
+            existing.avatarUrl = avatarUrl || getGoogleProfileImageUrl(cleanEmail, cleanName)
+          }
+
           if (existing.activeWorkspaceId && wsStore.workspaces.some((w) => w.id === existing.activeWorkspaceId)) {
             await wsStore.setActiveWorkspaceId(existing.activeWorkspaceId)
           } else {
@@ -60,7 +65,7 @@ export const useAuthStore = create<AuthState>()(
           id: `goog-${Date.now()}`,
           name: cleanName,
           email: cleanEmail,
-          avatarUrl: avatarUrl || undefined,
+          avatarUrl: avatarUrl || getGoogleProfileImageUrl(cleanEmail, cleanName),
           role: 'Workspace Owner',
           provider: 'google',
           initials,

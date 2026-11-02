@@ -27,12 +27,13 @@ export const AutoGenerateModal: React.FC = () => {
   const [showConstraints, setShowConstraints] = useState<boolean>(true)
 
   // Subject requirements state: for each subject, target sessions, resource, room
+  const defaultRoom = resources.find((r) => r.type === 'room')?.name || ''
   const [requirements, setRequirements] = useState<SolverSubjectRequirement[]>(() => {
     return subjects.map((s) => ({
       subject_id: s.id,
       required_sessions: 3,
       resource_id: resources[0]?.id,
-      room: 'Room 101'
+      room: defaultRoom
     }))
   })
 
@@ -49,7 +50,7 @@ export const AutoGenerateModal: React.FC = () => {
         subject_id: s.id,
         required_sessions: 2,
         resource_id: resources[0]?.id,
-        room: ''
+        room: defaultRoom
       }
     )
   })

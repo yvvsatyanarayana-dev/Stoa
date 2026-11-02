@@ -7,13 +7,14 @@ import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-networ
 import { getDb } from '../db'
 import { crdtDocDb, syncQueueDb, syncMetadataDb } from '../db'
 import type { SyncTableType, DocumentHandle, SyncDocumentData, SyncStats } from './types'
+import { randomUUID } from 'crypto'
 
 let repo: Repo | null = null
 const documentHandles = new Map<string, DocumentHandle>()
 let deviceId: string
 
 export function generateDeviceId(): string {
-  return `device-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  return `device-${Date.now()}-${randomUUID().slice(0, 8)}`
 }
 
 export async function initializeAutomergeRepo(): Promise<Repo> {
@@ -189,7 +190,7 @@ export async function changeDocument(type: SyncTableType, changeFn: (doc: any) =
 }
 
 export function addToSyncQueue(item: { type: 'create' | 'update' | 'delete'; tableName: SyncTableType; entityId: string; payload: any }): void {
-  const id = `sync-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  const id = `sync-${Date.now()}-${randomUUID().slice(0, 8)}`
   syncQueueDb.add({ id, ...item })
 }
 

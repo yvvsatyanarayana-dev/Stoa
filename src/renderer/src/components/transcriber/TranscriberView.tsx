@@ -36,7 +36,7 @@ export const TranscriberView: React.FC = () => {
     deleteMeeting
   } = useTranscriberStore()
 
-  const { events, populateStarterEvents } = useAppStore()
+  const { events, setIsEventModalOpen } = useAppStore()
   const { currentUser } = useAuthStore()
 
   const myName = currentUser?.name ? `${currentUser.name} (You)` : 'You'
@@ -129,7 +129,7 @@ export const TranscriberView: React.FC = () => {
                         const isAction = /action|todo|deliverable|schedule|task|verify/i.test(text)
                         const isDecision = /agree|decision|approved|confirmed|finalize/i.test(text)
                         const newSeg: TranscriptSegment = {
-                          id: `live-seg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                          id: `live-seg-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
                           speakerId: 'spk-me',
                           text,
                           startSeconds: recordingSeconds,
@@ -160,48 +160,11 @@ export const TranscriberView: React.FC = () => {
             }
           })
           .catch((err) => {
-            console.warn('[Transcriber] Mic not available, simulating real-time audio:', err)
-            const fallbackAudio = setInterval(() => {
-              setAudioLevel(Math.floor(Math.random() * 18) - 32)
-            }, 500)
-            return () => clearInterval(fallbackAudio)
+            console.warn('[Transcriber] Microphone access error:', err)
+            // Idle ambient baseline when microphone is denied or inactive
+            setAudioLevel(-45)
           })
       }
-
-      // Context-aware dynamic phrases
-      const dynamicPhrases = [
-        { speaker: 'Marcus Webb', text: "Let's review the delivery timeline for our primary milestone.", tag: 'decision' },
-        { speaker: myName, text: "I will ensure the architecture tests pass before Thursday noon.", tag: 'action' },
-        { speaker: 'Sarah Chen', text: "Do we have stakeholder confirmation on the budget adjustment?", tag: 'question' },
-        { speaker: 'Marcus Webb', text: "Yes, verified this morning with finance. Approved for rollout.", tag: 'decision' },
-        { speaker: myName, text: "Action item: Deploy canary release to staging by end of day.", tag: 'action' }
-      ]
-
-      let phraseIndex = 0
-      streamTimerRef.current = setInterval(() => {
-        // Only inject fallback phrases if no mic speech stream has been recorded yet
-        if (phraseIndex < dynamicPhrases.length && liveStreamSegments.length < 5) {
-          const phrase = dynamicPhrases[phraseIndex]
-          const newSeg: TranscriptSegment = {
-            id: `live-seg-${Date.now()}-${phraseIndex}`,
-            speakerId: phrase.speaker === myName ? 'spk-me' : 'spk-peer',
-            text: phrase.text,
-            startSeconds: phraseIndex * 6,
-            endSeconds: (phraseIndex + 1) * 6,
-            confidence: 0.96,
-            isKeyMoment: phrase.tag === 'action' || phrase.tag === 'decision',
-            tags: [phrase.tag]
-          }
-          setLiveStreamSegments((prev) => [...prev, newSeg])
-
-          if (phrase.tag === 'action') {
-            setLiveDetectedAction(`Extracted: ${phrase.text}`)
-            setTimeout(() => setLiveDetectedAction(null), 4000)
-          }
-
-          phraseIndex++
-        }
-      }, 4500)
     } else {
       setRecordingSeconds(0)
       setLiveStreamSegments([])
@@ -219,15 +182,12 @@ export const TranscriberView: React.FC = () => {
         } catch {}
         speechRecognitionRef.current = null
       }
-      if (animFrameRef.current) {
-        cancelAnimationFrame(animFrameRef.current)
-        animFrameRef.current = null
-      }
     }
 
     return () => {
-      clearInterval(interval)
+      if (interval) clearInterval(interval)
       if (streamTimerRef.current) clearInterval(streamTimerRef.current)
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach((t) => t.stop())
       }
@@ -238,9 +198,6 @@ export const TranscriberView: React.FC = () => {
         try {
           speechRecognitionRef.current.stop()
         } catch {}
-      }
-      if (animFrameRef.current) {
-        cancelAnimationFrame(animFrameRef.current)
       }
     }
   }, [recordingStatus])
@@ -479,11 +436,11 @@ export const TranscriberView: React.FC = () => {
               <div className="p-2 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] space-y-1.5 shadow-xs">
                 <p className="text-[10px] text-[var(--text-muted)]">0 calendar events found in database.</p>
                 <button
-                  onClick={() => populateStarterEvents()}
+                  onClick={() => setIsEventModalOpen(true)}
                   className="w-full h-6 text-[10px] font-semibold bg-[var(--accent)] text-[var(--accent-text)] rounded-[var(--radius-sm)] flex items-center justify-center gap-1 shadow-xs hover:opacity-90"
                 >
-                  <Sparkles className="w-3 h-3" />
-                  <span>Seed Real Calendar Events</span>
+                  <Plus className="w-3 h-3" />
+                  <span>Create New Calendar Event</span>
                 </button>
               </div>
             ) : (
